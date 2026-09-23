@@ -40,7 +40,8 @@ Before this change, `/setup` wrote candidate data into framework files. A fork t
 
    The contact details in the legacy `05`/`06` LaTeX blocks and the rest of the legacy `CLAUDE.md` summary are used only to cross-check `profile/candidate.md`. Report every conflict (for example a different job title or email) and ask the user which to keep. Never silently pick one.
 4. Show every proposed `profile/*.md` file in full and write them only after the user confirms.
-5. Tell the user: "Your data is now in `profile/`. If git still shows merge conflicts in files under `.claude/skills/`, resolve them by taking the upstream version, for example `git checkout --theirs .claude/skills/job-application-assistant/04-job-evaluation.md`. Your old data stays in git history." Migration deletes nothing.
+5. Check the templates. If `.claude/skills/job-application-assistant/profile-templates/candidate.md` no longer contains `[YOUR_EMAIL]`, `behavioral.md` no longer contains `[PROFILE_TYPE]`, or `search-queries.md` no longer contains `[YOUR_JOB_BOARD]`, git's rename detection carried the old data into the template files during the merge. Build the profile from `<ref>` as above (never from a polluted template), then tell the user to restore the templates from the remote they merged, for example `git checkout upstream/master -- .claude/skills/job-application-assistant/profile-templates/`, and commit.
+6. Tell the user: "Your data is now in `profile/`. If git still shows merge conflicts in files under `.claude/skills/`, resolve them by taking the upstream version, for example `git checkout --theirs .claude/skills/job-application-assistant/04-job-evaluation.md`. Your old data stays in git history." Migration deletes nothing.
 
 ### Step 0b: Choose a path
 

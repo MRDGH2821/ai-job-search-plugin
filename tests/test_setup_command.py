@@ -153,6 +153,14 @@ class SetupLegacyMigration(unittest.TestCase):
         self.assertIn("conflict", self.block.lower())
         self.assertIn("never silently", self.block.lower())
 
+    def test_migration_repairs_templates_polluted_by_rename_detection(self):
+        # git's rename detection merges a fork's personalized 01/02/search-queries
+        # INTO the new templates without a conflict (seen in a scratch-fork merge).
+        self.assertIn("rename", self.block.lower())
+        self.assertIn("profile-templates/", self.block)
+        self.assertIn("[PROFILE_TYPE]", self.block)
+        self.assertIn("[YOUR_JOB_BOARD]", self.block)
+
     def test_migration_confirms_and_never_deletes(self):
         low = self.block.lower()
         self.assertIn("confirm", low)

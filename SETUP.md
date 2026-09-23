@@ -334,8 +334,9 @@ Older versions stored your profile inside framework files (`.claude/skills/job-a
 
 1. `git merge upstream/master`. Expect conflicts in files under `.claude/skills/`.
 2. Resolve every conflict under `.claude/skills/` by taking upstream's version: `git checkout --theirs <path>` for each, then `git add` them. Your data is not lost; it is still in your git history.
-3. Commit the merge, then run `/setup`. It finds your old profile in git history, shows you the new `profile/` files built from it, and writes them only after you confirm.
-4. Commit `profile/` to your own (private) repository.
+3. Restore the blank templates. Git's rename detection can merge your old profile into the new template files **without reporting a conflict**. While the merge is still in progress, run `git checkout MERGE_HEAD -- .claude/skills/job-application-assistant/profile-templates/` and `git add` that folder.
+4. Commit the merge, then run `/setup`. It finds your old profile in git history, shows you the new `profile/` files built from it, and writes them only after you confirm.
+5. Commit `profile/` to your own (private) repository.
 
 ## Troubleshooting
 
