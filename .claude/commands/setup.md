@@ -22,8 +22,16 @@ Every write below goes to `profile/`. Framework files under `.claude/skills/` ar
 
 Before this change, `/setup` wrote candidate data into framework files. A fork that merged the change still has that data in its git history. Find it:
 
-1. Check, in order: the working tree, `ORIG_HEAD`, then each commit from `git log --format=%H -- .claude/skills/job-application-assistant/01-candidate-profile.md`. Use `git show <ref>:.claude/skills/job-application-assistant/01-candidate-profile.md`. The first version that exists and does **not** contain `[YOUR_EMAIL]` is the legacy profile; call its ref `<ref>`. If none is found, skip migration and continue with a fresh setup.
-2. Read these from `<ref>` with `git show <ref>:<path>` (skip any that do not exist there): `.claude/skills/job-application-assistant/01-candidate-profile.md` through `07-interview-prep.md`, `.claude/skills/job-scraper/search-queries.md`, and `CLAUDE.md`.
+1. Find the legacy ref. Check these candidates in order, reading `.claude/skills/job-application-assistant/01-candidate-profile.md` from each (`git show <candidate>:<path>`, or the file itself for the working tree). The first candidate where that file exists and does **not** contain `[YOUR_EMAIL]` is the legacy profile; call it `<ref>`.
+   a. The working tree.
+   b. `ORIG_HEAD` (set by the merge that brought this change in).
+   c. The fork's side of the upgrade merge: for each merge commit from `git log --no-show-signature --merges --format=%H` (newest first), try `<merge>^1`, then `<merge>^2`. When a fork merges upstream, `^1` is the fork's own pre-merge tip, so every legacy file is read as it was just before the upgrade.
+   d. Last resort: each commit from `git log --no-show-signature --full-history --format=%H -- .claude/skills/job-application-assistant/01-candidate-profile.md`. Keep `--full-history`: without it git follows the merge's upstream side and never reaches the fork's commits.
+
+   Always pass `--no-show-signature` to `git log`: with `log.showSignature` set, signature lines end up in the list of commit ids.
+
+   If no candidate qualifies, tell the user "No legacy profile found in git history; starting a fresh setup." and continue with a fresh setup.
+2. Read these from `<ref>` with `git show <ref>:<path>` (skip any that do not exist there): `.claude/skills/job-application-assistant/01-candidate-profile.md` through `07-interview-prep.md`, `.claude/skills/job-scraper/search-queries.md`, and `CLAUDE.md`. If `<ref>` came from step 1d, it is only the last commit that touched `01`: tell the user the other files are read as of that commit and may miss later edits (for example a template registered with `/add-template` afterwards), so they check each proposed file.
 3. Build the new files with this mapping:
 
    | Legacy region | New home |
@@ -41,7 +49,7 @@ Before this change, `/setup` wrote candidate data into framework files. A fork t
    The contact details in the legacy `05`/`06` LaTeX blocks and the rest of the legacy `CLAUDE.md` summary are used only to cross-check `profile/candidate.md`. Report every conflict (for example a different job title or email) and ask the user which to keep. Never silently pick one.
 4. Show every proposed `profile/*.md` file in full and write them only after the user confirms.
 5. Check the templates. If `.claude/skills/job-application-assistant/profile-templates/candidate.md` no longer contains `[YOUR_EMAIL]`, `behavioral.md` no longer contains `[PROFILE_TYPE]`, or `search-queries.md` no longer contains `[YOUR_JOB_BOARD]`, git's rename detection carried the old data into the template files during the merge. Build the profile from `<ref>` as above (never from a polluted template), then tell the user to restore the templates from the remote they merged, for example `git checkout upstream/master -- .claude/skills/job-application-assistant/profile-templates/`, and commit.
-6. Tell the user: "Your data is now in `profile/`. If git still shows merge conflicts in files under `.claude/skills/`, resolve them by taking the upstream version, for example `git checkout --theirs .claude/skills/job-application-assistant/04-job-evaluation.md`. Your old data stays in git history." Migration deletes nothing.
+6. Tell the user: "Your data is now in `profile/`. If git still shows merge conflicts in files under `.claude/skills/` or in `CLAUDE.md`, resolve them by taking the upstream version, for example `git checkout --theirs .claude/skills/job-application-assistant/04-job-evaluation.md`; for a file upstream deleted, use `git rm <path>`. Your old data stays in git history." Migration deletes nothing.
 
 ### Step 0b: Choose a path
 

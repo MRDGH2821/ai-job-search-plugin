@@ -224,6 +224,12 @@ class TestNoLegacyReferences(unittest.TestCase):
         self.assertNotIn("`search-queries.md` (this directory)", scraper)
 
 
+class TestTemplatesPointAtProfile(unittest.TestCase):
+    def test_no_template_sends_readers_to_claude_md(self):
+        offenders = [n for n in TEMPLATES if "CLAUDE.md" in (TPL / n).read_text(encoding="utf-8")]
+        self.assertEqual(offenders, [], "templates must point at profile/, not CLAUDE.md")
+
+
 class TestLegacyFilesRemoved(unittest.TestCase):
     def test_legacy_profile_files_are_gone(self):
         for path in (FW / "01-candidate-profile.md", FW / "02-behavioral-profile.md",
@@ -253,6 +259,12 @@ class TestDocs(unittest.TestCase):
         section9 = setup_md.split("## 9. Merging the profile-separation change", 1)[1].split("\n## ", 1)[0]
         self.assertIn("git checkout MERGE_HEAD -- .claude/skills/job-application-assistant/profile-templates/", section9)
         self.assertLess(section9.index("MERGE_HEAD"), section9.index("Commit the merge"))
+
+    def test_setup_md_covers_claude_md_and_deleted_file_conflicts(self):
+        setup_md = (REPO / "SETUP.md").read_text(encoding="utf-8")
+        section9 = setup_md.split("## 9. Merging the profile-separation change", 1)[1].split("\n## ", 1)[0]
+        self.assertIn("CLAUDE.md", section9)
+        self.assertIn("git rm", section9)
 
     def test_changelog_flags_the_fork_break(self):
         text = (REPO / "CHANGELOG.md").read_text(encoding="utf-8")

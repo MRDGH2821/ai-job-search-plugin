@@ -161,6 +161,27 @@ class SetupLegacyMigration(unittest.TestCase):
         self.assertIn("[PROFILE_TYPE]", self.block)
         self.assertIn("[YOUR_JOB_BOARD]", self.block)
 
+    def test_history_walk_survives_a_merge_without_orig_head(self):
+        # Default `git log -- <path>` simplification follows the merge's TREESAME
+        # (upstream) parent and never reaches the fork's personalizing commit.
+        self.assertIn("--full-history", self.block)
+        self.assertIn("no legacy profile", self.block.lower())
+
+    def test_other_files_are_read_from_the_pre_merge_tip(self):
+        # 04 calibration, 05/06 ACTIVE-TEMPLATE and 07 STAR may be edited after the
+        # last commit that touched 01; read them from the fork's side of the upgrade
+        # merge. (--diff-filter=D finds upstream's deleting commit, whose parent is
+        # pristine - verified in a scratch fork.)
+        self.assertIn("git log --no-show-signature --merges", self.block)
+        self.assertIn("^1", self.block)
+        self.assertNotIn("--diff-filter=D", self.block)
+
+    def test_git_log_output_is_not_polluted_by_signatures(self):
+        # log.showSignature=true prints gpg lines into --format=%H output.
+        for line in self.block.splitlines():
+            if "git log" in line:
+                self.assertIn("--no-show-signature", line, line)
+
     def test_migration_confirms_and_never_deletes(self):
         low = self.block.lower()
         self.assertIn("confirm", low)

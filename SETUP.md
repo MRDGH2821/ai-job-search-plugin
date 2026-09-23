@@ -333,7 +333,7 @@ Upstream keeps improving the methodology files your fork has personalized, so pl
 Older versions stored your profile inside framework files (`.claude/skills/job-application-assistant/01-candidate-profile.md` and its neighbours). Newer versions keep it in `profile/`. Upgrading across that change:
 
 1. `git merge upstream/master`. Expect conflicts in files under `.claude/skills/`.
-2. Resolve every conflict under `.claude/skills/` by taking upstream's version: `git checkout --theirs <path>` for each, then `git add` them. Your data is not lost; it is still in your git history.
+2. Resolve every conflict under `.claude/skills/` and in `CLAUDE.md` by taking upstream's version: `git checkout --theirs <path>` for each, then `git add` them. If git reports that upstream deleted a file you changed (for example `01-candidate-profile.md`), run `git rm <path>` for it instead. Your data is not lost; it is still in your git history.
 3. Restore the blank templates. Git's rename detection can merge your old profile into the new template files **without reporting a conflict**. While the merge is still in progress, run `git checkout MERGE_HEAD -- .claude/skills/job-application-assistant/profile-templates/` and `git add` that folder.
 4. Commit the merge, then run `/setup`. It finds your old profile in git history, shows you the new `profile/` files built from it, and writes them only after you confirm.
 5. Commit `profile/` to your own (private) repository.
