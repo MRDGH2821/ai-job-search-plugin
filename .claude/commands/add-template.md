@@ -27,7 +27,7 @@ Use Glob with `templates/**/TEMPLATE.md` to find registered templates. For each,
 | <name> | CV / Cover letter | .tex/.typ/... | lualatex/typst/... | <main font> | yes/no |
 ```
 
-A template is **active** if `05-cv-templates.md` (CV) or `06-cover-letter-templates.md` (cover letter) contains an `ACTIVE-TEMPLATE` managed block naming it. If no custom templates exist, say so and explain that `/add-template` registers one. Stop here.
+A template is **active** if `profile/cv.md` (CV) or `profile/cover-letter.md` (cover letter) contains an `ACTIVE-TEMPLATE` managed block naming it. If no custom templates exist, say so and explain that `/add-template` registers one. Stop here.
 
 ### Switch Mode
 
@@ -148,22 +148,22 @@ Do not proceed to Step 5 until the test compile passes.
 
 ## Step 5: Activate the Template
 
-Activation wires the template into `/apply` by adding a **managed block** to the top of the relevant guidance file — `05-cv-templates.md` for CVs, `06-cover-letter-templates.md` for cover letters. `/apply` reads these files in both its drafting step and its compile step, so the block is all it takes.
+Activation wires the template into `/apply` by adding a **managed block** under the `## Active Template` heading of the relevant profile file — `profile/cv.md` for CVs, `profile/cover-letter.md` for cover letters. `/apply` reads these files in both its drafting step and its compile step, so the block is all it takes.
 
 If Step 5 was reached from Switch Mode, use the template metadata resolved from `TEMPLATE.md`. If Step 5 was reached after registering a new template, use the metadata collected and verified in Steps 2-4.
 
-Insert (or replace, if one exists) this block immediately after the file's H1 title:
+Insert (or replace, if one exists) this block directly under the file's `## Active Template` heading. If `profile/` or that file is missing, tell the user to run `/setup` first and stop:
 
 ```markdown
 <!-- BEGIN ACTIVE-TEMPLATE (managed by /add-template - do not edit by hand) -->
 > **Active template override: `<name>`**
 >
-> A custom template is active. Where this block conflicts with the stock guidance below, this block wins. Structural advice below (tailoring, page-budget, cutting rules) still applies.
+> A custom template is active. Where this block conflicts with the stock guidance in 05-cv-templates.md / 06-cover-letter-templates.md, this block wins. Structural advice in those files (tailoring, page-budget, cutting rules) still applies.
 >
 > - **Template skeleton:** `templates/<type>/<name>/template<source-extension>` — use this as the structural reference instead of the stock template
 > - **Manifest:** `templates/<type>/<name>/TEMPLATE.md` — read this for style rules and known pitfalls before drafting
 > - **Source extension:** `<source-extension>` (not `.tex` unless the template's own toolchain is LaTeX)
-> - **Compile command:** `<the full declared command>` (not the command named in the stock guidance below — `/apply`'s compile step must use this instead). Run it from the output directory. If it redirects to `build/`, the log is in `build/`, and `/apply`'s Step 5e cleanup must delete that `build/` folder too
+> - **Compile command:** `<the full declared command>` (not the command named in the stock guidance — `/apply`'s compile step must use this instead). Run it from the output directory. If it redirects to `build/`, the log is in `build/`, and `/apply`'s Step 5e cleanup must delete that `build/` folder too
 > - **Fonts:** <font summary, including any path note for bundled fonts>
 > - **Page limit:** exactly <N> page(s)
 > - **Output file:** `cv/main_<company>_<role><source-extension>` / `cover_letters/cover_<company>_<role><source-extension>`; copy any class/package/font files the template needs into the output directory, or reference them by relative path
@@ -172,7 +172,7 @@ Insert (or replace, if one exists) this block immediately after the file's H1 ti
 
 Rules:
 
-- Exactly **one** managed block per guidance file. Replace the whole block between the `BEGIN`/`END` markers when switching templates; never stack blocks.
+- Exactly **one** managed block per profile file. Replace the whole block between the `BEGIN`/`END` markers when switching templates; never stack blocks.
 - **`--use default`**: remove the managed block entirely. The stock moderncv / cover.cls guidance below it is untouched and takes over again.
 - Do not modify anything outside the markers.
 

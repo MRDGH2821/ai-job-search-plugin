@@ -91,77 +91,40 @@ def section(text: str, start: str, end: str) -> str:
     return text[begin : text.index(end, begin)]
 
 
-def setup_step3_skill_files():
-    """Skill files /setup Step 3 populates, derived from its own headings.
+TPL = REPO / ".claude" / "skills" / "job-application-assistant" / "profile-templates"
 
-    Step 3's targets are written as '### <n>. <verb> `<target>`', where the
-    target is either a bare filename resolved against .claude/skills/ or a
-    repo-relative path. Non-skill targets (CLAUDE.md, cv/main_example.tex)
-    are dropped: /reset profile's scope is skill files only.
-    """
+
+def setup_step3_profile_files():
+    """profile/ files /setup Step 3 populates, derived from its own headings."""
     step3 = section(SETUP.read_text(encoding="utf-8"), "## Step 3:", "## Step 4:")
-    files = set()
-    for target in re.findall(r"^###\s+\d+\.\s+\w+\s+`([^`]+)`", step3, re.MULTILINE):
-        if (REPO / target).exists():
-            if target.startswith(".claude/skills/"):
-                files.add(Path(target).name)
-            continue
-        matches = list((REPO / ".claude" / "skills").glob(f"*/{target}"))
-        if matches:
-            files.add(Path(target).name)
-    return files
+    targets = re.findall(r"^###\s+\d+\.\s+\w+\s+`([^`]+)`", step3, re.MULTILINE)
+    return {t.split("/", 1)[1] for t in targets if t.startswith("profile/")}
 
 
-class TestResetCoversEveryPersonalizedSkillFile(unittest.TestCase):
+class TestResetRestoresProfileFromTemplates(unittest.TestCase):
     def setUp(self):
         self.text = RESET.read_text(encoding="utf-8")
-        self.files = setup_step3_skill_files()
-        # /setup must actually still name these targets, or every assertion
-        # below would pass vacuously against an empty set.
-        self.assertGreaterEqual(len(self.files), 6, self.files)
-        self.assertIn("04-job-evaluation.md", self.files)
-        self.assertIn("search-queries.md", self.files)
+        self.files = setup_step3_profile_files()
+        self.assertGreaterEqual(len(self.files), 7, self.files)
 
-    def test_preview_lists_every_personalized_skill_file(self):
-        preview = section(
-            self.text, "### If scope includes `profile`:", "### If scope includes `documents`:"
-        )
-        missing = sorted(f for f in self.files if f not in preview)
-        self.assertEqual(
-            missing,
-            [],
-            "reset.md's profile preview never mentions these files that /setup "
-            "Step 3 writes candidate data into, so the user types RESET against "
-            f"a list that omits them: {missing}",
-        )
+    def test_preview_lists_every_profile_file(self):
+        preview = section(self.text, "### If scope includes `profile`:", "### If scope includes `documents`:")
+        missing = sorted(f for f in self.files if f"profile/{f}" not in preview)
+        self.assertEqual(missing, [], f"reset preview omits profile files /setup writes: {missing}")
 
-    def test_execution_clears_every_personalized_skill_file(self):
+    def test_execution_copies_templates(self):
         execution = section(self.text, "### Profile reset", "### Documents reset")
-        missing = sorted(f for f in self.files if f not in execution)
-        self.assertEqual(
-            missing,
-            [],
-            "reset.md's Step 3 profile pass has no instruction for these files, "
-            'yet the command then reports the skill files are "now blank": '
-            f"{missing}",
-        )
+        self.assertIn("profile-templates/", execution)
+        self.assertNotIn("| Line to restore | Token |", execution, "token-restore tables must be gone")
 
-    def test_preserved_list_claims_no_personalized_file_is_framework_only(self):
-        """A file /setup personalizes must never be listed as framework-only.
+    def test_reset_preserves_active_template(self):
+        execution = section(self.text, "### Profile reset", "### Documents reset")
+        self.assertIn("Active Template", execution)
+        self.assertIn("keep", execution.lower())
 
-        This is the specific regression: 04-job-evaluation.md was named in the
-        "NOT touched (they contain framework rules, not candidate data)" list,
-        so merely searching reset.md for the filename would have found it.
-        """
-        preserved = section(self.text, "The following files are NOT touched", "```")
-        mislabeled = sorted(f for f in self.files if f in preserved)
-        self.assertEqual(
-            mislabeled,
-            [],
-            "reset.md tells the user these files contain 'framework rules, not "
-            "candidate data', but /setup Step 3 writes candidate data into them: "
-            f"{mislabeled}",
-        )
+    def test_every_template_is_a_setup_target(self):
+        templates = {p.name for p in TPL.glob("*.md")}
+        self.assertEqual(sorted(templates - self.files), [], "a template /setup never fills")
 
 
 if __name__ == "__main__":

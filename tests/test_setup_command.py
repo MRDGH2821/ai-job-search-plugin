@@ -20,6 +20,7 @@ COMMAND = REPO / ".claude" / "commands" / "setup.md"
 SKILL_DIR = REPO / ".claude" / "skills" / "job-application-assistant"
 CV_TEMPLATES = SKILL_DIR / "05-cv-templates.md"
 COVER_TEMPLATES = SKILL_DIR / "06-cover-letter-templates.md"
+TPL = SKILL_DIR / "profile-templates"
 
 
 def _sections(text: str) -> dict[str, str]:
@@ -42,32 +43,43 @@ def _substeps(step_body: str) -> dict[str, str]:
     return result
 
 
-class SetupStep3ContactBlocks(unittest.TestCase):
+class SetupWritesOnlyToProfile(unittest.TestCase):
     def setUp(self):
-        self.step3 = _sections(COMMAND.read_text(encoding="utf-8"))["Step 3: Generate Profile Files"]
-        self.substeps = _substeps(self.step3)
+        self.text = COMMAND.read_text(encoding="utf-8")
+        self.sections = _sections(self.text)
+        self.step3 = self.sections["Step 3: Generate Profile Files"]
 
-    def _substep_for(self, filename: str) -> str:
-        matches = [body for heading, body in self.substeps.items() if filename in heading]
-        self.assertEqual(len(matches), 1, f"expected exactly one Step 3 substep for {filename}, got {len(matches)}")
-        return matches[0]
+    def test_step3_targets_are_profile_files_with_templates(self):
+        import re
+        targets = re.findall(r"^###\s+\d+\.\s+\w+\s+`([^`]+)`", self.step3, re.MULTILINE)
+        profile_targets = [t for t in targets if t.startswith("profile/")]
+        self.assertGreaterEqual(len(profile_targets), 7, targets)
+        for t in profile_targets:
+            self.assertTrue((TPL / t.split("/", 1)[1]).exists(), f"no template for {t}")
+        for t in targets:
+            self.assertFalse(t.startswith(".claude/"), f"Step 3 still writes framework file {t}")
 
-    def test_cv_templates_substep_fills_the_contact_block(self):
-        body = self._substep_for("05-cv-templates.md")
-        self.assertIn("contact", body.lower())
-        for token in ("[FIRST_NAME]", "[YOUR_EMAIL]", "[YOUR_PHONE]"):
-            self.assertIn(token, body, f"the 05 substep must name {token} as something to replace")
+    def test_step3_never_edits_framework_latex_blocks(self):
+        self.assertNotIn("05-cv-templates.md", self.step3)
+        self.assertNotIn("06-cover-letter-templates.md", self.step3)
 
-    def test_cover_letter_templates_get_their_own_substep(self):
-        body = self._substep_for("06-cover-letter-templates.md")
-        self.assertIn("signature", body.lower())
-        for token in ("[YOUR_NAME]", "[YOUR_EMAIL]", "[YOUR_PHONE]", "[YOUR_LINKEDIN_URL]"):
-            self.assertIn(token, body, f"the 06 substep must name {token} as something to replace")
+    def test_step0a_copies_only_missing_templates(self):
+        step0 = self.sections["Step 0: Welcome & Choose Path"]
+        self.assertIn("### Step 0a: Prepare the profile folder", step0)
+        block = step0.split("### Step 0a: Prepare the profile folder", 1)[1]
+        self.assertIn("profile-templates/", block)
+        self.assertIn("only the missing", block.lower())
+        self.assertIn("never overwrite", block.lower())
 
-    def test_completion_summary_lists_the_cover_letter_templates(self):
-        step4 = _sections(COMMAND.read_text(encoding="utf-8"))["Step 4: Confirm & Next Steps"]
-        summary = step4.split("**Privacy note:**")[0]
-        self.assertIn("06-cover-letter-templates.md", summary)
+    def test_step0a_runs_before_section_shortcut(self):
+        step0 = self.sections["Step 0: Welcome & Choose Path"]
+        self.assertLess(step0.index("Step 0a"), step0.index("--section <name>"))
+
+    def test_completion_summary_lists_profile_files(self):
+        summary = self.sections["Step 4: Confirm & Next Steps"].split("**Privacy note:**")[0]
+        for name in ("profile/candidate.md", "profile/evaluation.md", "profile/search-queries.md"):
+            self.assertIn(name, summary)
+        self.assertNotIn(".claude/skills/", summary)
 
 
 @unittest.skipIf(
