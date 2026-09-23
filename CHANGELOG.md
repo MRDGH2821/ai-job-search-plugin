@@ -71,6 +71,16 @@ per-file diff commands.
 
 ### Changed
 
+- **BREAKING (personalized forks): candidate data moves to `profile/`**
+  (`.claude/skills/job-application-assistant/profile-templates/`, `.claude/commands/setup.md`,
+  `.claude/commands/reset.md`, `CLAUDE.md`, `10-verification.md`) - `/setup` now writes
+  every personal detail into a workspace `profile/` folder created from framework-owned
+  templates, and framework files hold rules only. Upstream merges stop conflicting with
+  your personalization. `01-candidate-profile.md`, `02-behavioral-profile.md` and
+  `job-scraper/search-queries.md` are removed; the workflow and verification checklist
+  move from `CLAUDE.md` to `10-verification.md`. Upgrading a personalized fork: see
+  SETUP.md section 9; `/setup` migrates your old profile from git history.
+
 - **`/add-template` keeps a registered template's intermediates in `build/`**
   (#473, `.claude/commands/add-template.md`, `.gitignore`,
   `tests/test_add_template_build_dir.py`) - the elicited compile command

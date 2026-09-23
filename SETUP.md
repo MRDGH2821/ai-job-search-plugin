@@ -230,14 +230,13 @@ All three paths produce the same result: fully populated profile files.
 
 | File | Content |
 |------|---------|
-| `CLAUDE.md` | Your full candidate profile |
-| `01-candidate-profile.md` | Structured education, experience, skills |
-| `02-behavioral-profile.md` | Behavioral assessment |
-| `04-job-evaluation.md` | Personalized skill match areas and career goals |
-| `05-cv-templates.md` | Profile statement templates for your background |
-| `07-interview-prep.md` | STAR examples from your experience |
+| `profile/candidate.md` | Identity, contact details, education, experience, skills |
+| `profile/behavioral.md` | Behavioral assessment |
+| `profile/evaluation.md` | Personalized skill match areas, career goals, deal-breakers |
+| `profile/cv.md` | Profile statements for your background |
+| `profile/star.md` | STAR examples from your experience |
 | `cv/main_example.tex` | Your LaTeX CV with actual details |
-| `search-queries.md` | Job search queries for `/scrape` |
+| `profile/search-queries.md` | Job search queries for `/scrape` |
 
 ### Re-running setup
 
@@ -309,7 +308,7 @@ Upstream keeps improving the methodology files your fork has personalized, so pl
 
 **Prefer releases over raw `master`.** Tagged [releases](../../releases) are vetted checkpoints, each described in [CHANGELOG.md](CHANGELOG.md). Updating to a tag pulls a stable, documented state instead of whatever `master` happens to be mid-review. Fetch tags with `git fetch upstream --tags` and merge a release (for example `git merge v1.0.0`) when you want stability; pull `master` directly only when you specifically want the latest unreleased changes. The steps below apply either way - substitute the release tag for `upstream/master` where you see it.
 
-1. **Commit your personalization - but know where those commits land.** `/setup` edits CLAUDE.md and the profile skill files in place; those edits are *yours*, and committing them is what lets updates merge cleanly. But a GitHub **fork of this repo is public** - forks of public repositories cannot be made private - so anything you commit *and push to a fork* is visible to anyone. If you want your profile in a remote at all, don't push it to a fork: create a **private** repository, push there, and add this repo as the `upstream` remote (`git remote add upstream https://github.com/MadsLorentzen/ai-job-search.git`) to keep receiving updates. Committing locally without pushing is also fine. The genuinely sensitive files (tracker, salary data, `documents/`, application archives) are gitignored and never enter git either way. An uncommitted working tree is the most common reason `git pull` refuses to merge at all (`Your local changes ... would be overwritten`).
+1. **Commit your personalization - but know where those commits land.** `/setup` writes your data into `profile/`; those edits are *yours*, and committing them is what lets updates merge cleanly. But a GitHub **fork of this repo is public** - forks of public repositories cannot be made private - so anything you commit *and push to a fork* is visible to anyone. If you want your profile in a remote at all, don't push it to a fork: create a **private** repository, push there, and add this repo as the `upstream` remote (`git remote add upstream https://github.com/MadsLorentzen/ai-job-search.git`) to keep receiving updates. Committing locally without pushing is also fine. The genuinely sensitive files (tracker, salary data, `documents/`, application archives) are gitignored and never enter git either way. An uncommitted working tree is the most common reason `git pull` refuses to merge at all (`Your local changes ... would be overwritten`).
 2. **Preview what changed before pulling:**
    ```bash
    git remote add upstream https://github.com/MadsLorentzen/ai-job-search.git   # first time only, if you cloned your own fork
@@ -327,7 +326,16 @@ Upstream keeps improving the methodology files your fork has personalized, so pl
      ```
 
      Forks also inherit a `.github/workflows/upstream-watch.yml` that runs this weekly and writes the result into a single rolling issue (it no-ops on the upstream template itself, and stays disabled on a fork until you enable Actions).
-3. **Merge normally.** `git merge upstream/master` (or `git pull`) three-way-merges upstream's edits around your personalization; because methodology edits rarely touch the lines `/setup` filled in, most updates land cleanly. A conflict in a personalized file is a *feature*, not a failure — it means upstream changed methodology in a section you customized, and the version marker plus its changelog commit tell you why. Resolve by keeping your data and adopting the methodology change around it.
+3. **Merge normally.** `git merge upstream/master` (or `git pull`) three-way-merges upstream's edits around your personalization; because methodology edits rarely touch the lines `/setup` filled in, most updates land cleanly. A conflict in a personalized file is a *feature*, not a failure — it means upstream changed methodology in a section you customized, and the version marker plus its changelog commit tell you why. Resolve by keeping your data and adopting the methodology change around it. Because your data lives in `profile/` and upstream never ships that folder, upstream merges no longer touch your personalization.
+
+## 9. Merging the profile-separation change into a personalized fork
+
+Older versions stored your profile inside framework files (`.claude/skills/job-application-assistant/01-candidate-profile.md` and its neighbours). Newer versions keep it in `profile/`. Upgrading across that change:
+
+1. `git merge upstream/master`. Expect conflicts in files under `.claude/skills/`.
+2. Resolve every conflict under `.claude/skills/` by taking upstream's version: `git checkout --theirs <path>` for each, then `git add` them. Your data is not lost; it is still in your git history.
+3. Commit the merge, then run `/setup`. It finds your old profile in git history, shows you the new `profile/` files built from it, and writes them only after you confirm.
+4. Commit `profile/` to your own (private) repository.
 
 ## Troubleshooting
 
