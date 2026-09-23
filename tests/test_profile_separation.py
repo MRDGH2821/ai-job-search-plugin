@@ -212,8 +212,6 @@ class TestNoLegacyReferences(unittest.TestCase):
         offenders = []
         files = list((REPO / ".claude").rglob("*.md")) + [REPO / "CLAUDE.md", REPO / "documents" / "README.md"]
         for path in files:
-            if path.name.startswith(("01-", "02-")):  # TEMPORARY: legacy files, deleted in Task 7
-                continue
             text = strip_setup_migration(path.read_text(encoding="utf-8"))
             for name in LEGACY_NAMES:
                 if name in text:
@@ -224,6 +222,17 @@ class TestNoLegacyReferences(unittest.TestCase):
         scraper = (REPO / ".claude" / "skills" / "job-scraper" / "SKILL.md").read_text(encoding="utf-8")
         self.assertIn("profile/search-queries.md", scraper)
         self.assertNotIn("`search-queries.md` (this directory)", scraper)
+
+
+class TestLegacyFilesRemoved(unittest.TestCase):
+    def test_legacy_profile_files_are_gone(self):
+        for path in (FW / "01-candidate-profile.md", FW / "02-behavioral-profile.md",
+                     REPO / ".claude" / "skills" / "job-scraper" / "search-queries.md"):
+            self.assertFalse(path.exists(), f"{path.relative_to(REPO)} should be deleted")
+
+    def test_version_guard_covers_templates(self):
+        src = (REPO / "tools" / "check_framework_version.py").read_text(encoding="utf-8")
+        self.assertIn("profile-templates", src)
 
 
 if __name__ == "__main__":
