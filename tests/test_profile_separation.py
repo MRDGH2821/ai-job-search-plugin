@@ -101,7 +101,7 @@ SETUP_TOKEN = re.compile(r"\[(?:YOUR_[A-Z0-9_]+|FIRST_NAME|LAST_NAME)\]")
 FRAMEWORK_FILES = [
     "03-writing-style.md", "04-job-evaluation.md", "05-cv-templates.md",
     "06-cover-letter-templates.md", "07-interview-prep.md",
-    "08-application-forms.md", "09-web-research.md", "SKILL.md",
+    "08-application-forms.md", "09-web-research.md", "10-verification.md", "SKILL.md",
 ]
 POINTER = re.compile(r"`profile/([\w-]+\.md)(?:#([\w-]+))?`")
 
@@ -161,6 +161,37 @@ class TestFrameworkFilesHoldRulesOnly(unittest.TestCase):
         self.assertIn("profile/candidate.md", guard)
         self.assertIn("[YOUR_EMAIL]", guard)
         self.assertIn("/setup", guard)
+
+
+APPLY = REPO / ".claude" / "commands" / "apply.md"
+
+
+class TestClaudeMdAndApply(unittest.TestCase):
+    def test_verification_file_holds_workflow_and_checklist(self):
+        text = (FW / "10-verification.md").read_text(encoding="utf-8")
+        self.assertIn("## Workflow for New Job Applications", text)
+        self.assertIn("## Verification Checklist", text)
+        self.assertIn("### Compiled PDF verification (MANDATORY - never skip)", text)
+
+    def test_claude_md_holds_no_personal_data(self):
+        text = (REPO / "CLAUDE.md").read_text(encoding="utf-8")
+        self.assertIsNone(SETUP_TOKEN.search(text), "CLAUDE.md must hold no /setup slots")
+        self.assertNotIn("## Candidate Profile", text)
+        self.assertNotIn("## Verification Checklist", text)
+        self.assertIn("10-verification.md", text)
+        self.assertIn("profile/", text)
+
+    def test_apply_runs_profile_guard_first(self):
+        text = APPLY.read_text(encoding="utf-8")
+        step1 = text.split("## Step 1", 1)[1].split("\n## ", 1)[0]
+        self.assertIn("Profile Guard", step1)
+
+    def test_apply_no_longer_reads_claude_md_for_facts(self):
+        text = APPLY.read_text(encoding="utf-8")
+        self.assertNotIn("Candidate Profile section", text)
+        self.assertNotIn("checklist from `CLAUDE.md`", text)
+        self.assertIn("10-verification.md", text)
+        self.assertIn("`profile/candidate.md#identity`", text)
 
 
 if __name__ == "__main__":
