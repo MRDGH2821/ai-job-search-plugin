@@ -237,6 +237,29 @@ contract changed: `04`, `05`, `06`, `07`, `SKILL.md`, `03`). New files start at 
    merge the branch, run `/setup` → confirm `profile/` reproduces the made-up data and
    nothing is lost
 
+### Planning clarifications (branch 1)
+
+Found while writing the implementation plan:
+
+1. **Draft-time tokens are renamed.** The LaTeX templates in `05`/`06` keep contact
+   placeholders, but as `[CANDIDATE_*]` tokens (`[CANDIDATE_NAME]`,
+   `[CANDIDATE_FIRST_NAME]`, `[CANDIDATE_LAST_NAME]`, `[CANDIDATE_ADDRESS]`,
+   `[CANDIDATE_PHONE]`, `[CANDIDATE_EMAIL]`, `[CANDIDATE_LINKEDIN_URL]`,
+   `[CANDIDATE_GITHUB_URL]`), filled from `profile/candidate.md` when a document is
+   drafted. `[YOUR_*]` then always means "a slot `/setup` fills", so the test "no
+   framework file contains `[YOUR_`" stays meaningful.
+2. **Pointer syntax is a link with an anchor:** `` `profile/evaluation.md#skill-match-areas` ``.
+   The anchor is the GitHub-style slug of a heading in the template. A test resolves
+   every pointer.
+3. **Fields that only existed in `CLAUDE.md` get a home.** `LinkedIn headline`,
+   `CV language` and `## Certifications` go to `profile/candidate.md`.
+   `What Excites You`, `Target Sectors` and `Deal-breakers` go to
+   `profile/evaluation.md`. `08-application-forms.md` and `/apply` ground facts against
+   `profile/candidate.md` + `cv/main_example.tex` (two sources instead of three).
+4. **`/reset profile` keeps an active custom template.** The Active Template section of
+   `profile/cv.md` / `profile/cover-letter.md` survives a reset, as it does today, where
+   the block lives in `05`/`06` and reset leaves it alone.
+
 ## Out of scope for branch 1
 
 - Any move into `plugins/`, `${CLAUDE_PLUGIN_ROOT}` rewrites, or marketplace files (branch 2)
