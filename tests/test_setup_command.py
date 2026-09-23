@@ -80,14 +80,14 @@ class TemplatesStillCarryThePlaceholders(unittest.TestCase):
 
     def test_cv_templates_contact_block_tokens(self):
         text = CV_TEMPLATES.read_text(encoding="utf-8")
-        for token in ("[FIRST_NAME]", "[LAST_NAME]", "[YOUR_EMAIL]", "[YOUR_PHONE]"):
+        for token in ("[CANDIDATE_FIRST_NAME]", "[CANDIDATE_LAST_NAME]", "[CANDIDATE_EMAIL]", "[CANDIDATE_PHONE]"):
             self.assertIn(token, text)
 
     def test_cover_letter_templates_contact_and_signature_tokens(self):
         text = COVER_TEMPLATES.read_text(encoding="utf-8")
-        for token in ("[YOUR_NAME]", "[YOUR_EMAIL]", "[YOUR_PHONE]", "[YOUR_LINKEDIN_URL]"):
+        for token in ("[CANDIDATE_NAME]", "[CANDIDATE_EMAIL]", "[CANDIDATE_PHONE]", "[CANDIDATE_LINKEDIN_URL]"):
             self.assertIn(token, text)
-        self.assertIn("\\signature{[YOUR_NAME]}", text)
+        self.assertIn("\\signature{[CANDIDATE_NAME]}", text)
 
 
 class SetupPathAProjectsIngestion(unittest.TestCase):

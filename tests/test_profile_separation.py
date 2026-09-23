@@ -97,5 +97,71 @@ class TestTemplates(unittest.TestCase):
         self.assertIn("**LinkedIn headline:**", text)
 
 
+SETUP_TOKEN = re.compile(r"\[(?:YOUR_[A-Z0-9_]+|FIRST_NAME|LAST_NAME)\]")
+FRAMEWORK_FILES = [
+    "03-writing-style.md", "04-job-evaluation.md", "05-cv-templates.md",
+    "06-cover-letter-templates.md", "07-interview-prep.md",
+    "08-application-forms.md", "09-web-research.md", "SKILL.md",
+]
+POINTER = re.compile(r"`profile/([\w-]+\.md)(?:#([\w-]+))?`")
+
+
+def pointer_sources():
+    """Every markdown file that may point into profile/."""
+    files = sorted((REPO / ".claude").rglob("*.md"))
+    files = [f for f in files if TPL not in f.parents]
+    for extra in ("CLAUDE.md", "AGENTS.md"):
+        if (REPO / extra).exists():
+            files.append(REPO / extra)
+    return files
+
+
+class TestFrameworkFilesHoldRulesOnly(unittest.TestCase):
+    def test_framework_files_have_no_setup_tokens(self):
+        offenders = {}
+        for name in FRAMEWORK_FILES:
+            path = FW / name
+            if not path.exists():
+                continue
+            text = path.read_text(encoding="utf-8")
+            if name == "SKILL.md" and "## Profile Guard" in text:
+                # The guard names the [YOUR_EMAIL] sentinel it checks for.
+                head, tail = text.split("## Profile Guard", 1)
+                text = head + ("\n## " + tail.split("\n## ", 1)[1] if "\n## " in tail else "")
+            hits = sorted(set(SETUP_TOKEN.findall(text)))
+            if hits:
+                offenders[name] = hits
+        self.assertEqual(offenders, {}, "framework files must not carry /setup slots")
+
+    def test_draft_time_tokens_use_candidate_prefix(self):
+        cv = (FW / "05-cv-templates.md").read_text(encoding="utf-8")
+        cover = (FW / "06-cover-letter-templates.md").read_text(encoding="utf-8")
+        for token in ("[CANDIDATE_FIRST_NAME]", "[CANDIDATE_LAST_NAME]",
+                      "[CANDIDATE_EMAIL]", "[CANDIDATE_PHONE]"):
+            self.assertIn(token, cv)
+        self.assertIn("\\signature{[CANDIDATE_NAME]}", cover)
+        self.assertIn("profile/candidate.md#identity", cv)
+        self.assertIn("profile/candidate.md#identity", cover)
+
+    def test_every_profile_pointer_resolves(self):
+        broken = []
+        for path in pointer_sources():
+            for name, anchor in POINTER.findall(path.read_text(encoding="utf-8")):
+                tpl = TPL / name
+                if name not in TEMPLATES or not tpl.exists():
+                    broken.append(f"{path.relative_to(REPO)}: profile/{name}")
+                elif anchor and anchor not in headings(tpl):
+                    broken.append(f"{path.relative_to(REPO)}: profile/{name}#{anchor}")
+        self.assertEqual(broken, [], "pointers into profile/ must hit a real template heading")
+
+    def test_skill_defines_profile_guard(self):
+        text = (FW / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("## Profile Guard", text)
+        guard = text.split("## Profile Guard", 1)[1].split("\n## ", 1)[0]
+        self.assertIn("profile/candidate.md", guard)
+        self.assertIn("[YOUR_EMAIL]", guard)
+        self.assertIn("/setup", guard)
+
+
 if __name__ == "__main__":
     unittest.main()
