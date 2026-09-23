@@ -13,10 +13,34 @@ There are three paths into setup. Step 0 picks the right one; all three converge
 Your candidate data lives in `profile/` at the workspace root. Before anything else:
 
 1. Create `profile/` if it does not exist.
-2. For each file in `.claude/skills/job-application-assistant/profile-templates/`, copy it to `profile/<same name>` **only if that file is missing**. Copy only the missing files and never overwrite an existing profile file: it may hold the user's data.
+2. If `profile/` did not exist before step 1, run **Legacy fork migration** below first. Then, for each file in `.claude/skills/job-application-assistant/profile-templates/`, copy it to `profile/<same name>` **only if that file is missing**. Copy only the missing files and never overwrite an existing profile file: it may hold the user's data.
 3. Tell the user in one line which files were created, if any.
 
 Every write below goes to `profile/`. Framework files under `.claude/skills/` are never edited by this command.
+
+#### Legacy fork migration
+
+Before this change, `/setup` wrote candidate data into framework files. A fork that merged the change still has that data in its git history. Find it:
+
+1. Check, in order: the working tree, `ORIG_HEAD`, then each commit from `git log --format=%H -- .claude/skills/job-application-assistant/01-candidate-profile.md`. Use `git show <ref>:.claude/skills/job-application-assistant/01-candidate-profile.md`. The first version that exists and does **not** contain `[YOUR_EMAIL]` is the legacy profile; call its ref `<ref>`. If none is found, skip migration and continue with a fresh setup.
+2. Read these from `<ref>` with `git show <ref>:<path>` (skip any that do not exist there): `.claude/skills/job-application-assistant/01-candidate-profile.md` through `07-interview-prep.md`, `.claude/skills/job-scraper/search-queries.md`, and `CLAUDE.md`.
+3. Build the new files with this mapping:
+
+   | Legacy region | New home |
+   |---|---|
+   | `01-candidate-profile.md` (all) | `profile/candidate.md` |
+   | `02-behavioral-profile.md` (all) | `profile/behavioral.md` |
+   | `03-writing-style.md` `## Patterns Observed in Past Applications` | `profile/writing-patterns.md` |
+   | `04-job-evaluation.md` match areas, experience lines, career goals, energizing/draining tasks, life-situation lines, permit second gate, `## Calibration from Past Applications` | `profile/evaluation.md` (Skill Match Areas, Experience Areas, Career Goals, Motivation, Life Situation, Eligibility Constraints, Calibration) |
+   | `05-cv-templates.md` profile statements (incl. `[Used for: ...]`), `ACTIVE-TEMPLATE` block | `profile/cv.md` (Profile Statements, Active Template) |
+   | `06-cover-letter-templates.md` extracted patterns, `ACTIVE-TEMPLATE` block | `profile/cover-letter.md` (Patterns From Past Letters, Active Template) |
+   | `07-interview-prep.md` `## Ready-Made STAR Examples`, `## STAR Candidates (Complete Manually)` | `profile/star.md` |
+   | `job-scraper/search-queries.md` (all) | `profile/search-queries.md` |
+   | `CLAUDE.md` Identity fields `LinkedIn headline`, `CV language`; `## Certifications`; What Excites You, Target Sectors, Deal-breakers | `profile/candidate.md` (Identity, Certifications); `profile/evaluation.md` (What Excites You, Target Sectors, Deal-breakers) |
+
+   The contact details in the legacy `05`/`06` LaTeX blocks and the rest of the legacy `CLAUDE.md` summary are used only to cross-check `profile/candidate.md`. Report every conflict (for example a different job title or email) and ask the user which to keep. Never silently pick one.
+4. Show every proposed `profile/*.md` file in full and write them only after the user confirms.
+5. Tell the user: "Your data is now in `profile/`. If git still shows merge conflicts in files under `.claude/skills/`, resolve them by taking the upstream version, for example `git checkout --theirs .claude/skills/job-application-assistant/04-job-evaluation.md`. Your old data stays in git history." Migration deletes nothing.
 
 ### Step 0b: Choose a path
 

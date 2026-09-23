@@ -125,5 +125,40 @@ class SetupPathAProjectsIngestion(unittest.TestCase):
         self.assertIn("New independent project:", self.text)
 
 
+class SetupLegacyMigration(unittest.TestCase):
+    def setUp(self):
+        text = COMMAND.read_text(encoding="utf-8")
+        step0 = _sections(text)["Step 0: Welcome & Choose Path"]
+        self.assertIn("#### Legacy fork migration", step0)
+        self.block = step0.split("#### Legacy fork migration", 1)[1].split("\n### ", 1)[0]
+
+    def test_detection_uses_git_history_and_the_sentinel(self):
+        self.assertIn("git show", self.block)
+        self.assertIn("ORIG_HEAD", self.block)
+        self.assertIn("[YOUR_EMAIL]", self.block)
+        self.assertIn("01-candidate-profile.md", self.block)
+
+    def test_mapping_covers_every_legacy_region(self):
+        for legacy in ("01-candidate-profile.md", "02-behavioral-profile.md", "03-writing-style.md",
+                       "04-job-evaluation.md", "05-cv-templates.md", "06-cover-letter-templates.md",
+                       "07-interview-prep.md", "search-queries.md", "CLAUDE.md"):
+            self.assertIn(legacy, self.block, f"migration mapping omits {legacy}")
+
+    def test_migration_carries_active_template(self):
+        self.assertIn("ACTIVE-TEMPLATE", self.block)
+        self.assertIn("profile/cv.md", self.block)
+        self.assertIn("profile/cover-letter.md", self.block)
+
+    def test_migration_reports_conflicts(self):
+        self.assertIn("conflict", self.block.lower())
+        self.assertIn("never silently", self.block.lower())
+
+    def test_migration_confirms_and_never_deletes(self):
+        low = self.block.lower()
+        self.assertIn("confirm", low)
+        self.assertIn("deletes nothing", low)
+        self.assertIn("git checkout --theirs", self.block)
+
+
 if __name__ == "__main__":
     unittest.main()
