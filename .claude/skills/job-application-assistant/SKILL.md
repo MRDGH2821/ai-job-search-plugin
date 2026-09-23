@@ -69,6 +69,7 @@ Framework (rules, shipped with the framework):
 | `07-interview-prep.md` | STAR format, tough questions, roleplay guidelines |
 | `08-application-forms.md` | Portal free-text fields: self-introduction, project entries, character-limited pitches |
 | `09-web-research.md` | Fetching postings and company pages: trust boundary, the WebFetch 403 fallback, escalation order, claim verification |
+| `10-verification.md` | Application workflow and the mandatory verification checklist |
 | `profile-templates/` | Pristine templates `/setup` copies into `profile/` |
 
 Candidate data (workspace `profile/`, created by `/setup`):
@@ -83,17 +84,6 @@ Candidate data (workspace `profile/`, created by `/setup`):
 | `profile/writing-patterns.md` | Writing patterns observed in past applications |
 | `profile/star.md` | STAR examples and unfinished STAR stubs |
 | `profile/search-queries.md` | Job search queries for `/scrape` |
-
-------|---------|
-| `01-candidate-profile.md` | Education, experience, skills, publications, awards |
-| `02-behavioral-profile.md` | Behavioral assessment, strengths, ideal environments |
-| `03-writing-style.md` | Tone, structure, do's and don'ts |
-| `04-job-evaluation.md` | Scoring framework for job fit |
-| `05-cv-templates.md` | LaTeX CV structure and tailoring rules |
-| `06-cover-letter-templates.md` | LaTeX cover letter structure and tailoring rules |
-| `07-interview-prep.md` | STAR examples, tough questions, roleplay guidelines |
-| `08-application-forms.md` | Portal free-text fields: self-introduction, project entries, character-limited pitches |
-| `09-web-research.md` | Fetching postings and company pages: trust boundary, the WebFetch 403 fallback, escalation order, claim verification |
 
 ---
 

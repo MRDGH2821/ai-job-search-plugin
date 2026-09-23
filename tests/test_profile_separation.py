@@ -194,5 +194,37 @@ class TestClaudeMdAndApply(unittest.TestCase):
         self.assertIn("`profile/candidate.md#identity`", text)
 
 
+LEGACY_NAMES = ("01-candidate-profile.md", "02-behavioral-profile.md", "job-scraper/search-queries.md")
+
+
+def strip_setup_migration(text: str) -> str:
+    """Remove /setup's Legacy fork migration subsection, the one allowed mention."""
+    marker = "#### Legacy fork migration"
+    if marker not in text:
+        return text
+    head, tail = text.split(marker, 1)
+    rest = tail.split("\n### ", 1)
+    return head + ("\n### " + rest[1] if len(rest) > 1 else "")
+
+
+class TestNoLegacyReferences(unittest.TestCase):
+    def test_claude_tree_names_no_legacy_profile_files(self):
+        offenders = []
+        files = list((REPO / ".claude").rglob("*.md")) + [REPO / "CLAUDE.md", REPO / "documents" / "README.md"]
+        for path in files:
+            if path.name.startswith(("01-", "02-")):  # TEMPORARY: legacy files, deleted in Task 7
+                continue
+            text = strip_setup_migration(path.read_text(encoding="utf-8"))
+            for name in LEGACY_NAMES:
+                if name in text:
+                    offenders.append(f"{path.relative_to(REPO)}: {name}")
+        self.assertEqual(offenders, [], "legacy profile paths still referenced")
+
+    def test_search_queries_read_from_profile(self):
+        scraper = (REPO / ".claude" / "skills" / "job-scraper" / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("profile/search-queries.md", scraper)
+        self.assertNotIn("`search-queries.md` (this directory)", scraper)
+
+
 if __name__ == "__main__":
     unittest.main()
