@@ -169,17 +169,17 @@ jobs:
           fi
       - name: Verify extractable PDF text
         run: |
-          python3 tools/verify_pdf.py cv/main_example.pdf --min-chars 100
-          python3 tools/verify_pdf.py cover_letters/cover_example.pdf --min-chars 100
+          python3 plugins/ai-job-search/skills/job-tools/scripts/verify_pdf.py cv/main_example.pdf --min-chars 100
+          python3 plugins/ai-job-search/skills/job-tools/scripts/verify_pdf.py cover_letters/cover_example.pdf --min-chars 100
       - name: Assert stock PDF structure (upstream template only)
         if: github.repository == 'MadsLorentzen/ai-job-search'
         run: |
-          python3 tools/verify_pdf.py cv/main_example.pdf \
+          python3 plugins/ai-job-search/skills/job-tools/scripts/verify_pdf.py cv/main_example.pdf \
             --pages 2 \
             --contains '[your.email@example.com]' \
             --contains 'Professional Experience' \
             --contains 'Achievement'
-          python3 tools/verify_pdf.py cover_letters/cover_example.pdf \
+          python3 plugins/ai-job-search/skills/job-tools/scripts/verify_pdf.py cover_letters/cover_example.pdf \
             --pages 1 \
             --contains 'your.email@example.com' \
             --contains 'Dear [Hiring Manager / Team]'
@@ -188,7 +188,7 @@ jobs:
     # The matrix is discovered, not hardcoded, so a portal CLI added in a fork
     # (the /add-portal path) gets typechecked and tested without the fork
     # having to edit this workflow - the same reason security-guards globs
-    # .agents/**/package.json instead of naming the shipped portals.
+    # plugins/**/package.json and .agents/**/package.json instead of naming the shipped portals.
     name: Discover portal CLIs
     runs-on: ubuntu-latest
     outputs:
@@ -197,8 +197,8 @@ jobs:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - id: list
         run: |
-          tools=$(find .agents/skills -mindepth 3 -maxdepth 3 -path '*/cli/package.json' \
-            | cut -d/ -f3 | sort | jq -R . | jq -cs .)
+          tools=$(find plugins/*/skills .agents/skills -mindepth 3 -maxdepth 3 -path '*/cli/package.json' 2>/dev/null \
+            | xargs -r -n1 dirname | xargs -r -n1 dirname | sort | jq -R . | jq -cs .)
           echo "Discovered portal CLIs: $tools"
           echo "tools=$tools" >> "$GITHUB_OUTPUT"
 
@@ -215,9 +215,9 @@ jobs:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
       - run: bun install
-        working-directory: .agents/skills/${{ matrix.tool }}/cli
+        working-directory: ${{ matrix.tool }}/cli
       - run: bun run typecheck
-        working-directory: .agents/skills/${{ matrix.tool }}/cli
+        working-directory: ${{ matrix.tool }}/cli
       - name: Run fixture/mock tests when present
         run: |
           if find tests -type f -name '*.test.ts' | grep -q .; then
@@ -225,7 +225,7 @@ jobs:
           else
             echo "No Bun tests found for ${{ matrix.tool }}; skipping"
           fi
-        working-directory: .agents/skills/${{ matrix.tool }}/cli
+        working-directory: ${{ matrix.tool }}/cli
 
   placeholder-integrity:
     name: Placeholder integrity (upstream template only)
@@ -245,8 +245,8 @@ jobs:
           check cv/main_example.tex '\\name{\[First\]}{\[Last\]}'
           check cv/main_example.tex '\\email{\[your\.email@example\.com\]}'
           check cover_letters/cover_example.tex '\[YOUR NAME\]'
-          check .claude/skills/job-application-assistant/profile-templates/candidate.md '\[YOUR_EMAIL\]'
-          check .claude/skills/job-application-assistant/profile-templates/evaluation.md '\[YOUR_PRIMARY_SKILLS\]'
+          check plugins/ai-job-search/skills/job-application-assistant/profile-templates/candidate.md '\[YOUR_EMAIL\]'
+          check plugins/ai-job-search/skills/job-application-assistant/profile-templates/evaluation.md '\[YOUR_PRIMARY_SKILLS\]'
           if [ -e profile ]; then
             echo "::error file=profile::profile/ must not be committed to the upstream template - personal data may have been committed"
             fail=1

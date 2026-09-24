@@ -23,9 +23,9 @@ class TestPaths(unittest.TestCase):
 
     def test_job_tools_hold_every_runtime_script(self):
         for script in ("rank_state.py", "job_key.py", "verify_pdf.py", "verify_layout.py",
-                       "robots_check.py", "convert_salary_excel.py"):
+                       "robots_check.py", "convert_salary_excel.py", "salary_lookup.py"):
             self.assertTrue((paths.JOB_TOOLS / script).is_file(), script)
-        self.assertTrue(paths.SALARY_LOOKUP.is_file())  # Task 2 moves it into JOB_TOOLS
+        self.assertEqual(paths.SALARY_LOOKUP, paths.JOB_TOOLS / "salary_lookup.py")
 
     def test_framework_markdown_covers_commands_and_skills(self):
         md = paths.framework_markdown()

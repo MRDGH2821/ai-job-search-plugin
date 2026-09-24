@@ -46,7 +46,7 @@ def _sections(text: str) -> dict[str, str]:
 class RankCommandSpec(unittest.TestCase):
     def test_command_file_exists_with_lint_compliant_header(self):
         self.assertTrue(COMMAND.is_file(), "command spec missing")
-        first_line = COMMAND.read_text(encoding="utf-8").splitlines()[0]
+        first_line = (lambda t: t.split("\n---\n", 1)[1] if t.startswith("---\n") else t)(COMMAND.read_text(encoding="utf-8")).lstrip().splitlines()[0]
         self.assertTrue(
             first_line.startswith("# /rank"),
             f"header must start with '# /rank' (lint_skills.py enforces it), got: {first_line!r}",

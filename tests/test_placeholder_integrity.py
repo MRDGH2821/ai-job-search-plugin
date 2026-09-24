@@ -90,7 +90,7 @@ class TestProfileSentinelIsDataLocated(unittest.TestCase):
     def test_ci_checks_a_data_placeholder_not_the_header_comment(self):
         ci = CI.read_text(encoding="utf-8")
         self.assertIn(
-            "check .claude/skills/job-application-assistant/profile-templates/candidate.md '\\[YOUR_EMAIL\\]'",
+            "check plugins/ai-job-search/skills/job-application-assistant/profile-templates/candidate.md '\\[YOUR_EMAIL\\]'",
             ci,
             "candidate.md's sentinel must sit in the Identity data /setup fills",
         )

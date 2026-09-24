@@ -14,7 +14,7 @@ class ExpandCommandTests(unittest.TestCase):
 
     def test_expand_command_file_starts_with_correct_header(self):
         text = EXPAND_COMMAND_FILE.read_text(encoding="utf-8")
-        first_line = text.lstrip().splitlines()[0]
+        first_line = (lambda t: t.split("\n---\n", 1)[1] if t.startswith("---\n") else t)(text).lstrip().splitlines()[0]
         self.assertTrue(
             first_line.startswith("# /expand"),
             f"Command file must start with '# /expand', got: {first_line!r}",

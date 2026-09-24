@@ -33,7 +33,7 @@ class HtmlReportCommandFileTests(unittest.TestCase):
     def test_command_file_starts_with_correct_header(self):
         """lint_skills.py rejects command files that don't start with '# /<name>'."""
         text = COMMAND_FILE.read_text(encoding="utf-8")
-        first_line = text.lstrip().splitlines()[0]
+        first_line = (lambda t: t.split("\n---\n", 1)[1] if t.startswith("---\n") else t)(text).lstrip().splitlines()[0]
         self.assertTrue(
             first_line.startswith("# /html-report"),
             f"Command file must start with '# /html-report', got: {first_line!r}",

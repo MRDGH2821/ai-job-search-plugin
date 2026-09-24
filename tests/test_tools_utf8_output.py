@@ -26,7 +26,7 @@ except ImportError:
     openpyxl = None
 
 REPO = Path(__file__).resolve().parent.parent
-TOOLS = REPO / "tools"
+TOOLS = paths.JOB_TOOLS
 
 # One name per script family that cp1252 cannot encode.
 CYRILLIC = "Яндекс"
@@ -116,8 +116,8 @@ class ToolsWriteUtf8(unittest.TestCase):
         driver.write_text(
             "import sys\n"
             "from unittest.mock import patch\n"
-            f"sys.path.insert(0, {str(REPO)!r})\n"
-            "from tools import verify_layout as v\n"
+            f"sys.path.insert(0, {str(paths.JOB_TOOLS)!r})\n"
+            "import verify_layout as v\n"
             "A4 = 842.0\n"
             "def line(text, top, left=70.0, height=10.0):\n"
             "    return v.Line(top=top, bottom=top + height, left=left, height=height, text=text)\n"

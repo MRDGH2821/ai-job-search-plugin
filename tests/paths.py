@@ -4,33 +4,37 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-FW = REPO / ".claude" / "skills" / "job-application-assistant"
+PLUGIN = REPO / "plugins" / "ai-job-search"
+MARKET = REPO / "plugins" / "danish-job-portals"
+SKILLS = PLUGIN / "skills"
+FW = SKILLS / "job-application-assistant"
 TPL = FW / "profile-templates"
-JOB_TOOLS = REPO / "tools"
+JOB_TOOLS = SKILLS / "job-tools" / "scripts"
 SETTINGS = REPO / ".claude" / "settings.json"
-_COMMANDS = REPO / ".claude" / "commands"
-_SKILLS = REPO / ".claude" / "skills"
-_PORTALS = REPO / ".agents" / "skills"
-SALARY_LOOKUP = REPO / "salary_lookup.py"  # Task 2: moves under JOB_TOOLS
+SALARY_LOOKUP = JOB_TOOLS / "salary_lookup.py"
 
 
 def command_file(name: str) -> Path:
-    return _COMMANDS / f"{name}.md"
+    return SKILLS / name / "SKILL.md"
 
 
 def skill_file(name: str) -> Path:
-    return _SKILLS / name / "SKILL.md"
+    return SKILLS / name / "SKILL.md"
 
 
 def portal_dirs() -> list[Path]:
-    return sorted(p for p in _PORTALS.glob("*-search") if (p / "SKILL.md").is_file())
+    found = list(SKILLS.glob("*-search")) + list((MARKET / "skills").glob("*-search"))
+    return sorted((p for p in found if (p / "SKILL.md").is_file()), key=lambda p: p.name)
+
+
+def all_skill_files() -> list[Path]:
+    return sorted(REPO.glob("plugins/*/skills/*/SKILL.md"))
 
 
 def framework_markdown() -> list[Path]:
-    return sorted(_COMMANDS.glob("*.md")) + sorted(_SKILLS.rglob("*.md"))
+    return sorted(p for p in REPO.glob("plugins/*/skills/**/*.md") if "node_modules" not in p.parts)
 
 
 def add_job_tools_to_sys_path() -> None:
-    for folder in (JOB_TOOLS, SALARY_LOOKUP.parent):
-        if str(folder) not in sys.path:
-            sys.path.insert(0, str(folder))
+    if str(JOB_TOOLS) not in sys.path:
+        sys.path.insert(0, str(JOB_TOOLS))
