@@ -71,6 +71,15 @@ per-file diff commands.
 
 ### Changed
 
+- **BREAKING (forks): the framework moves into plugins** (`.claude-plugin/marketplace.json`,
+  `plugins/ai-job-search/`, `plugins/danish-job-portals/`, `.claude/settings.json`,
+  `tools/security_guards.py`) - commands become user-only plugin skills (still `/apply`
+  etc.), the six shipped portals and the runtime scripts move into the plugins, and each
+  skill pre-approves its own scripts in `allowed-tools`, reviewed by a new
+  `security_guards.py` check. The clone loads both plugins in place once the folder is
+  trusted; `/plugin marketplace add MadsLorentzen/ai-job-search` installs them anywhere.
+  `salary_data.json` is read from the workspace root. Upgrading: SETUP.md section 10.
+
 - **BREAKING (personalized forks): candidate data moves to `profile/`**
   (`.claude/skills/job-application-assistant/profile-templates/`, `.claude/commands/setup.md`,
   `.claude/commands/reset.md`, `CLAUDE.md`, `10-verification.md`) - `/setup` now writes

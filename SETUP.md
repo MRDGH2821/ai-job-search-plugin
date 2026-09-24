@@ -180,14 +180,13 @@ Or manually: fork on GitHub, then clone your fork.
 > identically either way.
 
 ## 3. Install job search CLI dependencies
-Run these from the repository root.
+Run these from the repository root. First start Claude Code here once and accept the folder-trust prompt: that is what loads the `ai-job-search` and `danish-job-portals` plugins from `plugins/`.
 
 - PowerShell:
 
 ```powershell
-$tools = @("jobbank-search", "jobdanmark-search", "jobindex-search", "jobnet-search", "linkedin-search", "freehire-search")
-foreach ($tool in $tools) {
-  Push-Location ".agents/skills/$tool/cli"
+Get-ChildItem plugins/danish-job-portals/skills/*/cli | ForEach-Object {
+  Push-Location $_.FullName
   bun install
   Pop-Location
 }
@@ -195,12 +194,10 @@ foreach ($tool in $tools) {
 
 - Bash / zsh / Git Bash:
 ```bash
-for tool in jobbank-search jobdanmark-search jobindex-search jobnet-search linkedin-search freehire-search; do
-  (cd .agents/skills/$tool/cli && bun install)
-done
+for cli in plugins/danish-job-portals/skills/*/cli; do (cd "$cli" && bun install); done
 ```
 
-For `linkedin-search` and `freehire-search` the install is optional: both have zero runtime dependencies and run with plain `bun`; `bun install` only pulls TypeScript dev types.
+The Danish portals also install their dependencies themselves on first use. `linkedin-search` and `freehire-search` need no install: both have zero runtime dependencies and run with plain `bun`.
 
 If you're outside Denmark, you can generate an equivalent search skill for your local job board with `/add-portal` — it scaffolds the same CLI structure for any public portal and test-runs a live query before registering. See the "Job search tools" section in the README.
 
@@ -254,11 +251,11 @@ The `--section search` option is especially useful as your priorities evolve. It
 
 If you have salary data (from a union, salary survey, Glassdoor, or personal research):
 
-1. **Option A:** Create `salary_data.json` manually in the repo root (see `tools/README_SALARY_TOOL.md` for the format)
+1. **Option A:** Create `salary_data.json` manually in the repo root, your workspace (see `plugins/ai-job-search/skills/job-tools/scripts/README_SALARY_TOOL.md` for the format)
 2. **Option B:** Convert from Excel:
    ```bash
    pip install openpyxl
-   python3 tools/convert_salary_excel.py path/to/salary-data.xlsx --source "My Salary Data 2025"
+   python3 plugins/ai-job-search/skills/job-tools/scripts/convert_salary_excel.py path/to/salary-data.xlsx --source "My Salary Data 2025"
    ```
 
 This creates `salary_data.json` which the `/apply` workflow uses for salary benchmarking. If you skip this step, salary lookup is simply omitted.
@@ -332,11 +329,21 @@ Upstream keeps improving the methodology files your fork has personalized, so pl
 
 Older versions stored your profile inside framework files (`.claude/skills/job-application-assistant/01-candidate-profile.md` and its neighbours). Newer versions keep it in `profile/`. Upgrading across that change:
 
-1. `git merge upstream/master`. Expect conflicts in files under `.claude/skills/`.
-2. Resolve every conflict under `.claude/skills/` and in `CLAUDE.md` by taking upstream's version: `git checkout --theirs <path>` for each, then `git add` them. If git reports that upstream deleted a file you changed (for example `01-candidate-profile.md`), run `git rm <path>` for it instead. Your data is not lost; it is still in your git history.
-3. Restore the blank templates. Git's rename detection can merge your old profile into the new template files **without reporting a conflict**. While the merge is still in progress, run `git checkout MERGE_HEAD -- .claude/skills/job-application-assistant/profile-templates/` and `git add` that folder.
+1. `git merge upstream/master`. Expect conflicts in files under `.claude/skills/` or `plugins/`.
+2. Resolve every conflict under `.claude/skills/` or `plugins/` and in `CLAUDE.md` by taking upstream's version: `git checkout --theirs <path>` for each, then `git add` them. If git reports that upstream deleted a file you changed (for example `01-candidate-profile.md`), run `git rm <path>` for it instead. Your data is not lost; it is still in your git history.
+3. Restore the blank templates. Git's rename detection can merge your old profile into the new template files **without reporting a conflict**. While the merge is still in progress, run `git checkout MERGE_HEAD -- plugins/ai-job-search/skills/job-application-assistant/profile-templates/` and `git add` that folder.
 4. Commit the merge, then run `/setup`. It finds your old profile in git history, shows you the new `profile/` files built from it, and writes them only after you confirm.
 5. Commit `profile/` to your own (private) repository.
+
+## 10. Upgrading across the plugin layout change
+
+The framework now ships as two Claude Code plugins inside this repo (`plugins/ai-job-search/`, `plugins/danish-job-portals/`).
+
+1. After merging, start Claude Code in your clone and accept the folder-trust prompt once. Until you do, the plugins do not load and `/apply` and the other commands are missing.
+2. If you had edited a command, your edit followed the rename: `.claude/commands/<x>.md` is now `plugins/ai-job-search/skills/<x>/SKILL.md`, with a short frontmatter block added on top. A conflict there resolves like any other.
+3. Your own portals from `/add-portal` stay in `.agents/skills/`. The shipped ones moved into the plugins.
+4. Not in Denmark? Turn the Danish portals off in `.claude/settings.local.json`: `{"enabledPlugins": {"danish-job-portals@ai-job-search": false}}`.
+5. `salary_data.json` stays in your repo root; the salary tool now looks for it in the folder you run Claude in.
 
 ## Troubleshooting
 
@@ -355,7 +362,7 @@ Make sure Bun is installed and you ran `bun install` in each CLI directory. The 
 The cover letter template expects fonts in `cover_letters/OpenFonts/fonts/`. Make sure this directory exists and contains the Lato and Raleway font files.
 
 ### Stale `.claude/settings.local.json` from an older clone
-Shared Claude Code permissions now live in `.claude/settings.json` (scoped to `bun run`, `python salary_lookup.py`, and `python3 salary_lookup.py`). Earlier versions of this repo committed a broader `.claude/settings.local.json` that pre-approved `Bash(curl:*)`, `Bash(python:*)` and `Bash(bun:*)`. If you cloned before that change, git leaves the old file behind in your working copy, and its permissions still apply on top of `settings.json`. Delete it (or trim it to your own personal overrides):
+Shared Claude Code permissions now live in `.claude/settings.json` and in each plugin skill's `allowed-tools`. Earlier versions of this repo committed a broader `.claude/settings.local.json` that pre-approved `Bash(curl:*)`, `Bash(python:*)` and `Bash(bun:*)`. If you cloned before that change, git leaves the old file behind in your working copy, and its permissions still apply on top of `settings.json`. Delete it (or trim it to your own personal overrides):
 
 ```bash
 rm .claude/settings.local.json
