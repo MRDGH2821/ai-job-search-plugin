@@ -55,6 +55,8 @@ ALLOWED_SKILL_TOOLS = {
     "Bash(python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/verify_layout.py:*)",
     "Bash(python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/salary_lookup.py:*)",
     "Bash(python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/sync_instructions.py:*)",
+    "Bash(python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/init_workspace.py:*)",
+    "Bash(git init)",
     "Bash(pdftotext:*)",
     "Bash(bun --version)",
     # The user's own portals from /add-portal (workspace .agents/skills/).

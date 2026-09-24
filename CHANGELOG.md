@@ -15,6 +15,13 @@ per-file diff commands.
 
 ### Added
 
+- **`/init-workspace`: lay out a workspace from the plugin** (`plugins/ai-job-search/skills/init-workspace/`,
+  `job-tools/scripts/init_workspace.py`, `job-tools/workspace-template/`) - a plugin install
+  has no repository folders, so this copies the author's layout (CV and cover-letter
+  sources, fonts, `documents/` tree, state folders, privacy `.gitignore`) into any folder,
+  never overwriting, then writes the workspace instructions and offers `git init`. `/setup`
+  runs it first. A test keeps the template identical to this repository's own files.
+
 - **`/sync-instructions`: workspace instructions for any harness** (#493,
   `plugins/ai-job-search/skills/sync-instructions/`, `job-tools/scripts/sync_instructions.py`,
   `AGENTS.md`, `CLAUDE.md`) - plugins cannot ship `CLAUDE.md` and capa cannot carry

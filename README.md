@@ -160,6 +160,7 @@ Postings are treated as untrusted input (the workflow follows no instructions em
 - **`/add-template`** registers your own CV or cover letter template (LaTeX, Typst, or another toolchain) in place of the stock ones. It captures the template's instructions (source extension, compile command, fonts, style rules, page limit), runs a mandatory test compile, and wires the template into `/apply`. See [Custom templates](#custom-templates) below.
 - **`/add-portal`** generates a job-portal search skill for a job board in your market. It investigates the portal (search URL pattern, result structure, access rules), scaffolds the CLI skill from the same structure as the shipped ones, and test-runs a live query before registering. See [Job search tools](#job-search-tools) below.
 
+- **`/init-workspace`** lays out a job-search workspace in the current folder from the plugin's template: CV and cover-letter sources, fonts, the `documents/` tree, state folders and a privacy `.gitignore`. It copies only what is missing and never overwrites. `/setup` runs it for you too.
 - **`/sync-instructions`** writes the framework's standing instructions into your workspace's `AGENTS.md` (one managed block) and makes `CLAUDE.md` import it. Your own text in both files is left alone. `/setup` runs it for you; run it yourself after updating the plugin.
 
 `/reset` is also available, see [Starting over](#starting-over) below.
@@ -368,7 +369,7 @@ To get the most from this, invest time during `/setup` in describing not just yo
 /plugin install danish-job-portals@ai-job-search   # optional, Danish job boards
 ```
 
-Then run Claude in an empty folder and run `/setup`: your candidate data goes into that folder's `profile/`. (A command that lays out the full workspace folder arrives in a later release.)
+Then, in an empty folder, run `/init-workspace` (it lays out the CV and cover-letter sources, fonts, the `documents/` tree and a privacy `.gitignore`, and offers `git init`), then `/setup` to fill in your details.
 
 ## Using other harnesses (capa)
 

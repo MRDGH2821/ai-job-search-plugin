@@ -166,3 +166,48 @@ class TestInitScript(unittest.TestCase):
         self.assertEqual(run(self.root, "--root", str(other)).returncode, 0)
         self.assertTrue((other / "cv" / "main_example.tex").exists())
         self.assertFalse((self.root / "cv").exists())
+
+
+import re  # noqa: E402
+
+INIT_ENTRY = "Bash(python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/init_workspace.py:*)"
+SYNC_ENTRY = "Bash(python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/sync_instructions.py:*)"
+
+
+def frontmatter(path):
+    m = re.match(r"^---\n(.*?)\n---\n", path.read_text(encoding="utf-8"), re.DOTALL)
+    return m.group(1) if m else ""
+
+
+class TestWiring(unittest.TestCase):
+    def test_skill(self):
+        skill = paths.skill_file("init-workspace")
+        fm = frontmatter(skill)
+        self.assertIn("name: init-workspace", fm)
+        self.assertIn("disable-model-invocation: true", fm)
+        for entry in (INIT_ENTRY, SYNC_ENTRY, "Bash(git init)"):
+            self.assertIn(entry, fm)
+        body = skill.read_text(encoding="utf-8").split("\n---\n", 1)[1]
+        self.assertTrue(body.lstrip().startswith("# /init-workspace "))
+        self.assertIn("without asking for confirmation", body)
+        self.assertIn("no `cd`, no `&&`", body)
+        self.assertIn("private repository", body)
+        self.assertIn("/setup", body)
+
+    def test_setup_runs_init_first(self):
+        setup = paths.command_file("setup")
+        self.assertIn(INIT_ENTRY, frontmatter(setup))
+        step0a = setup.read_text(encoding="utf-8").split("### Step 0a:", 1)[1].split("#### Legacy fork migration", 1)[0]
+        self.assertIn("init_workspace.py", step0a)
+        self.assertLess(step0a.index("init_workspace.py"), step0a.index("Create `profile/`"))
+
+    def test_guard_and_docs(self):
+        guards = (paths.REPO / "tools" / "security_guards.py").read_text(encoding="utf-8")
+        self.assertIn(INIT_ENTRY, guards)
+        self.assertIn('"Bash(git init)"', guards)
+        readme = (paths.REPO / "README.md").read_text(encoding="utf-8")
+        self.assertIn("/init-workspace", readme)
+        self.assertNotIn("arrives in a later release", readme)
+        self.assertIn("/init-workspace", (paths.REPO / "SETUP.md").read_text(encoding="utf-8"))
+        changelog = (paths.REPO / "CHANGELOG.md").read_text(encoding="utf-8")
+        self.assertIn("/init-workspace", changelog.split("## [Unreleased]", 1)[1].split("\n## [", 1)[0])
