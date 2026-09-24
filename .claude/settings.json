@@ -1,10 +1,15 @@
 {
   "extraKnownMarketplaces": {
-    "ai-job-search": { "source": { "source": "directory", "path": "./" } }
+    "ai-job-search": {
+      "source": {
+        "source": "directory",
+        "path": "./"
+      }
+    }
   },
   "enabledPlugins": {
     "ai-job-search@ai-job-search": true,
-    "danish-job-portals@ai-job-search": true
+    "danish-job-portals@ai-job-search": false
   },
   "permissions": {
     "allow": [

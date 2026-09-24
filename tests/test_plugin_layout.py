@@ -124,7 +124,7 @@ class TestPermissions(unittest.TestCase):
         self.assertEqual(data["extraKnownMarketplaces"]["ai-job-search"]["source"],
                          {"source": "directory", "path": "./"})
         self.assertIs(data["enabledPlugins"]["ai-job-search@ai-job-search"], True)
-        self.assertIs(data["enabledPlugins"]["danish-job-portals@ai-job-search"], True)
+        self.assertIn("danish-job-portals@ai-job-search", data["enabledPlugins"])
         allow = data["permissions"]["allow"]
         self.assertFalse([a for a in allow if "tools/" in a or "salary_lookup" in a or ".agents/skills/" in a], allow)
 
@@ -215,3 +215,36 @@ class TestProfileGuardReachable(unittest.TestCase):
                                                 or "/setup" not in line):
                     offenders.append(f"{p.relative_to(REPO)}: {line.strip()[:80]}")
         self.assertEqual(offenders, [])
+
+
+class TestReviewFixes(unittest.TestCase):
+    def test_framework_files_do_not_use_cwd_relative_script_paths(self):
+        for md in sorted(paths.FW.glob("*.md")):
+            text = md.read_text(encoding="utf-8")
+            self.assertNotIn("../job-tools/", text, md.name)
+            if "<job-tools>" in text and md.name != "SKILL.md":  # SKILL.md defines it
+                self.assertIn("<job-tools>/scripts/", text, md.name)
+        for skill in ("job-application-assistant", "apply"):
+            text = paths.skill_file(skill).read_text(encoding="utf-8")
+            self.assertIn("`<job-tools>` means `${CLAUDE_SKILL_DIR}/../job-tools`", text, skill)
+
+    def test_shipped_portals_are_not_forked(self):
+        for d in paths.portal_dirs():
+            self.assertNotIn("context", frontmatter(d / "SKILL.md"), d.name)
+
+    def test_danish_portals_are_gated_by_the_plugin_not_the_file(self):
+        for d in paths.portal_dirs():
+            self.assertTrue(str(frontmatter(d / "SKILL.md").get("enabled")).lower().startswith("true"), d.name)
+        data = json.loads(paths.SETTINGS.read_text(encoding="utf-8"))
+        self.assertIs(data["enabledPlugins"]["danish-job-portals@ai-job-search"], False)
+        setup = paths.command_file("setup").read_text(encoding="utf-8")
+        self.assertNotIn("edit each of the four Danish `SKILL.md` files", setup)
+        self.assertIn("danish-job-portals@ai-job-search", setup)
+
+    def test_portal_opt_outs_live_in_the_workspace(self):
+        self.assertIn("disabled-portals", {h for h in __import__("tests.test_profile_separation", fromlist=["headings"]).headings(paths.TPL / "search-queries.md")})
+        scrape = paths.skill_file("job-scraper").read_text(encoding="utf-8")
+        self.assertIn("`profile/search-queries.md#disabled-portals`", scrape)
+        self.assertNotIn("offer to set that portal's `enabled: false`", scrape)
+        tpl = (paths.TPL / "search-queries.md").read_text(encoding="utf-8")
+        self.assertNotIn("under `.agents/skills/*/SKILL.md` and runs its CLI first", tpl)

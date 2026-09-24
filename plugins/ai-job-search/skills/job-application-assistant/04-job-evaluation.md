@@ -4,7 +4,7 @@ framework_version: 1.4.0
 
 # Job Evaluation Framework
 
-Paths starting with `../` are relative to this file's folder.
+`<job-tools>` is the `job-tools` helper-scripts folder; the skill that loaded this file gives its full path.
 
 The candidate's personal inputs (match areas, goals, sectors, deal-breakers, constraints, calibration) live in `profile/evaluation.md`. This file holds the framework only. Apply any findings in `profile/evaluation.md#calibration` when scoring.
 
@@ -118,7 +118,7 @@ Does this role advance career goals and contain tasks that energize?
 
 If the salary lookup tool is configured (`salary_data.json` exists), look up the company:
 ```
-python3 ../job-tools/scripts/salary_lookup.py "<Company Name>" --json
+python3 <job-tools>/scripts/salary_lookup.py "<Company Name>" --json
 ```
 
 If a city is known from the posting, add `--city "<City>"` to narrow results.

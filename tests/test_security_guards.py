@@ -451,5 +451,73 @@ class TestSkillAllowedTools(unittest.TestCase):
         self.assertEqual(errs, [])
 
 
+
+class TestPluginSurfaceGuards(unittest.TestCase):
+    """Final review, branch 2: three ways the plugin layout could widen permissions."""
+
+    def _tree(self):
+        tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, tmp, ignore_errors=True)
+        (tmp / "plugins" / "p" / ".claude-plugin").mkdir(parents=True)
+        (tmp / "plugins" / "p" / ".claude-plugin" / "plugin.json").write_text('{"name": "p"}', encoding="utf-8")
+        return tmp
+
+    def _skill(self, tmp, name, frontmatter_body):
+        d = tmp / "plugins" / "p" / "skills" / name
+        d.mkdir(parents=True)
+        (d / "SKILL.md").write_text(f"---\nname: {name}\ndescription: d\n{frontmatter_body}---\n# x\n", encoding="utf-8")
+
+    def _errors(self, tmp, *checks):
+        import importlib
+        mod = importlib.reload(security_guards)
+        mod.ROOT = tmp
+        mod.errors.clear()
+        for check in checks:
+            getattr(mod, check)()
+        found = list(mod.errors)
+        importlib.reload(security_guards)
+        return found
+
+    def test_list_form_allowed_tools_is_reviewed(self):
+        tmp = self._tree()
+        self._skill(tmp, "x", "allowed-tools:\n  - Read\n  - Bash(rm -rf:*)\n")
+        errs = self._errors(tmp, "check_skill_tools")
+        self.assertTrue(any("Bash(rm -rf:*)" in e for e in errs), errs)
+
+    def test_bare_bash_needs_review(self):
+        tmp = self._tree()
+        self._skill(tmp, "x", "allowed-tools: Read, Bash\n")
+        errs = self._errors(tmp, "check_skill_tools")
+        self.assertTrue(any("bare Bash" in e for e in errs), errs)
+
+    def test_bare_bash_allowed_for_the_reviewed_skill(self):
+        tmp = self._tree()
+        self._skill(tmp, "job-application-assistant", "allowed-tools: Read, Bash\n")
+        self.assertEqual(self._errors(tmp, "check_skill_tools"), [])
+
+    def test_plugin_hooks_and_mcp_fail(self):
+        for make in (
+            lambda t: ((t / "plugins" / "p" / "hooks").mkdir(), (t / "plugins" / "p" / "hooks" / "hooks.json").write_text("{}")),
+            lambda t: (t / "plugins" / "p" / ".mcp.json").write_text("{}"),
+            lambda t: (t / "plugins" / "p" / ".claude-plugin" / "plugin.json").write_text('{"name": "p", "mcpServers": {}}'),
+            lambda t: (t / "plugins" / "p" / ".claude-plugin" / "plugin.json").write_text('{"name": "p", "hooks": {}}'),
+        ):
+            tmp = self._tree()
+            make(tmp)
+            self.assertTrue(self._errors(tmp, "check_plugin_surface"), "plugin hooks/MCP must fail")
+
+    def test_settings_marketplace_and_plugins_are_pinned(self):
+        for settings in (
+            {"extraKnownMarketplaces": {"evil": {"source": {"source": "github", "repo": "x/y"}}}},
+            {"enabledPlugins": {"other@evil": True}},
+        ):
+            tmp = self._tree()
+            (tmp / ".claude").mkdir()
+            data = {"permissions": {"allow": sorted(security_guards.ALLOWED_PERMISSIONS)}}
+            data.update(settings)
+            (tmp / ".claude" / "settings.json").write_text(json.dumps(data), encoding="utf-8")
+            self.assertTrue(self._errors(tmp, "check_permissions"), settings)
+
+
 if __name__ == "__main__":
     unittest.main()

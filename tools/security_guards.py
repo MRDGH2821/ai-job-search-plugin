@@ -63,6 +63,23 @@ ALLOWED_SKILL_TOOLS = {
     "Bash(bun install --cwd ${CLAUDE_SKILL_DIR}/cli)",
 }
 
+# Skills allowed a bare `Bash` (every command pre-approved). Reviewed: the core
+# application skill has shipped it since before the plugin layout.
+ALLOWED_BARE_BASH = {"job-application-assistant"}
+
+# The clone's settings.json loads exactly these marketplaces and plugins. A PR
+# that points the clone at another marketplace or plugin makes every fork load
+# code nobody reviewed here, so it must change these values in the same PR.
+ALLOWED_MARKETPLACES = {
+    "ai-job-search": {"source": {"source": "directory", "path": "./"}},
+}
+ALLOWED_PLUGINS = {"ai-job-search@ai-job-search", "danish-job-portals@ai-job-search"}
+
+# Plugin components that run code without a model decision or a prompt. The
+# template ships none; like ALLOWED_HOOKS, adding one needs a guard change.
+FORBIDDEN_PLUGIN_KEYS = {"hooks", "mcpServers", "lspServers"}
+FORBIDDEN_PLUGIN_FILES = ("hooks", ".mcp.json", ".lsp.json")
+
 # Personal-data ignore rules that must never disappear from .gitignore.
 REQUIRED_IGNORE_RULES = [
     "salary_data.json",
@@ -196,6 +213,21 @@ def check_permissions() -> None:
                             "in the same PR so the addition is explicit and reviewable."
                         )
 
+    marketplaces = data.get("extraKnownMarketplaces", {})
+    if marketplaces != ALLOWED_MARKETPLACES and marketplaces:
+        errors.append(
+            ".claude/settings.json: extraKnownMarketplaces differs from the reviewed value "
+            f"{ALLOWED_MARKETPLACES!r}. Update ALLOWED_MARKETPLACES in tools/security_guards.py "
+            "in the same PR if this is intentional."
+        )
+    enabled = data.get("enabledPlugins", {})
+    if not isinstance(enabled, dict) or set(enabled) - ALLOWED_PLUGINS:
+        errors.append(
+            ".claude/settings.json: enabledPlugins names a plugin outside the reviewed set "
+            f"{sorted(ALLOWED_PLUGINS)}. Update ALLOWED_PLUGINS in tools/security_guards.py "
+            "in the same PR if this is intentional."
+        )
+
     permissions = data.get("permissions", {})
     if not isinstance(permissions, dict):
         errors.append(".claude/settings.json: permissions must be an object")
@@ -280,23 +312,65 @@ def check_package_manifests() -> None:
 
 
 
+def _allowed_tools_value(frontmatter: str) -> str:
+    """The allowed-tools value, in inline or YAML-list form, as one string."""
+    lines = frontmatter.splitlines()
+    for i, line in enumerate(lines):
+        if line.startswith("allowed-tools:"):
+            parts = [line.split(":", 1)[1]]
+            for follow in lines[i + 1:]:
+                if follow.startswith((" ", "\t", "-")):
+                    parts.append(follow.strip().lstrip("-").strip())
+                else:
+                    break
+            return ", ".join(p for p in parts if p.strip())
+    return ""
+
+
 def check_skill_tools() -> None:
     for skill in sorted(ROOT.glob("plugins/*/skills/*/SKILL.md")):
         text = skill.read_text(encoding="utf-8")
         m = re.match(r"^---\n(.*?)\n---\n", text, re.DOTALL)
         if not m:
             continue
-        line = next((l for l in m.group(1).splitlines() if l.startswith("allowed-tools:")), "")
-        for entry in re.findall(r"Bash\([^)]*\)", line):
+        value = _allowed_tools_value(m.group(1))
+        for entry in re.findall(r"Bash\([^)]*\)", value):
             if entry not in ALLOWED_SKILL_TOOLS:
                 errors.append(
                     f"{skill.relative_to(ROOT)}: allowed-tools entry not in the reviewed allowlist: "
                     f"{entry!r}. Add it to ALLOWED_SKILL_TOOLS in tools/security_guards.py in the same PR."
                 )
+        if re.search(r"(^|[,\s])Bash\s*(,|$)", value) and skill.parent.name not in ALLOWED_BARE_BASH:
+            errors.append(
+                f"{skill.relative_to(ROOT)}: allowed-tools grants bare Bash (every command). "
+                "Name the exact commands, or add the skill to ALLOWED_BARE_BASH in "
+                "tools/security_guards.py in the same PR."
+            )
+
+
+def check_plugin_surface() -> None:
+    for plugin in sorted(p for p in ROOT.glob("plugins/*") if p.is_dir()):
+        for name in FORBIDDEN_PLUGIN_FILES:
+            if (plugin / name).exists():
+                errors.append(
+                    f"{(plugin / name).relative_to(ROOT)}: plugins in this template ship no hooks, "
+                    "MCP or LSP servers - they run code with no prompt. Extend the guard in the same PR "
+                    "if this is intentional."
+                )
+        manifest = plugin / ".claude-plugin" / "plugin.json"
+        try:
+            data = json.loads(manifest.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            errors.append(f"{manifest.relative_to(ROOT)}: unreadable or invalid JSON: {exc}")
+            continue
+        for key in FORBIDDEN_PLUGIN_KEYS & set(data if isinstance(data, dict) else {}):
+            errors.append(f"{manifest.relative_to(ROOT)}: '{key}' is not allowed in a template plugin manifest.")
+
 
 def main() -> int:
     check_permissions()
     check_skill_tools()
+    check_plugin_surface()
     check_gitignore()
     check_package_manifests()
     if errors:
@@ -305,8 +379,8 @@ def main() -> int:
             print(f"  - {err}")
         return 1
     print(
-        "security_guards: OK (permissions allowlist, skill allowed-tools, hooks allowlist, "
-        "gitignore rules, package manifests)"
+        "security_guards: OK (permissions allowlist, skill allowed-tools, plugin surface, hooks "
+        "allowlist, gitignore rules, package manifests)"
     )
     return 0
 

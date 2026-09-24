@@ -89,7 +89,7 @@ cd ai-job-search
 
 ### 2. Load the plugins
 
-Start Claude Code in the clone and accept the folder-trust prompt. `.claude/settings.json` then loads both plugins from `plugins/` in place: `/apply`, `/setup` and the rest are plugin skills now. Nothing loads until the folder is trusted.
+Start Claude Code in the clone and accept the folder-trust prompt. `.claude/settings.json` then loads the `ai-job-search` plugin from `plugins/` in place: `/apply`, `/setup` and the rest are plugin skills now. Nothing loads until the folder is trusted. The Danish portals are a separate plugin, off by default; `/setup` turns them on if your market is Denmark.
 
 The four Danish portal CLIs need their dependencies installed once (they also install themselves on first use):
 
@@ -169,7 +169,7 @@ ai-job-search/
 ├── CLAUDE.md                          # Role and pointers (no personal data)
 ├── profile/                           # Your candidate data (created by /setup, not in the template)
 ├── .claude-plugin/marketplace.json    # Plugin marketplace: ai-job-search + danish-job-portals
-├── .claude/settings.json              # Loads both plugins in place (after you trust the folder)
+├── .claude/settings.json              # Loads the plugins in place (after you trust the folder)
 ├── plugins/
 │   ├── ai-job-search/                 # The workflow as a Claude Code plugin
 │   │   ├── agents/                    # gemini-research-expert subagent

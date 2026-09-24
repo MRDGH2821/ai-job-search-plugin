@@ -71,7 +71,7 @@ Discover the installed portal CLI skills in two places:
 
 Each portal documents its own flags and usage. **Use each portal's own documented interface — do not guess flags.** List which portals you used, and from which of the two places, in the Step 5 summary.
 
-**Honor the `enabled` toggle.** A portal is enabled unless its `SKILL.md` frontmatter sets `enabled: false` (a missing key means enabled — the default). Skip each disabled portal and record it for the Step 5 summary. A fork can thus keep a portal installed but sit out a run without deleting its directory.
+**Honor the opt-outs.** Skip a portal when its name is listed under `profile/search-queries.md#disabled-portals`, or when it is one of your own `.agents/skills/` portals whose `SKILL.md` frontmatter sets `enabled: false` (a missing key means enabled — the default). Record each skipped portal for the Step 5 summary. Never edit a plugin portal's own files: they live in the plugin install and updates replace them.
 
 For each **enabled** portal skill:
 
@@ -235,7 +235,7 @@ Scraper-based portal CLIs rot silently: when a portal changes its markup, the pa
 ### Step 5: Present Results
 
 Present new jobs in a table sorted by fit (high first). When Step 1b skipped
-portals (`enabled: false`), report them with the `skipped (disabled):` line below
+portals (opted out), report them with the `skipped (disabled):` line below
 so opting one out stays visible rather than silent; omit the line when nothing
 was skipped. When any portal's results came from the Step 1c fallback this run
 (bun unavailable, or its CLI failed at runtime), report it with the
@@ -243,10 +243,11 @@ was skipped. When any portal's results came from the Step 1c fallback this run
 can be stale, so the reader should know which rows carry that caveat; omit the
 line when every portal ran its CLI. When Step 4.75 found a portal degraded, broken, or inconclusive,
 add one `health:` line per suspect portal (healthy portals get no line); after
-the report, offer to set that portal's `enabled: false` so `/scrape` stops
-running it (and covers it via the Step 1c fallback) until it is fixed - only
-edit the toggle with the user's confirmation, and never edit anything else in
-the skill.
+the report, offer to add that portal's name under
+`profile/search-queries.md#disabled-portals` (or, for one of your own
+`.agents/skills/` portals, to set its `enabled: false`) so `/scrape` stops running
+it (and covers it via the Step 1c fallback) until it is fixed - only make that
+change with the user's confirmation, and never edit anything else.
 
 ```
 ## New Job Matches - YYYY-MM-DD
@@ -301,5 +302,5 @@ If the user decides to apply to any job, the tracker row is written by **job-app
 5. **Be efficient with detail fetches.** Don't run `detail` or WebFetch on every search hit — pre-filter by title/snippet, then fetch only promising matches.
 6. **Parallel searches.** Run portal CLI searches in parallel; use WebSearch only for gaps the CLIs don't cover.
 7. **No automated people lookups.** Referral contacts (Step 4.5) are LinkedIn search links only - never fetch or scrape LinkedIn people-search result pages programmatically.
-8. **Health checks are bounded and honest.** Step 4.75 spends at most one probe, one retry, and (in `health` mode) one detail fetch per portal - a diagnosis, not a crawl. A rate-limit is never evidence of breakage. Health verdicts come only from observed CLI output; a portal that could not be tested is reported as inconclusive, never guessed. The `enabled` toggle is the only thing the health check may edit, and only with confirmation.
+8. **Health checks are bounded and honest.** Step 4.75 spends at most one probe, one retry, and (in `health` mode) one detail fetch per portal - a diagnosis, not a crawl. A rate-limit is never evidence of breakage. Health verdicts come only from observed CLI output; a portal that could not be tested is reported as inconclusive, never guessed. The opt-out (a line under `profile/search-queries.md#disabled-portals`, or `enabled: false` on your own `.agents/skills/` portal) is the only thing the health check may edit, and only with confirmation.
 9. **Flag distribution patterns, never accuse.** The mass-posting signal (Step 2.5) describes how a listing is being distributed, not a claim that the employer is a scam. Never name a company as fraudulent or untrustworthy - present the observation and let the user decide.

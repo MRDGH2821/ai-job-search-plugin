@@ -10,7 +10,6 @@ description: >
   technical roles. Trigger phrases: find a tech job, software job search, developer
   jobs, engineering vacancies, data/ML jobs, DevOps roles, remote developer jobs,
   "are there any <tech role> jobs in <place>", look up this freehire job posting.
-context: fork
 enabled: true  # set to false to keep this portal installed but have /scrape skip it
 allowed-tools: Bash(bun run ${CLAUDE_SKILL_DIR}/cli/src/cli.ts *)
 ---

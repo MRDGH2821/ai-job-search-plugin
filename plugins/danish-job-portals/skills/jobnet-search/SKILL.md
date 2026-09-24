@@ -17,8 +17,7 @@ description: >
   fuldtidsjob, fastansættelse, tidsbegrænset ansættelse, fleksjob, sygeplejerske job,
   social worker job denmark, occupation search denmark, esco occupation, job deadline,
   ansøgningsfrist, søg efter job, full time job denmark, part time job denmark.
-context: fork
-enabled: false  # Danish demo portal - ships opt-in; /setup enables it when your market is Denmark, or set true here yourself
+enabled: true  # gated by the danish-job-portals plugin itself; to skip it, turn the plugin off or list this portal under Disabled Portals in profile/search-queries.md
 allowed-tools: Bash(bun run ${CLAUDE_SKILL_DIR}/cli/src/cli.ts *), Bash(bun install --cwd ${CLAUDE_SKILL_DIR}/cli)
 ---
 

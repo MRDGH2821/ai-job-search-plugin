@@ -180,7 +180,7 @@ Or manually: fork on GitHub, then clone your fork.
 > identically either way.
 
 ## 3. Install job search CLI dependencies
-Run these from the repository root. First start Claude Code here once and accept the folder-trust prompt: that is what loads the `ai-job-search` and `danish-job-portals` plugins from `plugins/`.
+Run these from the repository root. First start Claude Code here once and accept the folder-trust prompt: that is what loads the `ai-job-search` plugin from `plugins/` (the `danish-job-portals` plugin stays off until you turn it on, see section 10).
 
 - PowerShell:
 
@@ -342,7 +342,7 @@ The framework now ships as two Claude Code plugins inside this repo (`plugins/ai
 1. After merging, start Claude Code in your clone and accept the folder-trust prompt once. Until you do, the plugins do not load and `/apply` and the other commands are missing.
 2. If you had edited a command, your edit followed the rename: `.claude/commands/<x>.md` is now `plugins/ai-job-search/skills/<x>/SKILL.md`, with a short frontmatter block added on top. A conflict there resolves like any other.
 3. Your own portals from `/add-portal` stay in `.agents/skills/`. The shipped ones moved into the plugins.
-4. Not in Denmark? Turn the Danish portals off in `.claude/settings.local.json`: `{"enabledPlugins": {"danish-job-portals@ai-job-search": false}}`.
+4. The Danish portals are now a separate plugin, off by default. In Denmark? Turn them on in `.claude/settings.local.json`: `{"enabledPlugins": {"danish-job-portals@ai-job-search": true}}` (or run `/setup`, which offers it). Portals you had switched off with `enabled: false` go under Disabled Portals in `profile/search-queries.md` instead.
 5. `salary_data.json` stays in your repo root; the salary tool now looks for it in the folder you run Claude in.
 
 ## Troubleshooting

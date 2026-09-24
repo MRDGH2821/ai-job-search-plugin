@@ -18,8 +18,7 @@ description: >
   nyuddannede job, job til nyuddannede, international job denmark,
   jobbank søgning, find stilling, data scientist job, software developer job,
   projektleder stilling, konsulent job, data analyse job.
-context: fork
-enabled: false  # Danish demo portal - ships opt-in; /setup enables it when your market is Denmark, or set true here yourself
+enabled: true  # gated by the danish-job-portals plugin itself; to skip it, turn the plugin off or list this portal under Disabled Portals in profile/search-queries.md
 allowed-tools: Bash(bun run ${CLAUDE_SKILL_DIR}/cli/src/cli.ts *), Bash(bun install --cwd ${CLAUDE_SKILL_DIR}/cli)
 ---
 

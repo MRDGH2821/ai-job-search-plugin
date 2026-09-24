@@ -45,7 +45,9 @@ import sys
 import unicodedata
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+# The workspace root (where you run Claude), never this script's folder: in a
+# plugin install that folder is the plugin cache.
+ROOT = Path.cwd().resolve()
 STATE = ROOT / "job_scraper" / "seen_jobs.json"
 
 COMPANY_MAX = 40

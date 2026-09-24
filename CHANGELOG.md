@@ -76,8 +76,8 @@ per-file diff commands.
   `tools/security_guards.py`) - commands become user-only plugin skills (still `/apply`
   etc.), the six shipped portals and the runtime scripts move into the plugins, and each
   skill pre-approves its own scripts in `allowed-tools`, reviewed by a new
-  `security_guards.py` check. The clone loads both plugins in place once the folder is
-  trusted; `/plugin marketplace add MadsLorentzen/ai-job-search` installs them anywhere.
+  `security_guards.py` check. The clone loads the core plugin in place once the folder is
+  trusted (the Danish portals become a separate plugin, off by default); `/plugin marketplace add MadsLorentzen/ai-job-search` installs them anywhere.
   `salary_data.json` is read from the workspace root. Upgrading: SETUP.md section 10.
 
 - **BREAKING (personalized forks): candidate data moves to `profile/`**

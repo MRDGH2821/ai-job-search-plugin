@@ -12,6 +12,8 @@ framework_version: 1.5.0
 
 `${CLAUDE_SKILL_DIR}` is this skill's folder. If your tool does not expand it, read paths as relative to the folder containing this SKILL.md.
 
+`<job-tools>` means `${CLAUDE_SKILL_DIR}/../job-tools` (the helper-scripts skill next to this one). Framework files you read from here use it in commands: expand it to that full path and run the command exactly as written.
+
 ## Profile Guard
 
 Run this before any evaluation, ranking, drafting or interview prep. If `profile/` does not exist, or `profile/candidate.md` still contains `[YOUR_EMAIL]`, stop and tell the user: "Your profile isn't set up yet. Run `/setup` first." Never score, rank or draft against placeholder data.

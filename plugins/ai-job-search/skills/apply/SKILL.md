@@ -9,6 +9,8 @@ allowed-tools: Bash(python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/verify_pdf.
 
 `${CLAUDE_SKILL_DIR}` is this skill's folder. If your tool does not expand it, read paths as relative to the folder containing this SKILL.md.
 
+`<job-tools>` means `${CLAUDE_SKILL_DIR}/../job-tools` (the helper-scripts skill next to this one). Framework files you read from here use it in commands: expand it to that full path and run the command exactly as written.
+
 You are orchestrating a two-agent job application workflow. The job posting is provided below as `$ARGUMENTS` (either a URL or pasted text).
 
 Follow these steps **exactly in order**. Do not skip steps.
