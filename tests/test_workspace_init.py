@@ -151,7 +151,7 @@ class TestWiring(unittest.TestCase):
         self.assertNotIn("arrives in a later release", readme)
         self.assertIn("/init-workspace", (paths.REPO / "SETUP.md").read_text(encoding="utf-8"))
         changelog = (paths.REPO / "CHANGELOG.md").read_text(encoding="utf-8")
-        self.assertIn("/init-workspace", changelog.split("## [Unreleased]", 1)[1].split("\n## [", 1)[0])
+        self.assertIn("/init-workspace", changelog.split("\n## [", 2)[1])
 
 
 class TestReviewFixes(unittest.TestCase):

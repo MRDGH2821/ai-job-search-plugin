@@ -79,3 +79,43 @@ class TestNotAWorkspace(unittest.TestCase):
         text = (REPO / "AGENTS.md").read_text(encoding="utf-8")
         self.assertIn("## Working on this plugin", text)
         self.assertNotIn("<!-- ai-job-search-plugin:start", text)
+
+
+ALLOWED_MADS = ("LICENSE", "README.md", "SETUP.md", "CHANGELOG.md", "docs/superpowers/",
+                "tools/upstream_triage.py", "tools/upstream_paths.py", ".github/workflows/upstream-watch.yml",
+                ".github/upstream-handled.txt", "tests/")
+
+
+class TestIdentityDocs(unittest.TestCase):
+    def test_original_author_only_where_allowed(self):
+        out = subprocess.run(["git", "ls-files"], cwd=REPO, capture_output=True, text=True, check=True).stdout
+        offenders = []
+        for rel in out.splitlines():
+            if rel.startswith(ALLOWED_MADS) or not (REPO / rel).is_file():
+                continue
+            try:
+                if "MadsLorentzen" in (REPO / rel).read_text(encoding="utf-8"):
+                    offenders.append(rel)
+            except UnicodeDecodeError:
+                continue
+        self.assertEqual(offenders, [])
+
+    def test_license_keeps_both_copyrights(self):
+        text = (REPO / "LICENSE").read_text(encoding="utf-8")
+        self.assertIn("Copyright (c) 2026 Mads Lorentzen", text)
+        self.assertIn("Copyright (c) 2026 MRDGH2821", text)
+        self.assertFalse((REPO / ".github" / "FUNDING.yml").exists())
+
+    def test_readme(self):
+        text = (REPO / "README.md").read_text(encoding="utf-8")
+        for needle in ("/plugin marketplace add MRDGH2821/ai-job-search-plugin",
+                       "/plugin install ai-job-search-plugin@ai-job-search-plugin",
+                       "/init-workspace", "## Credits", "MadsLorentzen/ai-job-search",
+                       "upstream_triage.py", "untested outside Claude Code"):
+            self.assertIn(needle, text)
+
+    def test_changelog_top_section(self):
+        text = (REPO / "CHANGELOG.md").read_text(encoding="utf-8")
+        first = text.split("\n## [", 2)[1]
+        self.assertTrue(first.startswith("2.0.0] - Unreleased"), first[:40])
+        self.assertIn("Forked from MadsLorentzen/ai-job-search v1.7.1", first)

@@ -168,29 +168,17 @@ class TestPortals(unittest.TestCase):
 class TestDocs(unittest.TestCase):
     def test_readme_explains_both_install_routes_and_capa(self):
         text = (REPO / "README.md").read_text(encoding="utf-8")
-        self.assertIn("/plugin marketplace add MadsLorentzen/ai-job-search", text)
+        self.assertIn("/plugin marketplace add MRDGH2821/ai-job-search-plugin", text)
         self.assertIn("/plugin install ai-job-search-plugin@ai-job-search-plugin", text)
-        self.assertIn("capa registry add MadsLorentzen/ai-job-search", text)
+        self.assertIn("capa registry add MRDGH2821/ai-job-search-plugin", text)
         self.assertIn("untested outside Claude Code", text)
         self.assertNotIn(".claude/commands/", text)
-
-    def test_setup_md_has_the_upgrade_section(self):
-        text = (REPO / "SETUP.md").read_text(encoding="utf-8")
-        section = text.split("## 10. Upgrading across the plugin layout change", 1)[1].split("\n## ", 1)[0]
-        for needle in ("trust", "plugins/ai-job-search-plugin/skills/", "settings.local.json", "danish-job-portals"):
-            self.assertIn(needle, section)
 
     def test_agents_md_and_contributing_point_at_capa(self):
         for name in ("CONTRIBUTING.md",):
             text = (REPO / name).read_text(encoding="utf-8")
             self.assertIn("capa", text, name)
             self.assertNotIn("auto-discovered", text, name)
-
-    def test_changelog_flags_the_layout_break(self):
-        text = (REPO / "CHANGELOG.md").read_text(encoding="utf-8")
-        unreleased = text.split("## [Unreleased]", 1)[1].split("\n## [", 1)[0]
-        self.assertIn("BREAKING (forks): the framework moves into plugins", unreleased)
-
 
 class TestProfileGuardReachable(unittest.TestCase):
     def test_guard_references_resolve_from_a_plugin_install(self):

@@ -1,13 +1,9 @@
-"""Guards for the onboarding privacy warnings (issue #345).
+"""Guards for the onboarding privacy warnings (issue #345 in the original project).
 
-The README's quick start walks a new user into creating a public fork
-(forks of public repos cannot be private) and then has /setup write
-personal data into tracked files, with the only complete warning sitting
-in SETUP.md section 8 - a section about pulling updates, downstream of
-the decision it should inform. A real user hit exactly this. These tests
-pin that the warning lives at the point of decision (adjacent to both
-fork commands) and that /setup checks the origin's visibility BEFORE
-writing anything, not in its closing notes.
+/setup writes personal data into files in the workspace, some tracked by git.
+These tests pin that the warning lives at the point of decision (where the
+user creates the workspace folder) and that /setup checks the origin's
+visibility BEFORE writing anything, not in its closing notes.
 """
 import re
 import unittest
@@ -30,32 +26,20 @@ def section(text: str, heading: str) -> str:
     return match.group(1) if match else ""
 
 
-class TestForkWarningsAtTheDecisionPoint(unittest.TestCase):
+class TestWorkspaceWarningsAtTheDecisionPoint(unittest.TestCase):
     def assert_warns(self, body: str, where: str):
-        self.assertRegex(
-            body,
-            re.compile(r"public", re.IGNORECASE),
-            f"{where}'s fork section must say the fork will be public",
-        )
-        self.assertIn(
-            "personal data",
-            body,
-            f"{where}'s fork section must say /setup writes personal data into tracked files",
-        )
-        self.assertRegex(
-            body,
-            re.compile(r"section 8|§8|#8-pulling", re.IGNORECASE),
-            f"{where}'s fork section must point at SETUP.md section 8's private-remote recipe",
-        )
+        self.assertIn("personal data", body, f"{where} must say /setup writes personal data here")
+        self.assertRegex(body, re.compile(r"\bprivate\b", re.IGNORECASE),
+                         f"{where} must tell the user to keep the workspace private")
 
-    def test_readme_quick_start_warns_next_to_the_fork_command(self):
-        body = section(README.read_text(encoding="utf-8"), "### 1. Fork and clone")
-        self.assertIn("gh repo fork", body, "sanity: the fork command lives in this section")
+    def test_readme_first_run_warns_where_the_folder_is_created(self):
+        body = section(README.read_text(encoding="utf-8"), "## First run")
+        self.assertIn("/init-workspace", body, "sanity: the workspace is created in this section")
         self.assert_warns(body, "README")
 
-    def test_setup_guide_warns_next_to_the_fork_command(self):
-        body = section(SETUP_GUIDE.read_text(encoding="utf-8"), "## 2. Fork and clone")
-        self.assertIn("gh repo fork", body, "sanity: the fork command lives in this section")
+    def test_setup_guide_warns_where_the_folder_is_created(self):
+        body = section(SETUP_GUIDE.read_text(encoding="utf-8"), "## 3. Create your workspace")
+        self.assertIn("/init-workspace", body, "sanity: the workspace is created in this section")
         self.assert_warns(body, "SETUP.md")
 
 

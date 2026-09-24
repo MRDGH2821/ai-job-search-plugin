@@ -4,14 +4,11 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-Releases are vetted checkpoints of `master`. If you maintain a personalized fork,
-prefer updating to a tagged release over pulling raw `master` (see
-[SETUP.md, section 8](SETUP.md#8-pulling-upstream-updates-into-your-fork)). The
-`framework_version` markers on methodology files tell you which of your customized
-files a release touched; `python3 tools/check_upstream_updates.py` lists them with
-per-file diff commands.
+Releases are published as plugin versions: Claude Code offers the update when a plugin's
+`version` changes. Entries below 2.0.0 are the history of the original project,
+MadsLorentzen/ai-job-search, which this project was forked from.
 
-## [Unreleased]
+## [2.0.0] - Unreleased
 
 ### Added
 
@@ -85,6 +82,27 @@ per-file diff commands.
   LaTeX toolchain.
 
 ### Changed
+
+- **Independent project: ai-job-search-plugin.** Forked from MadsLorentzen/ai-job-search v1.7.1
+  and renamed: the marketplace, core plugin and command prefix are `ai-job-search-plugin`
+  (install `ai-job-search-plugin@ai-job-search-plugin`; Danish portals
+  `danish-job-portals@ai-job-search-plugin`), and the workspace instruction markers are
+  `<!-- ai-job-search-plugin:start/end -->`. A workspace made by an earlier build upgrades its
+  old block on the next `/setup` or `/sync-instructions`.
+- **The repository is plugin source, not a workspace.** The root `cv/`, `cover_letters/`,
+  `templates/`, `documents/` and state folders are gone; `/init-workspace` lays out a workspace
+  from the plugin's `workspace-template/`. CI compiles the example CV and cover letter in a
+  freshly initialized workspace, and all checks run on every repository.
+- **Plugin version replaces `framework_version`.** Both plugins are 2.0.0; a test requires a
+  version bump whenever a plugin's files change.
+- **Upstream triage maps paths.** `tools/upstream_triage.py` translates the original project's
+  paths to the plugin layout (`tools/upstream_paths.py`), prints `git show` lines to port by
+  hand, and skips SHAs listed in `.github/upstream-handled.txt` (was `upstream-wontport.txt`).
+
+### Removed
+
+- `/setup`'s legacy fork migration, `tools/check_upstream_updates.py`,
+  `tools/check_framework_version.py`, the fork-upgrade sections of SETUP.md and FUNDING.yml.
 
 - **BREAKING (forks): the framework moves into plugins** (`.claude-plugin/marketplace.json`,
   `plugins/ai-job-search/`, `plugins/danish-job-portals/`, `.claude/settings.json`,

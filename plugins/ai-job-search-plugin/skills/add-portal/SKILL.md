@@ -10,7 +10,7 @@ disable-model-invocation: true
 
 You are helping the user build a job-portal search skill for a job board in their market. The repo ships worked examples of the pattern (four Danish portals plus the country-agnostic `linkedin-search` and `freehire-search`), and the README invites users elsewhere to build equivalents — this command turns that invitation into a guided workflow: investigate the portal, scaffold the skill from the canonical structure, and test-run a live query before registering anything.
 
-The generator is **country-agnostic**: it works for any portal in any market and language. The skills it produces are typically market-specific and live in the user's fork (per repo policy, country-specific portal skills are not merged upstream — the generator is the upstream feature, its output is yours).
+The generator is **country-agnostic**: it works for any portal in any market and language. The skills it produces are typically market-specific and live in the user's workspace (`.agents/skills/`): the generator ships in the plugin, its output is yours.
 
 `$ARGUMENTS` may contain a subcommand, a portal URL, or nothing.
 
@@ -132,13 +132,7 @@ Do not proceed to Step 5 until search, detail, and tests all pass.
 1. Ask whether the user wants the new portal added to their `/scrape` search strategy. If yes:
    - The portal CLI itself is already picked up automatically by `/scrape` (it reads every `.agents/skills/*/SKILL.md` in your workspace) — no further wiring is needed for CLI search/detail.
    - Optionally add WebSearch/`site:` placeholder queries for that board in `profile/search-queries.md` (use the `[YOUR_JOB_BOARD]` style placeholders from its template) so the fallback path still covers the board if the CLI is unavailable.
-2. Remind the user to add the install line for their own records if they maintain a fork README:
-   ```bash
-   cd .agents/skills/<name>/cli && bun install && cd ../../../..
-   ```
-   (Skip if the skill is zero-dependency and they don't care about typecheck types.)
-3. Note that the skill auto-triggers from its `SKILL.md` description - no other wiring is needed.
-4. CI coverage is also automatic: the `cli-checks` job discovers every `cli/package.json` under `plugins/*/skills/` and `.agents/skills/`, so the new CLI's `typecheck` and `test` scripts run on every push to the fork without editing the workflow.
+2. Note that the skill auto-triggers from its `SKILL.md` description - no other wiring is needed.
 
 ---
 
@@ -154,13 +148,13 @@ Present a summary:
 >
 > Try it: `bun run .agents/skills/<name>/cli/src/cli.ts search -q "<test query>" --format table`
 >
-> Per upstream policy, market-specific skills like this live in your fork rather than being PR'd upstream. If the portal changes its markup later, `url-reference.md` records the parsing anchors to update.
+> The skill lives in this workspace's `.agents/skills/`. If the portal changes its markup later, `url-reference.md` records the parsing anchors to update.
 
 ---
 
 ## Design Principles
 
-- The generator is country-agnostic; its output is market-specific and stays in the user's fork. This matches the repo policy that upstream stays a universal template.
+- The generator is country-agnostic; its output is market-specific and stays in the user's workspace. The plugin itself stays universal.
 - Investigation before scaffolding: the command never generates parsers from guesses - Step 2 fetches real responses first, and Step 4 verifies against live data before anything is registered.
 - The portal-skill contract keeps every generated skill interchangeable with the shipped ones: same commands, same flags, same output shape, same error convention.
 - Zero runtime dependencies by default, matching `linkedin-search` - a portal skill should run on a fresh clone with nothing but `bun`.

@@ -1,6 +1,6 @@
 # Setup Guide
 
-Step-by-step instructions for getting the AI Job Search framework running.
+Step-by-step instructions for getting ai-job-search-plugin running.
 
 ## 1. Prerequisites
 
@@ -153,59 +153,42 @@ The default extractor is **pypdf** (BSD, `pip install pypdf`). Poppler `pdftotex
 
 If a command still uses `pdftotext -layout`, it must pass `-enc UTF-8` as well. If **neither** extractor is available, `/apply` skips the mechanical check with a warning and falls back to a visual keyword review — everything else works normally.
 
-## 2. Fork and clone
+## 2. Install the plugin
 
-```bash
-gh repo fork MadsLorentzen/ai-job-search --clone
-cd ai-job-search
-gh repo set-default <your-github-username>/ai-job-search
+Inside Claude Code:
+
+```
+/plugin marketplace add MRDGH2821/ai-job-search-plugin
+/plugin install ai-job-search-plugin@ai-job-search-plugin
 ```
 
-Or manually: fork on GitHub, then clone your fork.
+Job boards for Denmark (Jobbank, Jobdanmark, Jobindex, Jobnet) are a separate plugin, off by default. Install it if your market is Denmark (`/setup` offers it too):
 
-> **The `set-default` line is not optional.** `gh repo fork --clone` sets the
-> **upstream** repo as gh's default repository ("The `upstream` remote will be set as
-> the default remote repository" — `gh repo fork --help`), and gh uses the default for
-> **creating issues and PRs**. Without it, any later `gh issue create` run from this
-> clone — by you or by an agent you have asked to track your applications — silently
-> files on the upstream **public** tracker, publishing whatever the issue contains
-> under your GitHub identity, on a repo where you cannot delete it (#389).
-
-> **Before you go further: forks are public.** GitHub cannot make a fork of a public
-> repository private, and `/setup` (section 6) writes your personal data into **tracked**
-> files — pushing those commits to a fork publishes them. If this copy is for your own
-> job search rather than for contributing, prefer a **private repository** with this repo
-> as `upstream`: see section 8, step 1 for the exact commands and why committing your
-> personalization there is still the right move. Everything else in this guide works
-> identically either way.
-
-**Starting from the plugin instead of a clone?** Install it (`/plugin marketplace add MadsLorentzen/ai-job-search`, then `/plugin install ai-job-search-plugin@ai-job-search-plugin`), open Claude Code in an empty folder and run `/init-workspace`. It lays out the same folders this repository has, then points you to `/setup`.
-
-## 3. Install job search CLI dependencies
-Run these from the repository root. First start Claude Code here once and accept the folder-trust prompt: that is what loads the `ai-job-search` plugin from `plugins/` (the `danish-job-portals` plugin stays off until you turn it on, see section 10).
-
-- PowerShell:
-
-```powershell
-Get-ChildItem plugins/danish-job-portals/skills/*/cli | ForEach-Object {
-  Push-Location $_.FullName
-  bun install
-  Pop-Location
-}
+```
+/plugin install danish-job-portals@ai-job-search-plugin
 ```
 
-- Bash / zsh / Git Bash:
-```bash
-for cli in plugins/danish-job-portals/skills/*/cli; do (cd "$cli" && bun install); done
+The portal CLIs install their dependencies on first use. `linkedin-search` and `freehire-search` have zero runtime dependencies and run with plain `bun`. Outside Denmark, `/add-portal` generates a search skill for your local job board (see "Job search tools" in the README).
+
+## 3. Create your workspace
+
+Your workspace is an ordinary folder that holds your profile, CVs, cover letters and application history. Create an empty one, start Claude Code in it, and run:
+
+```
+/init-workspace
 ```
 
-The Danish portals also install their dependencies themselves on first use. `linkedin-search` and `freehire-search` need no install: both have zero runtime dependencies and run with plain `bun`.
+It lays out the CV and cover-letter sources, fonts, the `documents/` tree, state folders and a privacy `.gitignore`, writes `AGENTS.md` and `CLAUDE.md`, and offers `git init`. It copies only what is missing and never overwrites anything.
 
-If you're outside Denmark, you can generate an equivalent search skill for your local job board with `/add-portal` — it scaffolds the same CLI structure for any public portal and test-runs a live query before registering. See the "Job search tools" section in the README.
+> **Keep this folder private.** `/setup` writes your personal data (name, contact details,
+> employment history, salary expectations) into files here, and some of them are tracked
+> by git. Keep the workspace local, or push it only to a **private** repository: anything
+> pushed to a public repository is visible to anyone. `/setup` checks your `origin` and
+> warns before writing if it is public.
 
 ## 4. Run the setup interview
 
-Start Claude Code in the repository:
+Start Claude Code in your workspace folder:
 
 ```bash
 claude
@@ -249,18 +232,19 @@ You can update specific sections later:
 
 The `--section search` option is especially useful as your priorities evolve. It re-runs the search configuration interview and suggests role types you may not have considered based on your full profile.
 
-## 5. Optional: Set up salary benchmarking
+## 5. Salary data
 
-If you have salary data (from a union, salary survey, Glassdoor, or personal research):
+Optional. If you have salary data (from a union, salary survey, Glassdoor, or personal research), put `salary_data.json` in your workspace root:
 
-1. **Option A:** Create `salary_data.json` manually in the repo root, your workspace (see `plugins/ai-job-search-plugin/skills/job-tools/scripts/README_SALARY_TOOL.md` for the format)
-2. **Option B:** Convert from Excel:
+1. **Option A:** Create it by hand. The format is in `plugins/ai-job-search-plugin/skills/job-tools/scripts/README_SALARY_TOOL.md`.
+2. **Option B:** Convert it from Excel with the plugin's converter:
    ```bash
    pip install openpyxl
-   python3 plugins/ai-job-search-plugin/skills/job-tools/scripts/convert_salary_excel.py path/to/salary-data.xlsx --source "My Salary Data 2025"
+   python3 <plugin folder>/skills/job-tools/scripts/convert_salary_excel.py path/to/salary-data.xlsx --source "My Salary Data 2025"
    ```
+   `<plugin folder>` is where Claude Code installed the plugin (`/plugin` shows it), or `plugins/ai-job-search-plugin` in a clone of this repository.
 
-This creates `salary_data.json` which the `/apply` workflow uses for salary benchmarking. If you skip this step, salary lookup is simply omitted.
+`/apply` uses it for salary benchmarking. Without it, the salary step is skipped.
 
 ## 6. Test the workflow
 
@@ -299,53 +283,15 @@ Set-Location cv; lualatex main_<company>_<role>.tex; Set-Location ..
 Set-Location cover_letters; xelatex cover_<company>_<role>.tex; Set-Location ..
 ```
 
-These commands apply to the stock templates (moderncv CV, `cover.cls` cover letter). If you'd rather use your own LaTeX template, run `/add-template` — it captures the template's compile engine, fonts, style rules, and page limit, test-compiles it, and wires it into `/apply`. See the "LaTeX templates" section in the README.
+These commands apply to the stock templates (moderncv CV, `cover.cls` cover letter). If you'd rather use your own LaTeX template, run `/add-template` — it captures the template's compile engine, fonts, style rules, and page limit, test-compiles it, and wires it into `/apply`. See "Custom templates" in the README.
 
-## 8. Pulling upstream updates into your fork
+## 8. Updating
 
-Upstream keeps improving the methodology files your fork has personalized, so plan for updates from day one:
+Run `/plugin` and update `ai-job-search-plugin` (and `danish-job-portals` if installed), then run `/sync-instructions` in your workspace to refresh its `AGENTS.md` block. Your `profile/` and documents are never touched by an update.
 
-**Prefer releases over raw `master`.** Tagged [releases](../../releases) are vetted checkpoints, each described in [CHANGELOG.md](CHANGELOG.md). Updating to a tag pulls a stable, documented state instead of whatever `master` happens to be mid-review. Fetch tags with `git fetch upstream --tags` and merge a release (for example `git merge v1.0.0`) when you want stability; pull `master` directly only when you specifically want the latest unreleased changes. The steps below apply either way - substitute the release tag for `upstream/master` where you see it.
+## 9. Tracking the original project
 
-1. **Commit your personalization - but know where those commits land.** `/setup` writes your data into `profile/`; those edits are *yours*, and committing them is what lets updates merge cleanly. But a GitHub **fork of this repo is public** - forks of public repositories cannot be made private - so anything you commit *and push to a fork* is visible to anyone. If you want your profile in a remote at all, don't push it to a fork: create a **private** repository, push there, and add this repo as the `upstream` remote (`git remote add upstream https://github.com/MadsLorentzen/ai-job-search.git`) to keep receiving updates. Committing locally without pushing is also fine. The genuinely sensitive files (tracker, salary data, `documents/`, application archives) are gitignored and never enter git either way. An uncommitted working tree is the most common reason `git pull` refuses to merge at all (`Your local changes ... would be overwritten`).
-2. **Preview what changed before pulling:**
-   ```bash
-   git remote add upstream https://github.com/MadsLorentzen/ai-job-search.git   # first time only, if you cloned your own fork
-   git fetch upstream    # or origin, if you cloned the template directly
-   python3 tools/check_upstream_updates.py
-   ```
-   It compares the `framework_version` markers in your framework files against upstream and lists exactly which methodology files changed, with the diff command for each.
-
-   Two tools answer two different questions, and it's worth running both:
-   - **`check_upstream_updates.py`** — *which of my personalized files changed?* It reads the `framework_version` stamp on each methodology file, so it flags exactly the customized files a release touched.
-   - **`upstream_triage.py`** — *which upstream commits deserve my attention?* It walks the commits you're behind and sorts them into "worth reviewing" vs "probably skip", dropping anything you've already cherry-picked (matched by `git patch-id`, so ported work falls off with no bookkeeping), commits that only touch files your fork removed, and SHAs you've listed in `.github/upstream-wontport.txt`. It's report-only — it prints ready-to-run `git cherry-pick` lines but never merges, pushes, or opens a PR, because on a fork "applies cleanly" isn't "correct".
-
-     ```bash
-     python3 tools/upstream_triage.py --remote upstream
-     ```
-
-     Forks also inherit a `.github/workflows/upstream-watch.yml` that runs this weekly and writes the result into a single rolling issue (it no-ops on the upstream template itself, and stays disabled on a fork until you enable Actions).
-3. **Merge normally.** `git merge upstream/master` (or `git pull`) three-way-merges upstream's edits around your personalization; because methodology edits rarely touch the lines `/setup` filled in, most updates land cleanly. A conflict in a personalized file is a *feature*, not a failure — it means upstream changed methodology in a section you customized, and the version marker plus its changelog commit tell you why. Resolve by keeping your data and adopting the methodology change around it. Because your data lives in `profile/` and upstream never ships that folder, upstream merges no longer touch your personalization.
-
-## 9. Merging the profile-separation change into a personalized fork
-
-Older versions stored your profile inside framework files (`.claude/skills/job-application-assistant/01-candidate-profile.md` and its neighbours). Newer versions keep it in `profile/`. Upgrading across that change:
-
-1. `git merge upstream/master`. Expect conflicts in files under `.claude/skills/` or `plugins/`.
-2. Resolve every conflict under `.claude/skills/` or `plugins/` and in `CLAUDE.md` by taking upstream's version: `git checkout --theirs <path>` for each, then `git add` them. If git reports that upstream deleted a file you changed (for example `01-candidate-profile.md`), run `git rm <path>` for it instead. Your data is not lost; it is still in your git history.
-3. Restore the blank templates. Git's rename detection can merge your old profile into the new template files **without reporting a conflict**. While the merge is still in progress, run `git checkout MERGE_HEAD -- plugins/ai-job-search-plugin/skills/job-application-assistant/profile-templates/` and `git add` that folder.
-4. Commit the merge, then run `/setup`. It finds your old profile in git history, shows you the new `profile/` files built from it, and writes them only after you confirm.
-5. Commit `profile/` to your own (private) repository.
-
-## 10. Upgrading across the plugin layout change
-
-The framework now ships as two Claude Code plugins inside this repo (`plugins/ai-job-search-plugin/`, `plugins/danish-job-portals/`).
-
-1. After merging, start Claude Code in your clone and accept the folder-trust prompt once. Until you do, the plugins do not load and `/apply` and the other commands are missing.
-2. If you had edited a command, your edit followed the rename: `.claude/commands/<x>.md` is now `plugins/ai-job-search-plugin/skills/<x>/SKILL.md`, with a short frontmatter block added on top. A conflict there resolves like any other.
-3. Your own portals from `/add-portal` stay in `.agents/skills/`. The shipped ones moved into the plugins.
-4. The Danish portals are now a separate plugin, off by default. In Denmark? Turn them on in `.claude/settings.local.json`: `{"enabledPlugins": {"danish-job-portals@ai-job-search-plugin": true}}` (or run `/setup`, which offers it). Portals you had switched off with `enabled: false` go under Disabled Portals in `profile/search-queries.md` instead.
-5. `salary_data.json` stays in your repo root; the salary tool now looks for it in the folder you run Claude in.
+This project was forked from [MadsLorentzen/ai-job-search](https://github.com/MadsLorentzen/ai-job-search). Maintainers of this repository check it for improvements worth porting with `python3 tools/upstream_triage.py --remote upstream`, which maps upstream paths to the plugin layout. Ported and rejected commits are listed in `.github/upstream-handled.txt`. Users of the plugin don't need to do anything.
 
 ## Troubleshooting
 
@@ -353,7 +299,7 @@ The framework now ships as two Claude Code plugins inside this repo (`plugins/ai
 This is expected if you haven't set up salary benchmarking. The `/apply` workflow skips this step automatically.
 
 ### Job search CLI tools not working
-Make sure Bun is installed and you ran `bun install` in each CLI directory. The tools require network access to fetch job listings.
+Make sure Bun is installed. Portal CLIs install their dependencies on first use. The tools require network access to fetch job listings.
 
 ### LaTeX compilation errors
 - CV: uses `lualatex` (pdflatex often fails on modern MiKTeX with `fontawesome5` font-expansion errors; lualatex handles the same sources cleanly)
@@ -361,11 +307,4 @@ Make sure Bun is installed and you ran `bun install` in each CLI directory. The 
 - Make sure your LaTeX distribution includes the `moderncv` package
 
 ### Fonts not found in cover letter
-The cover letter template expects fonts in `cover_letters/OpenFonts/fonts/`. Make sure this directory exists and contains the Lato and Raleway font files.
-
-### Stale `.claude/settings.local.json` from an older clone
-Shared Claude Code permissions now live in `.claude/settings.json` and in each plugin skill's `allowed-tools`. Earlier versions of this repo committed a broader `.claude/settings.local.json` that pre-approved `Bash(curl:*)`, `Bash(python:*)` and `Bash(bun:*)`. If you cloned before that change, git leaves the old file behind in your working copy, and its permissions still apply on top of `settings.json`. Delete it (or trim it to your own personal overrides):
-
-```bash
-rm .claude/settings.local.json
-```
+The cover letter template expects fonts in your workspace's `cover_letters/OpenFonts/fonts/`. If they are missing, run `/init-workspace` again: it restores missing files without overwriting anything.

@@ -189,7 +189,7 @@ class RepoRootTests(unittest.TestCase):
     def test_readme_and_changelog_mention_the_command(self):
         self.assertIn("/sync-instructions", (paths.REPO / "README.md").read_text(encoding="utf-8"))
         changelog = (paths.REPO / "CHANGELOG.md").read_text(encoding="utf-8")
-        unreleased = changelog.split("## [Unreleased]", 1)[1].split("\n## [", 1)[0]
+        unreleased = changelog.split("\n## [", 2)[1]
         self.assertIn("/sync-instructions", unreleased)
 
 

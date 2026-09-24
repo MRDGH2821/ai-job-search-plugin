@@ -220,36 +220,11 @@ class TestLegacyFilesRemoved(unittest.TestCase):
 
 
 class TestDocs(unittest.TestCase):
-    def test_docs_name_no_legacy_profile_files_outside_migration(self):
-        setup_md = (REPO / "SETUP.md").read_text(encoding="utf-8")
-        migration = "## 9. Merging the profile-separation change into a personalized fork"
-        self.assertIn(migration, setup_md)
-        before, after = setup_md.split(migration, 1)
-        rest = after.split("\n## ", 1)
-        outside = before + (rest[1] if len(rest) > 1 else "")
-        for text, where in ((outside, "SETUP.md"), ((REPO / "README.md").read_text(encoding="utf-8"), "README.md"),
+    def test_docs_name_no_legacy_profile_files(self):
+        for text, where in (((REPO / "SETUP.md").read_text(encoding="utf-8"), "SETUP.md"), ((REPO / "README.md").read_text(encoding="utf-8"), "README.md"),
                             ((REPO / "AGENTS.md").read_text(encoding="utf-8"), "AGENTS.md")):
             for name in ("01-candidate-profile.md", "02-behavioral-profile.md"):
                 self.assertNotIn(name, text, f"{where} still names {name}")
-
-    def test_setup_md_restores_templates_before_committing_the_merge(self):
-        setup_md = (REPO / "SETUP.md").read_text(encoding="utf-8")
-        section9 = setup_md.split("## 9. Merging the profile-separation change", 1)[1].split("\n## ", 1)[0]
-        self.assertIn("git checkout MERGE_HEAD -- plugins/ai-job-search-plugin/skills/job-application-assistant/profile-templates/", section9)
-        self.assertLess(section9.index("MERGE_HEAD"), section9.index("Commit the merge"))
-
-    def test_setup_md_covers_claude_md_and_deleted_file_conflicts(self):
-        setup_md = (REPO / "SETUP.md").read_text(encoding="utf-8")
-        section9 = setup_md.split("## 9. Merging the profile-separation change", 1)[1].split("\n## ", 1)[0]
-        self.assertIn("CLAUDE.md", section9)
-        self.assertIn("git rm", section9)
-
-    def test_changelog_flags_the_fork_break(self):
-        text = (REPO / "CHANGELOG.md").read_text(encoding="utf-8")
-        unreleased = text.split("## [Unreleased]", 1)[1].split("\n## [", 1)[0]
-        self.assertIn("BREAKING (personalized forks)", unreleased)
-        self.assertIn("profile/", unreleased)
-
 
 if __name__ == "__main__":
     unittest.main()
