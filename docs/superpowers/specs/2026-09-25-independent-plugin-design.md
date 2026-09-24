@@ -78,7 +78,7 @@ so a workspace created by an earlier build upgrades on its next `/setup` or
 
 - **Kept:** `tools/upstream_triage.py`, `.github/workflows/upstream-watch.yml` (weekly rolling
   issue), pointed at the `upstream` remote (`MadsLorentzen/ai-job-search`).
-- **Path map** (`tools/upstream_paths.py`, one function `map_upstream_path(path: str) -> str | None`):
+- **Path map** (`tools/upstream_paths.py`, one function `map_upstream_path(path: str) -> list[str]`; a list because `.gitignore` maps to two files):
 
   | Upstream path | This repository |
   |---|---|
