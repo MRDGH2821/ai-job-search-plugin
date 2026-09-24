@@ -6,6 +6,8 @@ disable-model-invocation: true
 ---
 # /notion-sync - Push Ranked Jobs and Applications to a Notion Database
 
+`${CLAUDE_SKILL_DIR}` is this skill's folder. If your tool does not expand it, read paths as relative to the folder containing this SKILL.md.
+
 You are publishing a **read-only view** of the job search into the user's Notion workspace: one database row per job, with a detailed page per shortlisted match. The repo files stay the system of record - `job_scraper/seen_jobs.json` owns scraped/ranked jobs and `job_search_tracker.csv` owns applications. Notion is a disposable presentation layer on top of them; nothing ever syncs back.
 
 This command requires the **Notion MCP server** (OAuth). It reads state, upserts pages, and stops - it never ranks, applies, or edits repo files. Notion is the in-tree reference binding; the sync contract itself is tool-agnostic (see "Adapting to Another Tool" at the end - only the two sections marked *(Notion binding)* are tool-specific).
@@ -107,7 +109,7 @@ Batch politely: if the MCP server rate-limits, back off and continue; report any
 The page body is what makes a row worth clicking. Build it **only from stored data and actually fetched content**:
 
 1. **Fit summary** - a short section from `seen_jobs.json` fields: score, verdict, quick-fit level, first-seen and ranked dates. If the job is in the tracker, add the application timeline (date applied, channel, current status, dated notes from the `notes` column) and name the submitted documents from `cv_file`/`cover_letter_file` (filenames only - the documents themselves never sync). **When the status is `drafted`, write "drafted YYYY-MM-DD, not yet submitted" instead of a date applied, and call the files drafts rather than submitted documents** (page bodies are write-once - Step 4.3).
-2. **The posting** - WebFetch the job URL and write a readable digest: what the role is, key requirements, practical details (location, deadline, salary if stated). Retry a 403 with browser headers per `.claude/skills/job-application-assistant/09-web-research.md` first. If the fetch still fails or redirects to a listing page, write "Posting no longer available (checked YYYY-MM-DD)" - **never reconstruct a posting from memory**.
+2. **The posting** - WebFetch the job URL and write a readable digest: what the role is, key requirements, practical details (location, deadline, salary if stated). Retry a 403 with browser headers per `${CLAUDE_SKILL_DIR}/../job-application-assistant/09-web-research.md` first. If the fetch still fails or redirects to a listing page, write "Posting no longer available (checked YYYY-MM-DD)" - **never reconstruct a posting from memory**.
 3. **Links** - the posting URL; derive `<company>_<role>` by the **Subfolder naming** rule in `documents/README.md`, and if that archive exists locally, name its path (plain text - the destination cannot link into the filesystem).
 
 Keep the page under ~40 blocks; this is a briefing, not a mirror of the posting.

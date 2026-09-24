@@ -23,6 +23,8 @@ allowed-tools: Bash(bun run ${CLAUDE_SKILL_DIR}/cli/src/cli.ts *)
 
 # Jobindex Search Skill
 
+`${CLAUDE_SKILL_DIR}` is this skill's folder. If your tool does not expand it, read paths as relative to the folder containing this SKILL.md.
+
 Search live Danish job listings from Jobindex.dk. No authentication needed.
 Covers thousands of job postings across all sectors, updated in real time.
 

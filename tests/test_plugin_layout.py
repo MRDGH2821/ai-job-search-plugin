@@ -60,3 +60,59 @@ class TestConvertedCommands(unittest.TestCase):
     def test_job_tools_is_hidden_from_the_slash_menu(self):
         fm = frontmatter(paths.skill_file("job-tools"))
         self.assertIs(fm.get("user-invocable"), False)
+
+
+RUNTIME = ("rank_state", "job_key", "verify_pdf", "verify_layout", "robots_check",
+           "convert_salary_excel")
+FALLBACK = ("`${CLAUDE_SKILL_DIR}` is this skill's folder. If your tool does not expand it, "
+            "read paths as relative to the folder containing this SKILL.md.")
+SKILL_DIR_REF = re.compile(r"\$\{CLAUDE_SKILL_DIR\}(/[^\s`'\")|*>]+)")
+
+
+def strip_setup_migration(text):
+    """/setup's Legacy fork migration reads old paths from git history; they stay literal."""
+    marker = "#### Legacy fork migration"
+    if marker not in text:
+        return text
+    head, tail = text.split(marker, 1)
+    rest = tail.split("\n### ", 1)
+    return head + ("\n### " + rest[1] if len(rest) > 1 else "")
+
+
+class TestSkillPaths(unittest.TestCase):
+    def test_no_legacy_paths_in_framework_text(self):
+        bad = re.compile(r"\.claude/(commands|skills|agents)/|(?<![\w/.])tools/(%s)\.py|python3? salary_lookup\.py"
+                         % "|".join(RUNTIME))
+        offenders = []
+        for md in paths.framework_markdown() + [REPO / "CLAUDE.md"]:
+            text = strip_setup_migration(md.read_text(encoding="utf-8"))
+            for i, line in enumerate(text.splitlines(), 1):
+                if bad.search(line):
+                    offenders.append(f"{md.relative_to(REPO)}:{i}")
+        self.assertEqual(offenders, [])
+
+    def test_skill_dir_references_resolve(self):
+        broken = []
+        for md in paths.framework_markdown():
+            skill_dir = md.parent
+            while skill_dir.parent.name != "skills":
+                skill_dir = skill_dir.parent
+            for ref in SKILL_DIR_REF.findall(md.read_text(encoding="utf-8")):
+                target = ref.rstrip(".,:;")
+                if "<" in target or "node_modules" in target:  # placeholder, or created at first run
+                    continue
+                if not (skill_dir / target.lstrip("/")).resolve().exists():
+                    broken.append(f"{md.relative_to(REPO)}: {target}")
+        self.assertEqual(broken, [])
+
+    def test_skills_using_skill_dir_carry_the_fallback_line(self):
+        missing = [str(p.relative_to(REPO)) for p in paths.all_skill_files()
+                   if "${CLAUDE_SKILL_DIR}" in p.read_text(encoding="utf-8")
+                   and FALLBACK not in p.read_text(encoding="utf-8")]
+        self.assertEqual(missing, [])
+
+    def test_state_writing_skills_pin_workspace_root(self):
+        for name in ("job-scraper", "upskill"):
+            text = paths.skill_file(name).read_text(encoding="utf-8")
+            self.assertIn("relative to the workspace root", text, name)
+            self.assertIn("never inside this skill's folder", text, name)

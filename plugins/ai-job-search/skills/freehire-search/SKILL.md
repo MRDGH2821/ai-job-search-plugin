@@ -17,6 +17,8 @@ allowed-tools: Bash(bun run ${CLAUDE_SKILL_DIR}/cli/src/cli.ts *)
 
 # freehire Search Skill
 
+`${CLAUDE_SKILL_DIR}` is this skill's folder. If your tool does not expand it, read paths as relative to the folder containing this SKILL.md.
+
 Search live job listings from the **[freehire.me](https://freehire.me)** job
 aggregator — an open-source IT job board that normalizes postings from ~50 ATS
 platforms across many countries into one schema. No authentication, no API key,

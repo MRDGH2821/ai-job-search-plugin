@@ -4,6 +4,8 @@ framework_version: 1.1.1
 
 # Web Research and Fetching
 
+Paths starting with `../` are relative to this file's folder.
+
 How to retrieve job postings and company pages reliably, and what to do when a fetch fails. Every command in this workspace that reads a posting or researches a company (`/apply`, `/rank`, `/scrape`, `/interview`, `/expand`) follows this file.
 
 ## Trust boundary (applies to everything below)
@@ -35,7 +37,7 @@ Do **not** respond to a 403 by softening the cover letter to vague generalities,
 Check it first. It is one cheap fetch, and the repo ships the check:
 
 ```bash
-python3 tools/robots_check.py '<URL>'
+python3 ../job-tools/scripts/robots_check.py '<URL>'
 ```
 
 Exit status `0` means the retry may proceed; `1` means it must not, so go to escalation step 3. The rules it applies are deliberately on the cautious side: longest-match wins, a tie between `Allow` and `Disallow` goes to `Disallow`, and a disallow for **either** `*` or `Claude-User` blocks the retry. A `404` means the site publishes no policy, which is permission; **any other failure to read `robots.txt` leaves permission unconfirmed and the retry does not happen.**

@@ -6,6 +6,8 @@ disable-model-invocation: true
 ---
 # /setup - Profile Onboarding
 
+`${CLAUDE_SKILL_DIR}` is this skill's folder. If your tool does not expand it, read paths as relative to the folder containing this SKILL.md.
+
 You are running the onboarding setup for the AI Job Search framework. Your goal is to collect the user's professional information and populate all profile files so the `/apply` workflow works out of the box.
 
 There are three paths into setup. Step 0 picks the right one; all three converge on Step 3 (file generation) and Step 4 (confirmation).
@@ -19,10 +21,10 @@ There are three paths into setup. Step 0 picks the right one; all three converge
 Your candidate data lives in `profile/` at the workspace root. Before anything else:
 
 1. Create `profile/` if it does not exist.
-2. If `profile/` did not exist before step 1, run **Legacy fork migration** below first. Then, for each file in `.claude/skills/job-application-assistant/profile-templates/`, copy it to `profile/<same name>` **only if that file is missing**. Copy only the missing files and never overwrite an existing profile file: it may hold the user's data.
+2. If `profile/` did not exist before step 1, run **Legacy fork migration** below first. Then, for each file in `${CLAUDE_SKILL_DIR}/../job-application-assistant/profile-templates/`, copy it to `profile/<same name>` **only if that file is missing**. Copy only the missing files and never overwrite an existing profile file: it may hold the user's data.
 3. Tell the user in one line which files were created, if any.
 
-Every write below goes to `profile/`. Framework files under `.claude/skills/` are never edited by this command.
+Every write below goes to `profile/`. Framework files in the plugin are never edited by this command.
 
 #### Legacy fork migration
 
@@ -54,8 +56,8 @@ Before this change, `/setup` wrote candidate data into framework files. A fork t
 
    The contact details in the legacy `05`/`06` LaTeX blocks and the rest of the legacy `CLAUDE.md` summary are used only to cross-check `profile/candidate.md`. Report every conflict (for example a different job title or email) and ask the user which to keep. Never silently pick one.
 4. Show every proposed `profile/*.md` file in full and write them only after the user confirms.
-5. Check the templates. If `.claude/skills/job-application-assistant/profile-templates/candidate.md` no longer contains `[YOUR_EMAIL]`, `behavioral.md` no longer contains `[PROFILE_TYPE]`, or `search-queries.md` no longer contains `[YOUR_JOB_BOARD]`, git's rename detection carried the old data into the template files during the merge. Build the profile from `<ref>` as above (never from a polluted template), then tell the user to restore the templates from the remote they merged, for example `git checkout upstream/master -- .claude/skills/job-application-assistant/profile-templates/`, and commit.
-6. Tell the user: "Your data is now in `profile/`. If git still shows merge conflicts in files under `.claude/skills/` or in `CLAUDE.md`, resolve them by taking the upstream version, for example `git checkout --theirs .claude/skills/job-application-assistant/04-job-evaluation.md`; for a file upstream deleted, use `git rm <path>`. Your old data stays in git history." Migration deletes nothing.
+5. Check the templates. If `${CLAUDE_SKILL_DIR}/../job-application-assistant/profile-templates/candidate.md` no longer contains `[YOUR_EMAIL]`, `behavioral.md` no longer contains `[PROFILE_TYPE]`, or `search-queries.md` no longer contains `[YOUR_JOB_BOARD]`, git's rename detection carried the old data into the template files during the merge. Build the profile from `<ref>` as above (never from a polluted template), then tell the user to restore the templates from the remote they merged, for example `git checkout upstream/master -- plugins/ai-job-search/skills/job-application-assistant/profile-templates/`, and commit.
+6. Tell the user: "Your data is now in `profile/`. If git still shows merge conflicts in files under `plugins/`, `.claude/skills/` or in `CLAUDE.md`, resolve them by taking the upstream version, for example `git checkout --theirs plugins/ai-job-search/skills/job-application-assistant/04-job-evaluation.md`; for a file upstream deleted, use `git rm <path>`. Your old data stays in git history." Migration deletes nothing.
 
 ### Step 0b: Choose a path
 

@@ -6,6 +6,8 @@ disable-model-invocation: true
 ---
 # /interview - Prepare for an Interview on a Tracked Application
 
+`${CLAUDE_SKILL_DIR}` is this skill's folder. If your tool does not expand it, read paths as relative to the folder containing this SKILL.md.
+
 You are preparing the user for a real, scheduled interview on one of their applications. The frameworks for this already exist - `07-interview-prep.md` (STAR format, tough questions, questions to ask, roleplay protocol), the candidate's STAR examples in `profile/star.md`, and the Company Research Checklist in `04-job-evaluation.md` - and the `/outcome` archive records which stage the user is at and what earlier stages surfaced. This command wires them together into a stage-specific prep pack and an optional mock interview.
 
 `/apply` optimizes what the company reads; `/interview` optimizes what the company hears. The bridge between them is consistency: the interviewer has read the submitted CV and cover letter, so everything prepared here must match what those documents claim.
@@ -36,12 +38,12 @@ v1 preps for a **specific application**. Generic no-target practice is out of sc
 2. **Fallbacks** (the application may predate `/outcome`): posting via WebFetch on the tracker row's `source` URL, or ask the user to paste it; CV via `cv/main_<company>_<role>.*` and cover letter via `cover_letters/cover_<company>_<role>.*`, deriving `<company>_<role>` by the **Subfolder naming** rule in `documents/README.md`. **Never widen those globs to the company alone**: with two roles at one company it would prep you from the sibling role's documents. State plainly which context is missing rather than guessing - and suggest `/outcome <company>` to build the archive for next time.
 3. **Ask the user what this interview is** (skip anything `outcome.md` already records): stage (phone screen / technical / case / final round), date, format (phone, video, onsite), and who is interviewing (names and titles, if known).
 4. **Read the frameworks once** - do not re-read them in later steps:
-   - `.claude/skills/job-application-assistant/07-interview-prep.md`
+   - `${CLAUDE_SKILL_DIR}/../job-application-assistant/07-interview-prep.md`
    - `profile/star.md`
    - `profile/evaluation.md`
    - `profile/candidate.md`
    - `profile/behavioral.md`
-   - `.claude/skills/job-application-assistant/04-job-evaluation.md`
+   - `${CLAUDE_SKILL_DIR}/../job-application-assistant/04-job-evaluation.md`
 
 ---
 
@@ -56,7 +58,7 @@ Additions for interview purposes:
 - **Interviewer angle:** if interviewer names are known (from Step 1 or the tracker's `contact_person`), look up their public professional profile. A hiring manager probes team fit and motivation; a senior engineer probes technical depth; HR probes the CV timeline. Note the likely angle per interviewer - do not speculate beyond public information.
 - **Conversation hooks:** 2-3 recent, verifiable company specifics (a product launch, a stated strategic priority) the user can reference naturally in answers and in the "why this company" moment.
 
-**Verify before using:** every company claim that will appear in the prep pack must be independently confirmed via WebFetch/WebSearch - same rule the repo applies to cover-letter claims. An unverified "fact" delivered confidently in an interview is worse than no fact. On a 403, retry with browser headers per `.claude/skills/job-application-assistant/09-web-research.md` rather than dropping to search snippets; a snippet is a lead, not a source.
+**Verify before using:** every company claim that will appear in the prep pack must be independently confirmed via WebFetch/WebSearch - same rule the repo applies to cover-letter claims. An unverified "fact" delivered confidently in an interview is worse than no fact. On a 403, retry with browser headers per `${CLAUDE_SKILL_DIR}/../job-application-assistant/09-web-research.md` rather than dropping to search snippets; a snippet is a lead, not a source.
 
 ---
 

@@ -17,6 +17,8 @@ allowed-tools: Bash(bun run ${CLAUDE_SKILL_DIR}/cli/src/cli.ts *)
 
 # LinkedIn Search Skill
 
+`${CLAUDE_SKILL_DIR}` is this skill's folder. If your tool does not expand it, read paths as relative to the folder containing this SKILL.md.
+
 Search live job listings from LinkedIn's public job board for **any country/region**
 (and remote). No authentication, no API key, and **zero runtime dependencies** — it runs
 with just `bun`. The location is always passed explicitly, so the same skill works for a

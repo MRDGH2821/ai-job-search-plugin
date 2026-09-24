@@ -5,10 +5,14 @@ description: >
   (LinkedIn, local job boards, and any skills added with /add-portal). Deduplicates
   across runs. Triggers on: job scrape, find jobs, search jobs, new jobs, job search,
   scrape jobs, /scrape
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash(bun --version), Bash(bun run .agents/skills/*/cli/src/cli.ts *), Bash(python tools/job_key.py:*), Bash(python3 tools/job_key.py:*), WebFetch, WebSearch, Agent, AskUserQuestion
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash(bun --version), Bash(bun run .agents/skills/*/cli/src/cli.ts *), Bash(python ${CLAUDE_SKILL_DIR}/../job-tools/scripts/job_key.py:*), Bash(python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/job_key.py:*), WebFetch, WebSearch, Agent, AskUserQuestion
 ---
 
 # Job Scraper
+
+`${CLAUDE_SKILL_DIR}` is this skill's folder. If your tool does not expand it, read paths as relative to the folder containing this SKILL.md.
+
+All state and report files (`job_scraper/`, `upskill/`, `job_search_tracker.csv`) are relative to the workspace root, the folder you run Claude in, and never inside this skill's folder.
 
 ---
 
@@ -108,7 +112,7 @@ proof the posting is open; deadlines and dead URLs remain `/rank`'s job.
 
 **From WebSearch results:** Use `WebFetch` on the posting URL and extract the same
 fields manually. If it returns HTTP 403, retry with browser headers via curl per
-`.claude/skills/job-application-assistant/09-web-research.md` before giving up — most
+`${CLAUDE_SKILL_DIR}/../job-application-assistant/09-web-research.md` before giving up — most
 bank and corporate sites reject WebFetch's user agent while serving browsers normally.
 
 **Store a URL that actually resolves to the posting.** A listing-page URL with a
@@ -146,16 +150,16 @@ For each new job, do a rapid fit check (NOT the full evaluation from `04-job-eva
 1. Derive each entry's key with the helper, never by slugifying in the moment:
 
 ```bash
-python3 tools/job_key.py --company "<company>" --title "<title>" --url "<url>"
+python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/job_key.py --company "<company>" --title "<title>" --url "<url>"
 ```
 
-It prints one line: the canonical key for that posting. The key must be a pure function of the posting, because two runs that slugify differently store the same job twice and defeat the dedup this step exists to provide. The helper also length-caps long titles and disambiguates the cap with a hash of the full slug, so a truncated title is stable across runs and two different long titles never collide. `python3 tools/job_key.py --audit` reports entries in an existing state file that predate this rule; it only reports, and never rewrites keys, since a rewritten key breaks the tracker's own company+role matching.
+It prints one line: the canonical key for that posting. The key must be a pure function of the posting, because two runs that slugify differently store the same job twice and defeat the dedup this step exists to provide. The helper also length-caps long titles and disambiguates the cap with a hash of the full slug, so a truncated title is stable across runs and two different long titles never collide. `python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/job_key.py --audit` reports entries in an existing state file that predate this rule; it only reports, and never rewrites keys, since a rewritten key breaks the tracker's own company+role matching.
 
 2. Add ALL fetched jobs (new and skipped) to `seen_jobs.json` with structure:
 ```json
 {
   "seen": {
-    "<key from tools/job_key.py>": {
+    "<key from ${CLAUDE_SKILL_DIR}/../job-tools/scripts/job_key.py>": {
       "title": "...",
       "company": "...",
       "url": "...",

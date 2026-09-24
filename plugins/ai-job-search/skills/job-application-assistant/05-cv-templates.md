@@ -4,6 +4,8 @@ framework_version: 1.5.0
 
 # CV Templates and Tailoring Guide
 
+Paths starting with `../` are relative to this file's folder.
+
 If `profile/cv.md#active-template` holds an `ACTIVE-TEMPLATE` block (written by `/add-template`), that block wins wherever it conflicts with the stock guidance below.
 
 ## Template: LaTeX moderncv (Banking Style)
@@ -269,7 +271,7 @@ Restore the highest-relevance item that was previously cut — a CV that ends mi
 Most employers run CVs through an ATS before a human sees them, and the ATS reads the PDF's embedded **text layer**, not the rendered page. A CV can pass visual inspection and still extract as garbage. After the layout passes the compile-and-inspect loop, verify the text layer:
 
 ```bash
-python tools/verify_pdf.py cv/main_<company>_<role>.pdf --dump-text cv/main_<company>_<role>.txt
+python3 ../job-tools/scripts/verify_pdf.py cv/main_<company>_<role>.pdf --dump-text cv/main_<company>_<role>.txt
 ```
 
 Extraction tries **pypdf** first (`pip install pypdf`, BSD license), then Poppler `pdftotext`. If a fallback still uses `pdftotext -layout`, it must also pass `-enc UTF-8`: Xpdf-based builds default to Latin-1, which makes every non-ASCII character in a perfectly good CV read back as a replacement character. If neither extractor is available, skip the mechanical check with a warning and rely on the visual PDF read for keyword coverage.

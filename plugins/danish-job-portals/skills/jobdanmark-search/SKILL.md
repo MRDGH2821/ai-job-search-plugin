@@ -23,6 +23,8 @@ allowed-tools: Bash(bun run ${CLAUDE_SKILL_DIR}/cli/src/cli.ts *)
 
 # Jobdanmark Search Skill
 
+`${CLAUDE_SKILL_DIR}` is this skill's folder. If your tool does not expand it, read paths as relative to the folder containing this SKILL.md.
+
 Access live Danish job listings from the Jobdanmark.dk public API. No authentication needed.
 Covers ~15,000+ active job listings across 10 categories and all Danish municipalities.
 

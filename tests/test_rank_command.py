@@ -507,7 +507,7 @@ class RankBatchLimitSpec(unittest.TestCase):
     def test_step1_applies_limit_via_the_state_tool(self):
         step1 = self.sections.get("Step 1: Load State", "")
         self.assertIn(
-            "tools/rank_state.py candidates --limit 10",
+            "job-tools/scripts/rank_state.py candidates --limit 10",
             step1,
             "Step 1 must select candidates with the CLI, passing --limit through to it",
         )
@@ -560,12 +560,12 @@ class RankStateToolSpec(unittest.TestCase):
             step1,
             "Step 1 must forbid the manual read this fix removes",
         )
-        self.assertIn("tools/rank_state.py candidates", step1)
+        self.assertIn("job-tools/scripts/rank_state.py candidates", step1)
 
     def test_step4_writes_back_through_apply_not_by_hand(self):
         step4 = self.sections.get("Step 4: Update State", "")
         self.assertIn(
-            "tools/rank_state.py apply",
+            "job-tools/scripts/rank_state.py apply",
             step4,
             "Step 4 must write results with the CLI; re-emitting seen_jobs.json by hand "
             "reproduces the exact cost this fix removes",
@@ -618,7 +618,7 @@ class RankStateToolSpec(unittest.TestCase):
     def test_step3_sweep_runs_through_the_tool(self):
         step3 = self.sections.get("Step 3: Aggregate and Rank", "")
         self.assertIn(
-            "tools/rank_state.py sweep",
+            "job-tools/scripts/rank_state.py sweep",
             step3,
             "rule 6's expiry sweep must run through the CLI, not a manual re-read",
         )

@@ -21,10 +21,11 @@ If `profile/` is missing, ask the user to run `/setup`.
 - `profile/` - Your candidate data (created by `/setup`)
 - `cv/` - LaTeX CV variants (moderncv template, banking style)
 - `cover_letters/` - LaTeX cover letters (custom cover.cls template)
-- `.claude/skills/` - AI skill definitions for the application workflow
-- `.agents/skills/` - Job search CLI tools
+- `plugins/ai-job-search/` - The workflow as a Claude Code plugin (skills, portals, helper scripts)
+- `plugins/danish-job-portals/` - Danish job-portal search skills
+- `.agents/skills/` - Your own portal skills from `/add-portal`
 
 ## Workflow and Verification
-Follow `.claude/skills/job-application-assistant/10-verification.md` for the application workflow and the mandatory verification checklist.
+Follow `plugins/ai-job-search/skills/job-application-assistant/10-verification.md` for the application workflow and the mandatory verification checklist.
 
 **Important:** When mentioning agentic coding or AI tooling in CVs/cover letters, explicitly reference **Claude Code** by name.

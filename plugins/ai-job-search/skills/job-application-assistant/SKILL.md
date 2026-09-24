@@ -10,6 +10,8 @@ framework_version: 1.4.0
 
 # Job Application Assistant
 
+`${CLAUDE_SKILL_DIR}` is this skill's folder. If your tool does not expand it, read paths as relative to the folder containing this SKILL.md.
+
 ## Profile Guard
 
 Run this before any evaluation, ranking, drafting or interview prep. If `profile/` does not exist, or `profile/candidate.md` still contains `[YOUR_EMAIL]`, stop and tell the user: "Your profile isn't set up yet. Run `/setup` first." Never score, rank or draft against placeholder data.
@@ -45,7 +47,7 @@ When the user provides a job posting (URL or text), follow this workflow:
 
 ### Step 3b: Record the Application
 - Run this once both documents exist. A CV or cover letter drafted alone is not yet an application.
-- Follow **`/apply` Step 6b** (`.claude/commands/apply.md`) exactly: same header, same match-then-update rule, same `drafted` row, same posting archive, same prohibition on touching `job_scraper/seen_jobs.json`. It is stated there once so the two paths cannot drift. Four of its values are named in `/apply`'s own terms: `cv_file`/`cover_letter_file` are the paths written in Steps 2 and 3 here, `source` is the posting URL from Step 1, `deadline` is the application deadline from the posting text Step 1 keeps verbatim (empty when the posting states none - never guess one), and the posting text item 7 archives is the one Step 1 read.
+- Follow **`/apply` Step 6b** (`${CLAUDE_SKILL_DIR}/../apply/SKILL.md`) exactly: same header, same match-then-update rule, same `drafted` row, same posting archive, same prohibition on touching `job_scraper/seen_jobs.json`. It is stated there once so the two paths cannot drift. Four of its values are named in `/apply`'s own terms: `cv_file`/`cover_letter_file` are the paths written in Steps 2 and 3 here, `source` is the posting URL from Step 1, `deadline` is the application deadline from the posting text Step 1 keeps verbatim (empty when the posting states none - never guess one), and the posting text item 7 archives is the one Step 1 read.
 - This step exists here because `/scrape` Step 5 routes straight into this skill. Without it, that path writes two documents and records nothing.
 
 ### Step 4: Interview Preparation

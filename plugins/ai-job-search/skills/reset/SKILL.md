@@ -6,6 +6,8 @@ disable-model-invocation: true
 ---
 # /reset - Reset Candidate Profile Data
 
+`${CLAUDE_SKILL_DIR}` is this skill's folder. If your tool does not expand it, read paths as relative to the folder containing this SKILL.md.
+
 You are resetting parts of the job search framework back to a blank state so the user can start fresh with `/setup`.
 
 **This command is destructive.** Nothing is deleted until the user explicitly confirms. Follow these steps exactly in order.
@@ -42,7 +44,7 @@ Before doing anything, show the user precisely what will be wiped.
 
 ### If scope includes `profile`:
 
-Read each of these and report whether it holds data or is already blank (still matches its template in `.claude/skills/job-application-assistant/profile-templates/`):
+Read each of these and report whether it holds data or is already blank (still matches its template in `${CLAUDE_SKILL_DIR}/../job-application-assistant/profile-templates/`):
 
 - `profile/candidate.md`
 - `profile/behavioral.md`
@@ -122,7 +124,7 @@ Wait for the user's response.
 
 ### Profile reset
 
-For each file listed in Step 1, copy `.claude/skills/job-application-assistant/profile-templates/<name>` over `profile/<name>`.
+For each file listed in Step 1, copy `${CLAUDE_SKILL_DIR}/../job-application-assistant/profile-templates/<name>` over `profile/<name>`.
 
 **Exception, keep the Active Template section:** before overwriting `profile/cv.md` and `profile/cover-letter.md`, read the text between `<!-- BEGIN ACTIVE-TEMPLATE` and `<!-- END ACTIVE-TEMPLATE -->` if present. After copying the template, put that block back under `## Active Template`. A reset clears data, not the user's template registration.
 

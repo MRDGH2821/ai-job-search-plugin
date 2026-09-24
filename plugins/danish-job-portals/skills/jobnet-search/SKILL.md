@@ -24,6 +24,8 @@ allowed-tools: Bash(bun run ${CLAUDE_SKILL_DIR}/cli/src/cli.ts *)
 
 # Jobnet-Search Skill
 
+`${CLAUDE_SKILL_DIR}` is this skill's folder. If your tool does not expand it, read paths as relative to the folder containing this SKILL.md.
+
 Access live Danish job listings from the Jobnet.dk public API. No authentication needed.
 Jobnet is operated by STAR (Styrelsen for Arbejdsmarked og Rekruttering) and is Denmark's
 official government job portal — covering public sector positions as well as many private

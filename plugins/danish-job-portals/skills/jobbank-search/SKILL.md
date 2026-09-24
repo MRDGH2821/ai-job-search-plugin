@@ -25,6 +25,8 @@ allowed-tools: Bash(bun run ${CLAUDE_SKILL_DIR}/cli/src/cli.ts *)
 
 # Jobbank Search Skill
 
+`${CLAUDE_SKILL_DIR}` is this skill's folder. If your tool does not expand it, read paths as relative to the folder containing this SKILL.md.
+
 Search live Danish job listings from [Akademikernes Jobbank](https://jobbank.dk) — Denmark's primary job portal for highly educated candidates. Uses the RSS feed for search (up to 100 results) and JSON-LD parsing for detailed job information. Jobbank may block automated requests with Cloudflare bot protection; if that happens, report the portal as unavailable and use WebSearch fallback instead of retrying.
 
 ## When to use this skill

@@ -9,6 +9,8 @@ allowed-tools: Read, Write, Glob, Grep, WebFetch, WebSearch
 
 # Upskill
 
+All state and report files (`job_scraper/`, `upskill/`, `job_search_tracker.csv`) are relative to the workspace root, the folder you run Claude in, and never inside this skill's folder.
+
 ---
 
 ## Overview
