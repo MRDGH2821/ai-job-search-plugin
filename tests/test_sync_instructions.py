@@ -172,3 +172,25 @@ class WiringTests(unittest.TestCase):
     def test_guard_reviews_the_entry(self):
         guards = (paths.REPO / "tools" / "security_guards.py").read_text(encoding="utf-8")
         self.assertIn(ENTRY, guards)
+
+
+class RepoRootTests(unittest.TestCase):
+    def test_repo_root_is_in_sync(self):
+        proc = run(paths.REPO, "--check", "--root", str(paths.REPO))
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+
+    def test_claude_md_is_just_the_import(self):
+        self.assertEqual((paths.REPO / "CLAUDE.md").read_text(encoding="utf-8"), "@AGENTS.md\n")
+
+    def test_agents_md_keeps_repo_notes_outside_the_block(self):
+        text = (paths.REPO / "AGENTS.md").read_text(encoding="utf-8")
+        outside = text.split(START, 1)[0] + text.split(END, 1)[1]
+        self.assertIn("## Repository layout", outside)
+        self.assertIn("plugins/ai-job-search/", outside)
+        self.assertIn("framework_version:", text.split(START, 1)[0])
+
+    def test_readme_and_changelog_mention_the_command(self):
+        self.assertIn("/sync-instructions", (paths.REPO / "README.md").read_text(encoding="utf-8"))
+        changelog = (paths.REPO / "CHANGELOG.md").read_text(encoding="utf-8")
+        unreleased = changelog.split("## [Unreleased]", 1)[1].split("\n## [", 1)[0]
+        self.assertIn("/sync-instructions", unreleased)

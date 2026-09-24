@@ -179,8 +179,9 @@ class TestClaudeMdAndApply(unittest.TestCase):
         self.assertIsNone(SETUP_TOKEN.search(text), "CLAUDE.md must hold no /setup slots")
         self.assertNotIn("## Candidate Profile", text)
         self.assertNotIn("## Verification Checklist", text)
-        self.assertIn("10-verification.md", text)
-        self.assertIn("profile/", text)
+        agents = (REPO / "AGENTS.md").read_text(encoding="utf-8")
+        self.assertIn("10-verification.md", agents)
+        self.assertIn("profile/", agents)
 
     def test_apply_runs_profile_guard_first(self):
         text = APPLY.read_text(encoding="utf-8")
