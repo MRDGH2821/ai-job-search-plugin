@@ -8,7 +8,7 @@ framework_version: 1.0.0
 
 ## Installed portal CLIs (primary for `/scrape`)
 
-`/scrape` runs every installed portal skill's CLI first: `linkedin-search` and `freehire-search` from the `ai-job-search` plugin, the Danish portals if the `danish-job-portals` plugin is on, and any skill you add with `/add-portal` (in `.agents/skills/`). You do **not** need a matching `site:` line below for those CLIs to run.
+`/scrape` runs every installed portal skill's CLI first: `linkedin-search` and `freehire-search` from the `ai-job-search-plugin` plugin, the Danish portals if the `danish-job-portals` plugin is on, and any skill you add with `/add-portal` (in `.agents/skills/`). You do **not** need a matching `site:` line below for those CLIs to run.
 
 The `site:` query templates in this file are the **WebSearch fallback** — for portals without a CLI, company career pages, or when a CLI fails.
 

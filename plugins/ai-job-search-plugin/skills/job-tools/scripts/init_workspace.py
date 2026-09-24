@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Lay out an ai-job-search workspace in the current folder.
+"""Lay out an ai-job-search-plugin workspace in the current folder.
 
 Usage: python3 init_workspace.py [--root DIR]
 

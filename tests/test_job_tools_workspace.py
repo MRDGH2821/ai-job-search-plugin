@@ -1,6 +1,6 @@
 """The job-tools scripts run from the workspace root (the current directory).
 
-After the plugin move the scripts live in plugins/ai-job-search/skills/job-tools/scripts/,
+After the plugin move the scripts live in plugins/ai-job-search-plugin/skills/job-tools/scripts/,
 and in a plugin install inside the plugin cache. A default path derived from
 __file__ points there instead of at the user's workspace (final review, branch 2).
 """

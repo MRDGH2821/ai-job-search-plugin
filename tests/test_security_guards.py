@@ -527,7 +527,7 @@ class TestTemplateGitignoreGuard(unittest.TestCase):
         self.addCleanup(shutil.rmtree, tmp, ignore_errors=True)
         full = "\n".join(security_guards.REQUIRED_IGNORE_RULES) + "\n"
         (tmp / ".gitignore").write_text(full, encoding="utf-8")
-        wt = tmp / "plugins" / "ai-job-search" / "skills" / "job-tools" / "workspace-template"
+        wt = tmp / "plugins" / "ai-job-search-plugin" / "skills" / "job-tools" / "workspace-template"
         wt.mkdir(parents=True)
         (wt / "gitignore.template").write_text(full.replace("salary_data.json\n", ""), encoding="utf-8")
         mod = importlib.reload(security_guards)

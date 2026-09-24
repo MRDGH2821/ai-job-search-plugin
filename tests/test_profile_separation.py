@@ -259,7 +259,7 @@ class TestDocs(unittest.TestCase):
     def test_setup_md_restores_templates_before_committing_the_merge(self):
         setup_md = (REPO / "SETUP.md").read_text(encoding="utf-8")
         section9 = setup_md.split("## 9. Merging the profile-separation change", 1)[1].split("\n## ", 1)[0]
-        self.assertIn("git checkout MERGE_HEAD -- plugins/ai-job-search/skills/job-application-assistant/profile-templates/", section9)
+        self.assertIn("git checkout MERGE_HEAD -- plugins/ai-job-search-plugin/skills/job-application-assistant/profile-templates/", section9)
         self.assertLess(section9.index("MERGE_HEAD"), section9.index("Commit the merge"))
 
     def test_setup_md_covers_claude_md_and_deleted_file_conflicts(self):

@@ -41,7 +41,7 @@ errors: list[str] = []
 # skill's allowed-tools in the plugin layout change; ALLOWED_SKILL_TOOLS below
 # reviews those.
 ALLOWED_PERMISSIONS = {
-    "Skill(ai-job-search:job-application-assistant)",
+    "Skill(ai-job-search-plugin:job-application-assistant)",
     "Bash(pdftotext:*)",
 }
 
@@ -74,9 +74,9 @@ ALLOWED_BARE_BASH = {"job-application-assistant"}
 # that points the clone at another marketplace or plugin makes every fork load
 # code nobody reviewed here, so it must change these values in the same PR.
 ALLOWED_MARKETPLACES = {
-    "ai-job-search": {"source": {"source": "directory", "path": "./"}},
+    "ai-job-search-plugin": {"source": {"source": "directory", "path": "./"}},
 }
-ALLOWED_PLUGINS = {"ai-job-search@ai-job-search", "danish-job-portals@ai-job-search"}
+ALLOWED_PLUGINS = {"ai-job-search-plugin@ai-job-search-plugin", "danish-job-portals@ai-job-search-plugin"}
 
 # Plugin components that run code without a model decision or a prompt. The
 # template ships none; like ALLOWED_HOOKS, adding one needs a guard change.
@@ -253,7 +253,7 @@ def check_permissions() -> None:
         print(f"note: allowlisted permission not present in settings.json: {entry!r}")
 
 
-WORKSPACE_GITIGNORE = "plugins/ai-job-search/skills/job-tools/workspace-template/gitignore.template"
+WORKSPACE_GITIGNORE = "plugins/ai-job-search-plugin/skills/job-tools/workspace-template/gitignore.template"
 
 
 def check_gitignore() -> None:

@@ -3,8 +3,8 @@
 
 Usage: python3 sync_instructions.py [--check] [--root DIR]
 
-Writes the ai-job-search managed block (from agents-block.md next to this script)
-between <!-- ai-job-search:start vX --> and <!-- ai-job-search:end --> in
+Writes the ai-job-search-plugin managed block (from agents-block.md next to this script)
+between <!-- ai-job-search-plugin:start vX --> and <!-- ai-job-search-plugin:end --> in
 AGENTS.md, and makes sure CLAUDE.md contains an `@AGENTS.md` line. Text outside
 the markers, in either file, is never changed. --root defaults to the current
 directory: the workspace root, never this script's folder.
@@ -22,8 +22,11 @@ import sys
 from pathlib import Path
 
 TEMPLATE = Path(__file__).resolve().parent / "agents-block.md"
-START_RE = re.compile(r"^<!-- ai-job-search:start(?: v\S+)? -->$")
-END = "<!-- ai-job-search:end -->"
+START_RE = re.compile(r"^<!-- ai-job-search-plugin:start(?: v\S+)? -->$")
+END = "<!-- ai-job-search-plugin:end -->"
+# Workspaces created before the rename carry these; a sync replaces them.
+LEGACY_START_RE = re.compile(r"^<!-- ai-job-search:start(?: v\S+)? -->$")
+LEGACY_END = "<!-- ai-job-search:end -->"
 IMPORT = "@AGENTS.md"
 BOM = b"\xef\xbb\xbf"
 
@@ -50,7 +53,7 @@ def load_template() -> tuple[str, str]:
 
 def managed_block() -> list[str]:
     version, body = load_template()
-    return [f"<!-- ai-job-search:start v{version} -->", *body.split("\n"), END]
+    return [f"<!-- ai-job-search-plugin:start v{version} -->", *body.split("\n"), END]
 
 
 def read(path: Path) -> tuple[str, bool, str]:
@@ -81,13 +84,21 @@ def write(path: Path, text: str, bom: bool, newline: str) -> None:
 
 
 def locate(lines: list[str]) -> tuple[int, int] | None:
-    starts = [i for i, line in enumerate(lines) if START_RE.match(line.strip())]
-    ends = [i for i, line in enumerate(lines) if line.strip() == END]
+    def find(start_re, end):
+        return ([i for i, line in enumerate(lines) if start_re.match(line.strip())],
+                [i for i, line in enumerate(lines) if line.strip() == end])
+
+    new_s, new_e = find(START_RE, END)
+    old_s, old_e = find(LEGACY_START_RE, LEGACY_END)
+    if (new_s or new_e) and (old_s or old_e):
+        raise MarkerError("AGENTS.md: both old (ai-job-search) and new (ai-job-search-plugin) markers are present. "
+                          "Keep one block; nothing was written.")
+    starts, ends = (new_s, new_e) if (new_s or new_e) else (old_s, old_e)
     if not starts and not ends:
         return None
     if len(starts) != 1 or len(ends) != 1 or ends[0] < starts[0]:
         raise MarkerError(
-            "AGENTS.md: malformed ai-job-search markers "
+            "AGENTS.md: malformed ai-job-search-plugin markers "
             f"(start on line(s) {[s + 1 for s in starts]}, end on line(s) {[e + 1 for e in ends]}). "
             "Fix them by hand; nothing was written."
         )
@@ -184,9 +195,9 @@ def check(root: Path) -> list[str]:
     p = plan(root)
     new, old, _, _ = p["agents"]
     if locate(old.split("\n")) is None:
-        problems.append("AGENTS.md: no ai-job-search block - run /sync-instructions")
+        problems.append("AGENTS.md: no ai-job-search-plugin block - run /sync-instructions")
     elif new != old:
-        problems.append("AGENTS.md: the ai-job-search block is out of date - run /sync-instructions")
+        problems.append("AGENTS.md: the ai-job-search-plugin block is out of date - run /sync-instructions")
     if not isinstance(p["claude"], str):
         new, old, _, _ = p["claude"]
         if new != old:

@@ -21,9 +21,9 @@ def frontmatter(path):
 class TestMarketplace(unittest.TestCase):
     def test_marketplace_lists_both_plugins(self):
         data = json.loads((REPO / ".claude-plugin" / "marketplace.json").read_text(encoding="utf-8"))
-        self.assertEqual(data["name"], "ai-job-search")
+        self.assertEqual(data["name"], "ai-job-search-plugin")
         entries = {p["name"]: p["source"] for p in data["plugins"]}
-        self.assertEqual(entries, {"ai-job-search": "./plugins/ai-job-search",
+        self.assertEqual(entries, {"ai-job-search-plugin": "./plugins/ai-job-search-plugin",
                                    "danish-job-portals": "./plugins/danish-job-portals"})
         for name, source in entries.items():
             manifest = json.loads((REPO / source / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
@@ -121,10 +121,10 @@ class TestSkillPaths(unittest.TestCase):
 class TestPermissions(unittest.TestCase):
     def test_settings_load_both_plugins_and_hold_no_script_paths(self):
         data = json.loads(paths.SETTINGS.read_text(encoding="utf-8"))
-        self.assertEqual(data["extraKnownMarketplaces"]["ai-job-search"]["source"],
+        self.assertEqual(data["extraKnownMarketplaces"]["ai-job-search-plugin"]["source"],
                          {"source": "directory", "path": "./"})
-        self.assertIs(data["enabledPlugins"]["ai-job-search@ai-job-search"], True)
-        self.assertIn("danish-job-portals@ai-job-search", data["enabledPlugins"])
+        self.assertIs(data["enabledPlugins"]["ai-job-search-plugin@ai-job-search-plugin"], True)
+        self.assertIn("danish-job-portals@ai-job-search-plugin", data["enabledPlugins"])
         allow = data["permissions"]["allow"]
         self.assertFalse([a for a in allow if "tools/" in a or "salary_lookup" in a or ".agents/skills/" in a], allow)
 
@@ -179,7 +179,7 @@ class TestDocs(unittest.TestCase):
     def test_readme_explains_both_install_routes_and_capa(self):
         text = (REPO / "README.md").read_text(encoding="utf-8")
         self.assertIn("/plugin marketplace add MadsLorentzen/ai-job-search", text)
-        self.assertIn("/plugin install ai-job-search@ai-job-search", text)
+        self.assertIn("/plugin install ai-job-search-plugin@ai-job-search-plugin", text)
         self.assertIn("capa registry add MadsLorentzen/ai-job-search", text)
         self.assertIn("untested outside Claude Code", text)
         self.assertNotIn(".claude/commands/", text)
@@ -187,7 +187,7 @@ class TestDocs(unittest.TestCase):
     def test_setup_md_has_the_upgrade_section(self):
         text = (REPO / "SETUP.md").read_text(encoding="utf-8")
         section = text.split("## 10. Upgrading across the plugin layout change", 1)[1].split("\n## ", 1)[0]
-        for needle in ("trust", "plugins/ai-job-search/skills/", "settings.local.json", "danish-job-portals"):
+        for needle in ("trust", "plugins/ai-job-search-plugin/skills/", "settings.local.json", "danish-job-portals"):
             self.assertIn(needle, section)
 
     def test_agents_md_and_contributing_point_at_capa(self):
@@ -236,10 +236,10 @@ class TestReviewFixes(unittest.TestCase):
         for d in paths.portal_dirs():
             self.assertTrue(str(frontmatter(d / "SKILL.md").get("enabled")).lower().startswith("true"), d.name)
         data = json.loads(paths.SETTINGS.read_text(encoding="utf-8"))
-        self.assertIs(data["enabledPlugins"]["danish-job-portals@ai-job-search"], False)
+        self.assertIs(data["enabledPlugins"]["danish-job-portals@ai-job-search-plugin"], False)
         setup = paths.command_file("setup").read_text(encoding="utf-8")
         self.assertNotIn("edit each of the four Danish `SKILL.md` files", setup)
-        self.assertIn("danish-job-portals@ai-job-search", setup)
+        self.assertIn("danish-job-portals@ai-job-search-plugin", setup)
 
     def test_portal_opt_outs_live_in_the_workspace(self):
         self.assertIn("disabled-portals", {h for h in __import__("tests.test_profile_separation", fromlist=["headings"]).headings(paths.TPL / "search-queries.md")})

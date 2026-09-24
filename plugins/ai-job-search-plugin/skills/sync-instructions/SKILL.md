@@ -15,7 +15,7 @@ The user typing `/sync-instructions` is the request. Run it now, without asking 
 python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/sync_instructions.py $ARGUMENTS
 ```
 
-It keeps one managed block between `<!-- ai-job-search:start … -->` and `<!-- ai-job-search:end -->` in `AGENTS.md` and one `@AGENTS.md` line in `CLAUDE.md`. Everything else in both files is left alone.
+It keeps one managed block between `<!-- ai-job-search-plugin:start … -->` and `<!-- ai-job-search-plugin:end -->` in `AGENTS.md` and one `@AGENTS.md` line in `CLAUDE.md`. Everything else in both files is left alone.
 
 Report the script's output lines to the user. Then:
 - Exit 0: done. If `AGENTS.md` or `CLAUDE.md` says `created` or `updated`, tell the user the new instructions apply from their next Claude Code session.

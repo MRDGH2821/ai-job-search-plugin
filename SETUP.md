@@ -179,7 +179,7 @@ Or manually: fork on GitHub, then clone your fork.
 > personalization there is still the right move. Everything else in this guide works
 > identically either way.
 
-**Starting from the plugin instead of a clone?** Install it (`/plugin marketplace add MadsLorentzen/ai-job-search`, then `/plugin install ai-job-search@ai-job-search`), open Claude Code in an empty folder and run `/init-workspace`. It lays out the same folders this repository has, then points you to `/setup`.
+**Starting from the plugin instead of a clone?** Install it (`/plugin marketplace add MadsLorentzen/ai-job-search`, then `/plugin install ai-job-search-plugin@ai-job-search-plugin`), open Claude Code in an empty folder and run `/init-workspace`. It lays out the same folders this repository has, then points you to `/setup`.
 
 ## 3. Install job search CLI dependencies
 Run these from the repository root. First start Claude Code here once and accept the folder-trust prompt: that is what loads the `ai-job-search` plugin from `plugins/` (the `danish-job-portals` plugin stays off until you turn it on, see section 10).
@@ -253,11 +253,11 @@ The `--section search` option is especially useful as your priorities evolve. It
 
 If you have salary data (from a union, salary survey, Glassdoor, or personal research):
 
-1. **Option A:** Create `salary_data.json` manually in the repo root, your workspace (see `plugins/ai-job-search/skills/job-tools/scripts/README_SALARY_TOOL.md` for the format)
+1. **Option A:** Create `salary_data.json` manually in the repo root, your workspace (see `plugins/ai-job-search-plugin/skills/job-tools/scripts/README_SALARY_TOOL.md` for the format)
 2. **Option B:** Convert from Excel:
    ```bash
    pip install openpyxl
-   python3 plugins/ai-job-search/skills/job-tools/scripts/convert_salary_excel.py path/to/salary-data.xlsx --source "My Salary Data 2025"
+   python3 plugins/ai-job-search-plugin/skills/job-tools/scripts/convert_salary_excel.py path/to/salary-data.xlsx --source "My Salary Data 2025"
    ```
 
 This creates `salary_data.json` which the `/apply` workflow uses for salary benchmarking. If you skip this step, salary lookup is simply omitted.
@@ -333,18 +333,18 @@ Older versions stored your profile inside framework files (`.claude/skills/job-a
 
 1. `git merge upstream/master`. Expect conflicts in files under `.claude/skills/` or `plugins/`.
 2. Resolve every conflict under `.claude/skills/` or `plugins/` and in `CLAUDE.md` by taking upstream's version: `git checkout --theirs <path>` for each, then `git add` them. If git reports that upstream deleted a file you changed (for example `01-candidate-profile.md`), run `git rm <path>` for it instead. Your data is not lost; it is still in your git history.
-3. Restore the blank templates. Git's rename detection can merge your old profile into the new template files **without reporting a conflict**. While the merge is still in progress, run `git checkout MERGE_HEAD -- plugins/ai-job-search/skills/job-application-assistant/profile-templates/` and `git add` that folder.
+3. Restore the blank templates. Git's rename detection can merge your old profile into the new template files **without reporting a conflict**. While the merge is still in progress, run `git checkout MERGE_HEAD -- plugins/ai-job-search-plugin/skills/job-application-assistant/profile-templates/` and `git add` that folder.
 4. Commit the merge, then run `/setup`. It finds your old profile in git history, shows you the new `profile/` files built from it, and writes them only after you confirm.
 5. Commit `profile/` to your own (private) repository.
 
 ## 10. Upgrading across the plugin layout change
 
-The framework now ships as two Claude Code plugins inside this repo (`plugins/ai-job-search/`, `plugins/danish-job-portals/`).
+The framework now ships as two Claude Code plugins inside this repo (`plugins/ai-job-search-plugin/`, `plugins/danish-job-portals/`).
 
 1. After merging, start Claude Code in your clone and accept the folder-trust prompt once. Until you do, the plugins do not load and `/apply` and the other commands are missing.
-2. If you had edited a command, your edit followed the rename: `.claude/commands/<x>.md` is now `plugins/ai-job-search/skills/<x>/SKILL.md`, with a short frontmatter block added on top. A conflict there resolves like any other.
+2. If you had edited a command, your edit followed the rename: `.claude/commands/<x>.md` is now `plugins/ai-job-search-plugin/skills/<x>/SKILL.md`, with a short frontmatter block added on top. A conflict there resolves like any other.
 3. Your own portals from `/add-portal` stay in `.agents/skills/`. The shipped ones moved into the plugins.
-4. The Danish portals are now a separate plugin, off by default. In Denmark? Turn them on in `.claude/settings.local.json`: `{"enabledPlugins": {"danish-job-portals@ai-job-search": true}}` (or run `/setup`, which offers it). Portals you had switched off with `enabled: false` go under Disabled Portals in `profile/search-queries.md` instead.
+4. The Danish portals are now a separate plugin, off by default. In Denmark? Turn them on in `.claude/settings.local.json`: `{"enabledPlugins": {"danish-job-portals@ai-job-search-plugin": true}}` (or run `/setup`, which offers it). Portals you had switched off with `enabled: false` go under Disabled Portals in `profile/search-queries.md` instead.
 5. `salary_data.json` stays in your repo root; the salary tool now looks for it in the folder you run Claude in.
 
 ## Troubleshooting

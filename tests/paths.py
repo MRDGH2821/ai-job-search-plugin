@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-PLUGIN = REPO / "plugins" / "ai-job-search"
+PLUGIN = REPO / "plugins" / "ai-job-search-plugin"
 MARKET = REPO / "plugins" / "danish-job-portals"
 SKILLS = PLUGIN / "skills"
 FW = SKILLS / "job-application-assistant"

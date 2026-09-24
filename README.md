@@ -109,7 +109,7 @@ Bash / zsh / Git Bash:
 for cli in plugins/danish-job-portals/skills/*/cli; do (cd "$cli" && bun install); done
 ```
 
-`linkedin-search` and `freehire-search` (in `plugins/ai-job-search/skills/`) have zero runtime dependencies and run with plain `bun`.
+`linkedin-search` and `freehire-search` (in `plugins/ai-job-search-plugin/skills/`) have zero runtime dependencies and run with plain `bun`.
 
 ### 3. Set up your profile
 
@@ -301,8 +301,8 @@ Maintaining a fork adapted to your market or language? Add it to the [Community 
 
 For **country-agnostic** starting points outside Denmark, the repo ships two portal skills alongside the Danish demos:
 
-- **`linkedin-search`** — built on LinkedIn's public, unauthenticated `jobs-guest` endpoints. Field-agnostic, **zero runtime dependencies** (runs with just `bun`), and takes the search location as an explicit flag, so it works for any market out of the box (`-l "Berlin, Germany"`, `-l "Mumbai, Maharashtra, India"`, `-l "Remote"`, …). Intended for **personal use only** — automated access is against LinkedIn's Terms of Service, so keep volume low. See `plugins/ai-job-search/skills/linkedin-search/SKILL.md`.
-- **`freehire-search`** — queries the [freehire.me](https://freehire.me) aggregator's public REST API (JSON, no API key). Tech-focused (software, data, engineering, DevOps, remote), multi-market via facet flags (`--region`, `--country`, `--remote`), and **zero runtime dependencies**. Unlike the HTML-scraping Danish portals, results come back structured (skills, seniority, category). The backend is MIT-licensed and [self-hostable](https://github.com/strelov1/freehire) — point `FREEHIRE_API_URL` at your own instance if you prefer. See `plugins/ai-job-search/skills/freehire-search/SKILL.md`.
+- **`linkedin-search`** — built on LinkedIn's public, unauthenticated `jobs-guest` endpoints. Field-agnostic, **zero runtime dependencies** (runs with just `bun`), and takes the search location as an explicit flag, so it works for any market out of the box (`-l "Berlin, Germany"`, `-l "Mumbai, Maharashtra, India"`, `-l "Remote"`, …). Intended for **personal use only** — automated access is against LinkedIn's Terms of Service, so keep volume low. See `plugins/ai-job-search-plugin/skills/linkedin-search/SKILL.md`.
+- **`freehire-search`** — queries the [freehire.me](https://freehire.me) aggregator's public REST API (JSON, no API key). Tech-focused (software, data, engineering, DevOps, remote), multi-market via facet flags (`--region`, `--country`, `--remote`), and **zero runtime dependencies**. Unlike the HTML-scraping Danish portals, results come back structured (skills, seniority, category). The backend is MIT-licensed and [self-hostable](https://github.com/strelov1/freehire) — point `FREEHIRE_API_URL` at your own instance if you prefer. See `plugins/ai-job-search-plugin/skills/freehire-search/SKILL.md`.
 
 ### Extending the framework: portals, templates, criteria - and borrowing from other forks
 
@@ -324,7 +324,7 @@ Market-specific *data sources* (a national salary database, local award-rate tab
 
 ### Salary benchmarking
 
-The salary tool works with any salary data you provide (union statistics, Glassdoor exports, personal research, etc.). See `plugins/ai-job-search/skills/job-tools/scripts/README_SALARY_TOOL.md` for the expected format and setup. `salary_data.json` lives in your workspace root. If you don't have salary data, the salary step is simply skipped.
+The salary tool works with any salary data you provide (union statistics, Glassdoor exports, personal research, etc.). See `plugins/ai-job-search-plugin/skills/job-tools/scripts/README_SALARY_TOOL.md` for the expected format and setup. `salary_data.json` lives in your workspace root. If you don't have salary data, the salary step is simply skipped.
 
 ### Starting over
 
@@ -365,8 +365,8 @@ To get the most from this, invest time during `/setup` in describing not just yo
 
 ```
 /plugin marketplace add MadsLorentzen/ai-job-search
-/plugin install ai-job-search@ai-job-search
-/plugin install danish-job-portals@ai-job-search   # optional, Danish job boards
+/plugin install ai-job-search-plugin@ai-job-search-plugin
+/plugin install danish-job-portals@ai-job-search-plugin   # optional, Danish job boards
 ```
 
 Then, in an empty folder, run `/init-workspace` (it lays out the CV and cover-letter sources, fonts, the `documents/` tree and a privacy `.gitignore`, and offers `git init`), then `/setup` to fill in your details.
@@ -377,7 +377,7 @@ Then, in an empty folder, run `/init-workspace` (it lays out the CV and cover-le
 
 ```
 capa registry add MadsLorentzen/ai-job-search
-capa add ai-job-search:ai-job-search
+capa add ai-job-search-plugin:ai-job-search
 ```
 
 This is untested outside Claude Code: capa copies the skills into your harness, and each skill falls back to paths relative to its own folder.

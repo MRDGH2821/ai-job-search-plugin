@@ -2,9 +2,9 @@
 framework_version: 1.0.0
 ---
 <!-- Managed by /sync-instructions: text between these markers is replaced on every sync. Put your own notes outside them. -->
-## Job search workspace (ai-job-search)
+## Job search workspace (ai-job-search-plugin)
 
-This folder is a job-application workspace for the `ai-job-search` Claude Code plugin.
+This folder is a job-application workspace for the `ai-job-search-plugin` Claude Code plugin.
 
 - **Candidate data** lives in `profile/` (`candidate.md`, `behavioral.md`, `evaluation.md`,
   `cv.md`, `cover-letter.md`, `writing-patterns.md`, `star.md`, `search-queries.md`). Read facts

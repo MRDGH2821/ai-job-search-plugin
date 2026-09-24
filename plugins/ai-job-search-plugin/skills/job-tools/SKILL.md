@@ -1,6 +1,6 @@
 ---
 name: job-tools
-description: Helper scripts used by the ai-job-search skills - tracker state, job keys, PDF checks, robots.txt check, salary lookup. Not for direct use.
+description: Helper scripts used by the ai-job-search-plugin skills - tracker state, job keys, PDF checks, robots.txt check, salary lookup. Not for direct use.
 user-invocable: false
 ---
 

@@ -1,9 +1,9 @@
 {
   "name": "danish-job-portals",
   "version": "1.8.0",
-  "description": "Job portal search skills for Denmark (Jobbank, Jobdanmark, Jobindex, Jobnet), used by /scrape from the ai-job-search plugin.",
-  "author": { "name": "Mads Lorentzen" },
-  "homepage": "https://github.com/MadsLorentzen/ai-job-search",
-  "repository": "https://github.com/MadsLorentzen/ai-job-search",
+  "description": "Job portal search skills for Denmark (Jobbank, Jobdanmark, Jobindex, Jobnet), used by /scrape from the ai-job-search-plugin plugin.",
+  "author": { "name": "MRDGH2821" },
+  "homepage": "https://github.com/MRDGH2821/ai-job-search-plugin",
+  "repository": "https://github.com/MRDGH2821/ai-job-search-plugin",
   "license": "MIT"
 }

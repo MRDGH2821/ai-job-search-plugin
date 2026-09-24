@@ -10,8 +10,8 @@ from pathlib import Path
 from tests import paths
 
 SCRIPT = paths.JOB_TOOLS / "sync_instructions.py"
-START = "<!-- ai-job-search:start v"
-END = "<!-- ai-job-search:end -->"
+START = "<!-- ai-job-search-plugin:start v"
+END = "<!-- ai-job-search-plugin:end -->"
 
 
 def run(root, *args):
@@ -194,7 +194,7 @@ class RepoRootTests(unittest.TestCase):
         text = (paths.REPO / "AGENTS.md").read_text(encoding="utf-8")
         outside = text.split(START, 1)[0] + text.split(END, 1)[1]
         self.assertIn("## Repository layout", outside)
-        self.assertIn("plugins/ai-job-search/", outside)
+        self.assertIn("plugins/ai-job-search-plugin/", outside)
         self.assertIn("framework_version:", text.split(START, 1)[0])
 
     def test_readme_and_changelog_mention_the_command(self):
@@ -272,3 +272,26 @@ class ReviewFixTests(unittest.TestCase):
         for text in (paths.skill_file("sync-instructions").read_text(encoding="utf-8"),
                      paths.command_file("setup").read_text(encoding="utf-8")):
             self.assertIn("unreadable file or broken symlink", text)
+
+
+class LegacyMarkerTests(unittest.TestCase):
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.root = Path(tmp.name)
+
+    def test_legacy_markers_are_upgraded(self):
+        (self.root / "AGENTS.md").write_text(
+            "mine\n<!-- ai-job-search:start v1.0.0 -->\nold\n<!-- ai-job-search:end -->\ntail\n", encoding="utf-8")
+        proc = run(self.root)
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        text = (self.root / "AGENTS.md").read_text(encoding="utf-8")
+        self.assertTrue(text.startswith("mine\n<!-- ai-job-search-plugin:start v"))
+        self.assertTrue(text.endswith("<!-- ai-job-search-plugin:end -->\ntail\n"))
+        self.assertNotIn("<!-- ai-job-search:start", text)
+        self.assertEqual(run(self.root, "--check").returncode, 0)
+
+    def test_mixed_old_and_new_markers_are_malformed(self):
+        (self.root / "AGENTS.md").write_text(
+            "<!-- ai-job-search:start v1 -->\nx\n<!-- ai-job-search-plugin:end -->\n", encoding="utf-8")
+        self.assertEqual(run(self.root).returncode, 2)
