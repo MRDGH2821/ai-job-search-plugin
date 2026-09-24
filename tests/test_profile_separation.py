@@ -189,22 +189,12 @@ class TestClaudeMdAndApply(unittest.TestCase):
 LEGACY_NAMES = ("01-candidate-profile.md", "02-behavioral-profile.md", "job-scraper/search-queries.md")
 
 
-def strip_setup_migration(text: str) -> str:
-    """Remove /setup's Legacy fork migration subsection, the one allowed mention."""
-    marker = "#### Legacy fork migration"
-    if marker not in text:
-        return text
-    head, tail = text.split(marker, 1)
-    rest = tail.split("\n### ", 1)
-    return head + ("\n### " + rest[1] if len(rest) > 1 else "")
-
-
 class TestNoLegacyReferences(unittest.TestCase):
     def test_claude_tree_names_no_legacy_profile_files(self):
         offenders = []
         files = paths.framework_markdown() + [REPO / "CLAUDE.md", paths.WT / "documents" / "README.md"]
         for path in files:
-            text = strip_setup_migration(path.read_text(encoding="utf-8"))
+            text = path.read_text(encoding="utf-8")
             for name in LEGACY_NAMES:
                 if name in text:
                     offenders.append(f"{path.relative_to(REPO)}: {name}")

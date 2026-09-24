@@ -69,23 +69,13 @@ FALLBACK = ("`${CLAUDE_SKILL_DIR}` is this skill's folder. If your tool does not
 SKILL_DIR_REF = re.compile(r"\$\{CLAUDE_SKILL_DIR\}(/[^\s`'\")|*>]+)")
 
 
-def strip_setup_migration(text):
-    """/setup's Legacy fork migration reads old paths from git history; they stay literal."""
-    marker = "#### Legacy fork migration"
-    if marker not in text:
-        return text
-    head, tail = text.split(marker, 1)
-    rest = tail.split("\n### ", 1)
-    return head + ("\n### " + rest[1] if len(rest) > 1 else "")
-
-
 class TestSkillPaths(unittest.TestCase):
     def test_no_legacy_paths_in_framework_text(self):
         bad = re.compile(r"\.claude/(commands|skills|agents)/|(?<![\w/.])tools/(%s)\.py|python3? salary_lookup\.py"
                          % "|".join(RUNTIME))
         offenders = []
         for md in paths.framework_markdown() + [REPO / "CLAUDE.md"]:
-            text = strip_setup_migration(md.read_text(encoding="utf-8"))
+            text = md.read_text(encoding="utf-8")
             for i, line in enumerate(text.splitlines(), 1):
                 if bad.search(line):
                     offenders.append(f"{md.relative_to(REPO)}:{i}")

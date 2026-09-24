@@ -138,7 +138,7 @@ class TestWiring(unittest.TestCase):
     def test_setup_runs_init_first(self):
         setup = paths.command_file("setup")
         self.assertIn(INIT_ENTRY, frontmatter(setup))
-        step0a = setup.read_text(encoding="utf-8").split("### Step 0a:", 1)[1].split("#### Legacy fork migration", 1)[0]
+        step0a = setup.read_text(encoding="utf-8").split("### Step 0a:", 1)[1].split("\n### ", 1)[0]
         self.assertIn("init_workspace.py", step0a)
         self.assertLess(step0a.index("init_workspace.py"), step0a.index("Create `profile/`"))
 
@@ -192,7 +192,7 @@ class TestReviewFixes(unittest.TestCase):
 
     def test_callers_stop_on_exit_2(self):
         setup = paths.command_file("setup").read_text(encoding="utf-8")
-        step0a = setup.split("### Step 0a:", 1)[1].split("#### Legacy fork migration", 1)[0]
+        step0a = setup.split("### Step 0a:", 1)[1].split("\n### ", 1)[0]
         item1 = step0a.split("\n2. ", 1)[0]
         self.assertIn("stop", item1.lower())
         self.assertNotIn("show its message and continue", item1)

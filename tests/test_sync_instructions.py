@@ -173,7 +173,7 @@ class WiringTests(unittest.TestCase):
         setup = paths.command_file("setup")
         self.assertIn(ENTRY, _frontmatter(setup))
         text = setup.read_text(encoding="utf-8")
-        step0a = text.split("### Step 0a:", 1)[1].split("#### Legacy fork migration", 1)[0]
+        step0a = text.split("### Step 0a:", 1)[1].split("\n### ", 1)[0]
         self.assertIn("python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/sync_instructions.py", step0a)
         self.assertIn("no `cd`, no `&&`", step0a)
 

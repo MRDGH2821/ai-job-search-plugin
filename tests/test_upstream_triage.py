@@ -29,6 +29,7 @@ class TriageRepoFixture(unittest.TestCase):
 
         (self.root / "tools").mkdir()
         shutil.copy(SCRIPT, self.root / "tools" / "upstream_triage.py")
+        shutil.copy(SCRIPT.parent / "upstream_paths.py", self.root / "tools" / "upstream_paths.py")
         (self.root / ".github").mkdir()
 
         git(self.root, "init", "-b", "master")
@@ -94,8 +95,25 @@ class RelevanceFilterTests(TriageRepoFixture):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("Worth reviewing", result.stdout)
         self.assertIn("kept.py", result.stdout)
-        # Ready-to-run cherry-pick lines are offered, not executed.
-        self.assertIn("git cherry-pick", result.stdout)
+        # Read-the-change commands are offered; porting is by hand.
+        self.assertIn("git show", result.stdout)
+        self.assertNotIn("git cherry-pick", result.stdout)
+
+    def test_command_commit_is_mapped_and_relevant(self):
+        # Upstream edits a command at its old path; this repo has it as a plugin skill.
+        ours = "plugins/ai-job-search-plugin/skills/apply/SKILL.md"
+        self.write(ours, "ours\n")
+        self.commit("fork layout")
+        self.write(".claude/commands/apply.md", "upstream change\n")
+        sha = self.commit("feat(apply): upstream improvement")
+        self.set_upstream_to_head()
+        git(self.root, "reset", "--hard", "HEAD~1")
+
+        out = self.run_triage().stdout
+        section = out.split("Worth reviewing", 1)[1].split("Probably skip", 1)[0]
+        self.assertIn("upstream improvement", section)
+        self.assertIn(ours, section)
+        self.assertIn(f"git show {sha} -- .claude/commands/apply.md", out)
 
     def test_changelog_only_footprint_is_skipped(self):
         self.write("portals/gone.py", "y = 2\n")
@@ -137,19 +155,19 @@ class AlreadyAppliedTests(TriageRepoFixture):
         self.assertIn("**1** worth reviewing", result.stdout)
 
 
-class WontPortTests(TriageRepoFixture):
+class HandledListTests(TriageRepoFixture):
     def test_listed_sha_is_excluded(self):
         self.write("kept.py", "print('rejected feature')\n")
         rejected = self.commit("upstream: feature the fork rejects")
         self.set_upstream_to_head()
         git(self.root, "reset", "--hard", "HEAD~1")
-        self.write(".github/upstream-wontport.txt",
-                   f"{rejected[:9]}  # rejected on purpose\n")
-        self.commit("fork: won't-port list")
+        self.write(".github/upstream-handled.txt",
+                   f"# comment line\n{rejected[:9]}  # rejected: test\n")
+        self.commit("fork: handled list")
 
         result = self.run_triage()
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("on the fork's won't-port list", result.stdout)
+        self.assertIn("listed in upstream-handled.txt", result.stdout)
 
 
 class MissingUpstreamRefTests(TriageRepoFixture):

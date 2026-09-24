@@ -4,15 +4,10 @@
 Emits a Markdown report that sorts the behind-list into "worth reviewing" vs
 "probably skip", so a human decides what to merge/port. It never merges,
 pushes, or edits anything - it only reads git history and prints. This is the
-deliberate report/act boundary: on a fork "applies cleanly" is not "correct" -
-a commit for portals the fork dropped can cherry-pick fine and still be wrong,
-and that silent-wrong case is worse than a conflict. So the report stops at
-ready-to-run cherry-pick lines; a human runs them.
-
-This is the commit-level companion to check_upstream_updates.py. That tool
-answers "which of my personalized framework files changed" (version stamps);
-this one answers "which upstream commits deserve my attention" (commit history).
-Two tools, two questions - each cross-references the other in its output.
+deliberate report/act boundary: this project moved the original's files into
+plugins (see upstream_paths.py), so upstream commits rarely apply as-is. The
+report stops at `git show` lines to read each change; a human ports it by hand
+to the mapped files and records the SHA in .github/upstream-handled.txt.
 
 Two signals drive the sort:
 
@@ -21,9 +16,12 @@ Two signals drive the sort:
    fork-only commits and treat any upstream commit whose patch-id (or exact
    subject) matches as already applied.
 
-2. Relevant to this fork? A commit that only touches files this fork deleted
-   (e.g. removed demo portals) is almost certainly N/A. We check each commit's
-   touched paths against the working tree and flag accordingly.
+2. Relevant to this fork? Each touched upstream path is mapped to where the
+   same file lives here (upstream_paths.map_upstream_path). A commit whose
+   mapped paths all no longer exist here is almost certainly N/A.
+
+3. Handled? Ported or rejected SHAs listed in .github/upstream-handled.txt are
+   skipped: after the path move, patch-ids of ported commits no longer match.
 
 Usage: python tools/upstream_triage.py [--remote upstream] [--branch master]
 Exits 0 always (a report, not a gate). Prints a note to stderr and exits 0 if
@@ -34,6 +32,10 @@ from __future__ import annotations
 import argparse
 import subprocess
 import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from upstream_paths import map_upstream_path  # noqa: E402
 
 
 def git(*args: str) -> str:
@@ -89,8 +91,8 @@ def remote_slug(remote: str) -> str | None:
     return None
 
 
-def load_wontport(path: str) -> list[str]:
-    """SHA prefixes the fork has decided never to port; missing file -> []."""
+def load_handled(path: str) -> list[str]:
+    """SHA prefixes already ported or rejected; missing file -> []."""
     try:
         with open(path, encoding="utf-8") as f:
             raw = f.read()
@@ -114,11 +116,11 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--remote", default="upstream")
     ap.add_argument("--branch", default="master")
-    ap.add_argument("--wontport", default=".github/upstream-wontport.txt")
+    ap.add_argument("--handled", default=".github/upstream-handled.txt")
     args = ap.parse_args()
     ref = f"{args.remote}/{args.branch}"
     slug = remote_slug(args.remote)
-    wontport = load_wontport(args.wontport)
+    handled = load_handled(args.handled)
 
     try:
         git("rev-parse", "--verify", ref)
@@ -134,14 +136,13 @@ def main() -> int:
     behind = rev_list(f"HEAD..{ref}")
     if not behind:
         print(f"Up to date with `{ref}`. Nothing to review. :white_check_mark:")
-        _print_crossref(ref)
         return 0
 
     fork_only = rev_list(f"{ref}..HEAD")
     fork_patch_ids = {p for p in (patch_id(s) for s in fork_only) if p}
     fork_subjects = {subject(s) for s in fork_only}
 
-    review: list[tuple[str, str, str, list[str]]] = []
+    review: list[tuple[str, str, str, list[tuple[str, str]]]] = []
     skip: list[tuple[str, str, str, str]] = []
 
     for sha in behind:
@@ -150,15 +151,16 @@ def main() -> int:
         if patch_id(sha) in fork_patch_ids or subj in fork_subjects:
             skip.append((short, sha, subj, "already applied (cherry-picked)"))
             continue
-        if any(sha.startswith(e) for e in wontport):
-            skip.append((short, sha, subj, "on the fork's won't-port list"))
+        if any(sha.startswith(e) for e in handled):
+            skip.append((short, sha, subj, "listed in upstream-handled.txt"))
             continue
         touched = files_touched(sha)
-        present = [f for f in touched if path_exists(f)]
+        # (upstream path, path here) for every touched file that still exists here.
+        present = [(f, ours) for f in touched for ours in map_upstream_path(f) if path_exists(ours)]
         # A commit whose only surviving footprint is the changelog is one whose
         # real change lives in files this fork removed - the code doesn't apply,
         # only a doc line would. Low signal; demote it.
-        substantive = [f for f in present if f != "CHANGELOG.md"]
+        substantive = [pair for pair in present if pair[1] != "CHANGELOG.md"]
         if touched and not present:
             skip.append((short, sha, subj, "touches only files not in this fork"))
         elif present and not substantive:
@@ -176,22 +178,26 @@ def main() -> int:
     lines.append("### Worth reviewing")
     if review:
         lines.append("")
-        lines.append("| Commit | Subject | Fork files it touches |")
+        lines.append("| Commit | Subject | Files (upstream → here) |")
         lines.append("|---|---|---|")
-        for short, sha, subj, present in review:
-            shown = ", ".join(f"`{p}`" for p in present[:4]) or "_(new/shared paths)_"
-            if len(present) > 4:
-                shown += f" +{len(present) - 4} more"
+        for short, sha, subj, pairs in review:
+            shown = ", ".join(f"`{up}`" if up == ours else f"`{up}` → `{ours}`" for up, ours in pairs[:4])
+            shown = shown or "_(new/shared paths)_"
+            if len(pairs) > 4:
+                shown += f" +{len(pairs) - 4} more"
             lines.append(f"| {commit_cell(short, sha, slug)} | {subj} | {shown} |")
-        # Ready-to-run cherry-pick lines - still information, not action. The
-        # report stops here on purpose; a human runs (and verifies) these.
+        # Read-the-change lines - information, not action. Upstream paths differ
+        # from ours, so a human ports each change to the mapped files.
         lines.append("")
-        lines.append("<details><summary>Ready-to-run cherry-picks (review each before running)</summary>")
+        lines.append("<details><summary>Read each change, then port it by hand to the mapped files</summary>")
         lines.append("")
         lines.append("```bash")
-        for short, sha, subj, _ in review:
-            lines.append(f"git cherry-pick {sha}  # {subj}")
+        for short, sha, subj, pairs in review:
+            ups = " ".join(dict.fromkeys(up for up, _ in pairs))
+            lines.append(f"git show {sha} -- {ups}  # {subj}")
         lines.append("```")
+        lines.append("")
+        lines.append("Record each commit you port or reject in `.github/upstream-handled.txt`.")
         lines.append("")
         lines.append("</details>")
     else:
@@ -211,16 +217,7 @@ def main() -> int:
         lines.append("_None._")
 
     print("\n".join(lines))
-    _print_crossref(ref)
     return 0
-
-
-def _print_crossref(ref: str) -> None:
-    print()
-    print(
-        "_For personalized-file version stamps (which methodology files changed), "
-        f"run `python tools/check_upstream_updates.py --remote {ref.split('/')[0]}`._"
-    )
 
 
 if __name__ == "__main__":

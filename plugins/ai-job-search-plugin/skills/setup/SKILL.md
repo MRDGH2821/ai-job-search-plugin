@@ -23,67 +23,21 @@ Your candidate data lives in `profile/` at the workspace root. Before anything e
 
 1. Lay out the workspace: run `python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/init_workspace.py` exactly as written, as one command from the current directory (no `cd`, no `&&`). It copies only what is missing (CV and cover-letter sources, fonts, the `documents/` tree, a privacy `.gitignore`) and never overwrites anything. Mention in one line what it created, if anything. If it exits 2, show its message and stop: the user fixes what it names and runs `/setup` again. Continuing without its privacy `.gitignore` could let personal data into git.
 2. Create `profile/` if it does not exist.
-3. If `profile/` did not exist before step 2, run **Legacy fork migration** below first. Then, for each file in `${CLAUDE_SKILL_DIR}/../job-application-assistant/profile-templates/`, copy it to `profile/<same name>` **only if that file is missing**. Copy only the missing files and never overwrite an existing profile file: it may hold the user's data.
+3. For each file in `${CLAUDE_SKILL_DIR}/../job-application-assistant/profile-templates/`, copy it to `profile/<same name>` **only if that file is missing**. Copy only the missing files and never overwrite an existing profile file: it may hold the user's data.
 4. Tell the user in one line which files were created, if any.
 5. Refresh this workspace's instructions: run `python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/sync_instructions.py` exactly as written, as one command from the current directory (no `cd`, no `&&`). It writes the framework's block into `AGENTS.md` and makes `CLAUDE.md` import it, leaving everything else in both files alone. Mention its result in one line. If it exits 2 (broken markers in `AGENTS.md`, an unreadable file or broken symlink), show its message and continue with setup.
 
 Every write below goes to `profile/`. Framework files in the plugin are never edited by this command.
 
-#### Legacy fork migration
-
-Before this change, `/setup` wrote candidate data into framework files. A fork that merged the change still has that data in its git history. Find it:
-
-1. Find the legacy ref. Check these candidates in order, reading `.claude/skills/job-application-assistant/01-candidate-profile.md` from each (`git show <candidate>:<path>`, or the file itself for the working tree). The first candidate where that file exists and does **not** contain `[YOUR_EMAIL]` is the legacy profile; call it `<ref>`.
-   a. The working tree.
-   b. `ORIG_HEAD` (set by the merge that brought this change in).
-   c. The fork's side of the upgrade merge: for each merge commit from `git log --no-show-signature --merges --format=%H` (newest first), try `<merge>^1`, then `<merge>^2`. When a fork merges upstream, `^1` is the fork's own pre-merge tip, so every legacy file is read as it was just before the upgrade.
-   d. Last resort: each commit from `git log --no-show-signature --full-history --format=%H -- .claude/skills/job-application-assistant/01-candidate-profile.md`. Keep `--full-history`: without it git follows the merge's upstream side and never reaches the fork's commits.
-
-   Always pass `--no-show-signature` to `git log`: with `log.showSignature` set, signature lines end up in the list of commit ids.
-
-   If no candidate qualifies, tell the user "No legacy profile found in git history; starting a fresh setup." and continue with a fresh setup.
-2. Read these from `<ref>` with `git show <ref>:<path>` (skip any that do not exist there): `.claude/skills/job-application-assistant/01-candidate-profile.md` through `07-interview-prep.md`, `.claude/skills/job-scraper/search-queries.md`, and `CLAUDE.md`. If `<ref>` came from step 1d, it is only the last commit that touched `01`: tell the user the other files are read as of that commit and may miss later edits (for example a template registered with `/add-template` afterwards), so they check each proposed file.
-3. Build the new files with this mapping:
-
-   | Legacy region | New home |
-   |---|---|
-   | `01-candidate-profile.md` (all) | `profile/candidate.md` |
-   | `02-behavioral-profile.md` (all) | `profile/behavioral.md` |
-   | `03-writing-style.md` `## Patterns Observed in Past Applications` | `profile/writing-patterns.md` |
-   | `04-job-evaluation.md` match areas, experience lines, career goals, energizing/draining tasks, life-situation lines, permit second gate, `## Calibration from Past Applications` | `profile/evaluation.md` (Skill Match Areas, Experience Areas, Career Goals, Motivation, Life Situation, Eligibility Constraints, Calibration) |
-   | `05-cv-templates.md` profile statements (incl. `[Used for: ...]`), `ACTIVE-TEMPLATE` block | `profile/cv.md` (Profile Statements, Active Template) |
-   | `06-cover-letter-templates.md` extracted patterns, `ACTIVE-TEMPLATE` block | `profile/cover-letter.md` (Patterns From Past Letters, Active Template) |
-   | `07-interview-prep.md` `## Ready-Made STAR Examples`, `## STAR Candidates (Complete Manually)` | `profile/star.md` |
-   | `job-scraper/search-queries.md` (all) | `profile/search-queries.md` |
-   | `CLAUDE.md` Identity fields `LinkedIn headline`, `CV language`; `## Certifications`; What Excites You, Target Sectors, Deal-breakers | `profile/candidate.md` (Identity, Certifications); `profile/evaluation.md` (What Excites You, Target Sectors, Deal-breakers) |
-
-   The contact details in the legacy `05`/`06` LaTeX blocks and the rest of the legacy `CLAUDE.md` summary are used only to cross-check `profile/candidate.md`. Report every conflict (for example a different job title or email) and ask the user which to keep. Never silently pick one.
-4. Show every proposed `profile/*.md` file in full and write them only after the user confirms.
-5. Check the templates. If `${CLAUDE_SKILL_DIR}/../job-application-assistant/profile-templates/candidate.md` no longer contains `[YOUR_EMAIL]`, `behavioral.md` no longer contains `[PROFILE_TYPE]`, or `search-queries.md` no longer contains `[YOUR_JOB_BOARD]`, git's rename detection carried the old data into the template files during the merge. Build the profile from `<ref>` as above (never from a polluted template), then tell the user to restore the templates from the remote they merged, for example `git checkout upstream/master -- plugins/ai-job-search-plugin/skills/job-application-assistant/profile-templates/`, and commit.
-6. Tell the user: "Your data is now in `profile/`. If git still shows merge conflicts in files under `plugins/`, `.claude/skills/` or in `CLAUDE.md`, resolve them by taking the upstream version, for example `git checkout --theirs plugins/ai-job-search-plugin/skills/job-application-assistant/04-job-evaluation.md`; for a file upstream deleted, use `git rm <path>`. Your old data stays in git history." Migration deletes nothing.
-
 ### Step 0b: Choose a path
 
 If `$ARGUMENTS` contains `--section <name>`, skip directly to that section in Path C for an update-only flow. Do not run the path-selection prompt below.
 
-Otherwise, first check where this working copy would publish to — **before anything is
-written, not after** (the Step 4 privacy note fires only once every file is already on
-disk, which is too late to inform the decision). Run `git remote get-url origin`; if the
-command fails (no remote, or not a git checkout), skip this check silently. If there is
-a GitHub `origin`, check it with `gh repo view <owner/repo> --json visibility,isFork`
-when `gh` is available. If the origin is a **public fork** of the template — or its
-visibility cannot be determined — warn now and wait:
+Otherwise, before any personal data is written, check whether this workspace folder would publish personal data: run `git remote get-url origin`. If it fails (no remote, or not a git repository), skip this check silently. If there is a GitHub `origin` and `gh` is available, check `gh repo view <owner/repo> --json visibility`. If the repository is public, or its visibility cannot be determined, warn and wait:
 
-> **Heads-up before we start:** your `origin` points at `<owner/repo>`, which is a
-> public GitHub fork. This setup writes your personal data (name, contact details,
-> employment history, salary expectations) into **tracked** files, and anything you
-> commit *and push* to that fork is visible to anyone. Two safe options: keep your
-> profile commits local and never push them, or push to a **private** repository
-> instead — SETUP.md section 8 has the two-minute private-remote recipe. Want to
-> continue with the setup?
+> **Heads-up before we start:** your `origin` points at `<owner/repo>`, which is a public repository. This setup writes your personal data (name, contact details, employment history, salary expectations) into files in this folder, and anything you commit and push is visible to anyone. Keep this workspace in a **private** repository, or don't push it. Want to continue?
 
-Wait for the user's confirmation before showing the path prompt. A private origin, no
-origin, or a non-fork remote needs no warning — continue silently.
+Wait for the user's confirmation before showing the path prompt. A private origin or no origin needs no warning; continue silently.
 
 Then, before greeting the user, scan the `documents/` folder. Use Glob with `documents/**/*` and count files per subfolder (`cv/`, `linkedin/`, `diplomas/`, `references/`, `projects/`, `applications/`).
 
@@ -462,10 +416,8 @@ Present a summary:
 > - `profile/search-queries.md` - Job search queries for `/scrape`
 > - `cv/main_example.tex` - Your LaTeX CV template
 >
-> **Privacy note:** the files above now contain your personal data. `profile/` and `cv/main_example.tex` are *tracked by git* in your repository.
-> A GitHub fork of the template is always public (forks of public repos cannot be made
-> private), so do not push these commits to a fork. Keep them local, or push to a private
-> repository instead - see SETUP.md section 8 for the private-remote setup.
+> **Privacy note:** the files above now contain your personal data. `profile/` and `cv/main_example.tex` are *tracked by git* in this workspace.
+> Keep the workspace local, or push it only to a **private** repository.
 >
 > **Try it out:**
 > - Run `/scrape` to search for matching jobs right now
