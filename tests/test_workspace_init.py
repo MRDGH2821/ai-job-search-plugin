@@ -211,3 +211,47 @@ class TestWiring(unittest.TestCase):
         self.assertIn("/init-workspace", (paths.REPO / "SETUP.md").read_text(encoding="utf-8"))
         changelog = (paths.REPO / "CHANGELOG.md").read_text(encoding="utf-8")
         self.assertIn("/init-workspace", changelog.split("## [Unreleased]", 1)[1].split("\n## [", 1)[0])
+
+
+class TestReviewFixes(unittest.TestCase):
+    """Final review, branch 4: the privacy .gitignore must never be weakened or skipped."""
+
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.root = Path(tmp.name)
+
+    def test_no_negation_is_appended_to_an_existing_gitignore(self):
+        (self.root / ".gitignore").write_text("cv/*\n*.tex\n", encoding="utf-8")
+        run(self.root)
+        appended = (self.root / ".gitignore").read_text(encoding="utf-8").split(HEADER, 1)[1]
+        self.assertFalse([l for l in appended.splitlines() if l.strip().startswith("!")], appended)
+
+    def test_gitignore_is_written_before_a_mid_copy_failure(self):
+        if os.name == "nt" or os.geteuid() == 0:
+            self.skipTest("needs POSIX permissions and a non-root user")
+        (self.root / "documents").mkdir()
+        (self.root / "documents").chmod(0o500)
+        self.addCleanup((self.root / "documents").chmod, 0o700)
+        proc = run(self.root)
+        self.assertEqual(proc.returncode, 2, proc.stdout)
+        self.assertTrue((self.root / ".gitignore").is_file(), "privacy rules must land first")
+
+    def test_dangling_gitignore_symlink_is_refused(self):
+        outside = tempfile.TemporaryDirectory()
+        self.addCleanup(outside.cleanup)
+        leak = Path(outside.name) / "leak"
+        try:
+            os.symlink(str(leak), self.root / ".gitignore")
+        except (OSError, NotImplementedError):
+            self.skipTest("symlinks unavailable")
+        proc = run(self.root)
+        self.assertEqual(proc.returncode, 2, proc.stdout)
+        self.assertFalse(leak.exists(), "wrote outside the workspace")
+
+    def test_callers_stop_on_exit_2(self):
+        setup = paths.command_file("setup").read_text(encoding="utf-8")
+        step0a = setup.split("### Step 0a:", 1)[1].split("#### Legacy fork migration", 1)[0]
+        item1 = step0a.split("\n2. ", 1)[0]
+        self.assertIn("stop", item1.lower())
+        self.assertNotIn("show its message and continue", item1)

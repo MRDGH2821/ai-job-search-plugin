@@ -21,7 +21,7 @@ There are three paths into setup. Step 0 picks the right one; all three converge
 
 Your candidate data lives in `profile/` at the workspace root. Before anything else:
 
-1. Lay out the workspace: run `python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/init_workspace.py` exactly as written, as one command from the current directory (no `cd`, no `&&`). It copies only what is missing (CV and cover-letter sources, fonts, the `documents/` tree, a privacy `.gitignore`) and never overwrites anything. Mention in one line what it created, if anything. If it exits 2, show its message and continue.
+1. Lay out the workspace: run `python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/init_workspace.py` exactly as written, as one command from the current directory (no `cd`, no `&&`). It copies only what is missing (CV and cover-letter sources, fonts, the `documents/` tree, a privacy `.gitignore`) and never overwrites anything. Mention in one line what it created, if anything. If it exits 2, show its message and stop: the user fixes what it names and runs `/setup` again. Continuing without its privacy `.gitignore` could let personal data into git.
 2. Create `profile/` if it does not exist.
 3. If `profile/` did not exist before step 2, run **Legacy fork migration** below first. Then, for each file in `${CLAUDE_SKILL_DIR}/../job-application-assistant/profile-templates/`, copy it to `profile/<same name>` **only if that file is missing**. Copy only the missing files and never overwrite an existing profile file: it may hold the user's data.
 4. Tell the user in one line which files were created, if any.
