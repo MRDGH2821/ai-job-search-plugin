@@ -3,6 +3,7 @@ name: apply
 description: "Drafter-Reviewer Job Application Workflow. Use when the user runs /apply."
 argument-hint: "<job-posting-url-or-text>"
 disable-model-invocation: true
+allowed-tools: Bash(python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/verify_pdf.py:*), Bash(python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/verify_layout.py:*), Bash(python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/salary_lookup.py:*), Bash(pdftotext:*)
 ---
 # /apply - Drafter-Reviewer Job Application Workflow
 
@@ -50,7 +51,7 @@ Read the evaluation framework:
 Using the framework from `04-job-evaluation.md`, evaluate the job posting against the candidate's profile. If the salary lookup tool is configured, run:
 
 ```bash
-python ${CLAUDE_SKILL_DIR}/../job-tools/scripts/salary_lookup.py "<Company Name>" --json
+python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/salary_lookup.py "<Company Name>" --json
 ```
 
 If the posting specifies a city, add `--city "<City>"` to narrow results. Parse the JSON output and include the salary benchmark in the evaluation. If the tool is not configured or returns an error, skip the salary benchmark.
@@ -263,10 +264,10 @@ If either compile fails, fix the error and re-compile until clean.
 **Measure first, then look.** A visual read catches gross breakage but cannot tell you that a page is 40% empty, and the failure below survives both a clean compile and a correct page count:
 
 ```bash
-python ${CLAUDE_SKILL_DIR}/../job-tools/scripts/verify_pdf.py cv/main_<company>_<role>.pdf --pages 2
-python ${CLAUDE_SKILL_DIR}/../job-tools/scripts/verify_pdf.py cover_letters/cover_<company>_<role>.pdf --pages 1
-python ${CLAUDE_SKILL_DIR}/../job-tools/scripts/verify_layout.py cv/main_<company>_<role>.pdf
-python ${CLAUDE_SKILL_DIR}/../job-tools/scripts/verify_layout.py cover_letters/cover_<company>_<role>.pdf
+python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/verify_pdf.py cv/main_<company>_<role>.pdf --pages 2
+python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/verify_pdf.py cover_letters/cover_<company>_<role>.pdf --pages 1
+python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/verify_layout.py cv/main_<company>_<role>.pdf
+python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/verify_layout.py cover_letters/cover_<company>_<role>.pdf
 ```
 
 The two `--pages` lines are the page-count check: exactly 2 pages for the CV and exactly 1 for the cover letter (the hard limits in `05-cv-templates.md` and `06-cover-letter-templates.md`), exit 1 otherwise. With a custom template active, substitute its declared **Page limit** from the `ACTIVE-TEMPLATE` block. Nothing else runs this check - `verify_layout.py` deliberately leaves page count to it, and Step 5d's extraction call passes no `--pages` - so if these lines are skipped, the page budget is enforced by nothing but the visual read below.
@@ -308,12 +309,12 @@ Do not proceed to Step 6 until both PDFs pass inspection.
 
 An ATS parser reads the PDF's embedded **text layer**, not the rendered page — a CV that passed visual inspection can still extract as garbage (icon glyphs where the contact details should be, scrambled reading order in multi-column layouts). This step verifies what a parser actually sees. It applies to the **CV only**; cover letters rarely go through keyword screening.
 
-**Availability check:** extract with `python ${CLAUDE_SKILL_DIR}/../job-tools/scripts/verify_pdf.py` (tries **pypdf** first — BSD, `pip install pypdf` — then Poppler `pdftotext`). If both are missing, print a one-line warning that the mechanical parse check is skipped, do the keyword-coverage check (item 3 below) against your visual Read of the PDF instead, and note the degraded mode in the Step 6 report. Same graceful-skip pattern as the salary lookup. If a documented fallback still shells out to `pdftotext -layout`, keep the `-enc UTF-8` flag: Xpdf-based builds default to Latin-1 output, and without it a correct non-ASCII CV fails the replacement-character check below.
+**Availability check:** extract with `python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/verify_pdf.py` (tries **pypdf** first — BSD, `pip install pypdf` — then Poppler `pdftotext`). If both are missing, print a one-line warning that the mechanical parse check is skipped, do the keyword-coverage check (item 3 below) against your visual Read of the PDF instead, and note the degraded mode in the Step 6 report. Same graceful-skip pattern as the salary lookup. If a documented fallback still shells out to `pdftotext -layout`, keep the `-enc UTF-8` flag: Xpdf-based builds default to Latin-1 output, and without it a correct non-ASCII CV fails the replacement-character check below.
 
 **1. Extract the text layer:**
 
 ```bash
-python ${CLAUDE_SKILL_DIR}/../job-tools/scripts/verify_pdf.py cv/main_<company>_<role>.pdf --dump-text cv/main_<company>_<role>.txt
+python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/verify_pdf.py cv/main_<company>_<role>.pdf --dump-text cv/main_<company>_<role>.txt
 ```
 
 The command prints `extractor: pypdf` or `extractor: pdftotext`. Record that name in the Step 6 report. Read the `.txt` file. If that tool is unavailable, the Poppler fallback is:

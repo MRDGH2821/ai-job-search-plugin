@@ -116,3 +116,31 @@ class TestSkillPaths(unittest.TestCase):
             text = paths.skill_file(name).read_text(encoding="utf-8")
             self.assertIn("relative to the workspace root", text, name)
             self.assertIn("never inside this skill's folder", text, name)
+
+
+class TestPermissions(unittest.TestCase):
+    def test_settings_load_both_plugins_and_hold_no_script_paths(self):
+        data = json.loads(paths.SETTINGS.read_text(encoding="utf-8"))
+        self.assertEqual(data["extraKnownMarketplaces"]["ai-job-search"]["source"],
+                         {"source": "directory", "path": "./"})
+        self.assertIs(data["enabledPlugins"]["ai-job-search@ai-job-search"], True)
+        self.assertIs(data["enabledPlugins"]["danish-job-portals@ai-job-search"], True)
+        allow = data["permissions"]["allow"]
+        self.assertFalse([a for a in allow if "tools/" in a or "salary_lookup" in a or ".agents/skills/" in a], allow)
+
+    def test_script_callers_preapprove_their_scripts(self):
+        expected = {
+            "apply": ["verify_pdf.py", "verify_layout.py", "salary_lookup.py"],
+            "rank": ["rank_state.py"], "outcome": ["rank_state.py"], "gmail-sync": ["rank_state.py"],
+            "job-scraper": ["job_key.py"],
+        }
+        for skill, scripts in expected.items():
+            fm = frontmatter(paths.skill_file(skill))
+            tools = fm.get("allowed-tools", "")
+            for script in scripts:
+                self.assertIn(f"Bash(python3 ${{CLAUDE_SKILL_DIR}}/../job-tools/scripts/{script}:*)", tools, skill)
+
+    def test_skill_bodies_call_scripts_with_python3(self):
+        offenders = [str(p.relative_to(REPO)) for p in paths.all_skill_files()
+                     if re.search(r"(^|[^3])python \$\{CLAUDE_SKILL_DIR\}", p.read_text(encoding="utf-8"), re.M)]
+        self.assertEqual(offenders, [])

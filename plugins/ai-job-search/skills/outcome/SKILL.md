@@ -3,6 +3,7 @@ name: outcome
 description: "Record the Result of an Application. Use when the user runs /outcome."
 argument-hint: "[company]"
 disable-model-invocation: true
+allowed-tools: Bash(python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/rank_state.py:*)
 ---
 # /outcome - Record the Result of an Application
 

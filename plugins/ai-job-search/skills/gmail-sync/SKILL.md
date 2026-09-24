@@ -3,6 +3,7 @@ name: gmail-sync
 description: "Sync Application Status from Gmail. Use when the user runs /gmail-sync."
 argument-hint: "[company]"
 disable-model-invocation: true
+allowed-tools: Bash(python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/rank_state.py:*)
 ---
 # /gmail-sync - Sync Application Status from Gmail
 

@@ -631,13 +631,15 @@ class RankStateToolSpec(unittest.TestCase):
             "Step 4 must still state that job_search_tracker.csv is read-only for /rank",
         )
 
-    def test_settings_and_guards_allow_the_new_tool(self):
-        settings = json.loads((paths.SETTINGS).read_text(encoding="utf-8"))
-        allow = settings["permissions"]["allow"]
+    def test_skill_and_guards_allow_the_new_tool(self):
+        # Permissions moved from settings.json into the skill's allowed-tools
+        # in the plugin layout change; the guard reviews them there.
+        text = COMMAND.read_text(encoding="utf-8")
+        frontmatter = text.split("\n---\n", 1)[0]
         guards = (REPO / "tools" / "security_guards.py").read_text(encoding="utf-8")
-        for entry in ("Bash(python tools/rank_state.py:*)", "Bash(python3 tools/rank_state.py:*)"):
-            self.assertIn(entry, allow, f"{entry} missing from .claude/settings.json")
-            self.assertIn(entry, guards, f"{entry} missing from security_guards.py's reviewed allowlist")
+        entry = "Bash(python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/rank_state.py:*)"
+        self.assertIn(entry, frontmatter, f"{entry} missing from rank/SKILL.md allowed-tools")
+        self.assertIn(entry, guards, f"{entry} missing from security_guards.py's reviewed allowlist")
 
 
 if __name__ == "__main__":

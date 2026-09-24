@@ -28,38 +28,39 @@ Stdlib only. Exit 0 on success, 1 with a failure list otherwise.
 """
 
 import json
+import re
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 errors: list[str] = []
 
-# The exact permission entries the template ships. A PR that adds or changes
-# an entry must add it here too - that is the point: the diff shows both.
+# The exact permission entries the template ships in .claude/settings.json.
+# A PR that adds or changes an entry must add it here too - that is the point:
+# the diff shows both. Script and portal permissions moved into each plugin
+# skill's allowed-tools in the plugin layout change; ALLOWED_SKILL_TOOLS below
+# reviews those.
 ALLOWED_PERMISSIONS = {
-    "Skill(job-application-assistant)",
-    # Narrowed from the upstream template's blanket Bash(bun run:*), which
-    # pre-approved `bun run <any file>`. One entry per shipped portal CLI,
-    # matching what each SKILL.md already declares in its allowed-tools.
-    # A portal added by /add-portal needs its own entry here and in
-    # .claude/settings.json - that review step is the point.
-    "Bash(bun run .agents/skills/jobbank-search/cli/src/cli.ts:*)",
-    "Bash(bun run .agents/skills/jobdanmark-search/cli/src/cli.ts:*)",
-    "Bash(bun run .agents/skills/jobindex-search/cli/src/cli.ts:*)",
-    "Bash(bun run .agents/skills/jobnet-search/cli/src/cli.ts:*)",
-    "Bash(bun run .agents/skills/linkedin-search/cli/src/cli.ts:*)",
-    "Bash(bun run .agents/skills/freehire-search/cli/src/cli.ts:*)",
-    "Bash(python salary_lookup.py:*)",
-    "Bash(python3 salary_lookup.py:*)",
-    "Bash(python tools/rank_state.py:*)",
-    "Bash(python3 tools/rank_state.py:*)",
-    "Bash(python tools/job_key.py:*)",
-    "Bash(python3 tools/job_key.py:*)",
-    "Bash(python tools/verify_pdf.py:*)",
-    "Bash(python3 tools/verify_pdf.py:*)",
-    "Bash(python tools/verify_layout.py:*)",
-    "Bash(python3 tools/verify_layout.py:*)",
+    "Skill(ai-job-search:job-application-assistant)",
     "Bash(pdftotext:*)",
+}
+
+# Bash entries a plugin skill may pre-approve in its allowed-tools. Permissions
+# moved out of settings.json into the skills in the plugin layout change, so the
+# review moved with them: a new entry needs a line here in the same PR.
+ALLOWED_SKILL_TOOLS = {
+    "Bash(python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/rank_state.py:*)",
+    "Bash(python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/job_key.py:*)",
+    "Bash(python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/verify_pdf.py:*)",
+    "Bash(python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/verify_layout.py:*)",
+    "Bash(python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/salary_lookup.py:*)",
+    "Bash(pdftotext:*)",
+    "Bash(bun --version)",
+    # The user's own portals from /add-portal (workspace .agents/skills/).
+    "Bash(bun run .agents/skills/*/cli/src/cli.ts *)",
+    # Shipped portals run their own CLI from their own folder.
+    "Bash(bun run ${CLAUDE_SKILL_DIR}/cli/src/cli.ts *)",
+    "Bash(bun install --cwd ${CLAUDE_SKILL_DIR}/cli)",
 }
 
 # Personal-data ignore rules that must never disappear from .gitignore.
@@ -278,8 +279,24 @@ def check_package_manifests() -> None:
             )
 
 
+
+def check_skill_tools() -> None:
+    for skill in sorted(ROOT.glob("plugins/*/skills/*/SKILL.md")):
+        text = skill.read_text(encoding="utf-8")
+        m = re.match(r"^---\n(.*?)\n---\n", text, re.DOTALL)
+        if not m:
+            continue
+        line = next((l for l in m.group(1).splitlines() if l.startswith("allowed-tools:")), "")
+        for entry in re.findall(r"Bash\([^)]*\)", line):
+            if entry not in ALLOWED_SKILL_TOOLS:
+                errors.append(
+                    f"{skill.relative_to(ROOT)}: allowed-tools entry not in the reviewed allowlist: "
+                    f"{entry!r}. Add it to ALLOWED_SKILL_TOOLS in tools/security_guards.py in the same PR."
+                )
+
 def main() -> int:
     check_permissions()
+    check_skill_tools()
     check_gitignore()
     check_package_manifests()
     if errors:
@@ -288,8 +305,8 @@ def main() -> int:
             print(f"  - {err}")
         return 1
     print(
-        "security_guards: OK (permissions allowlist, hooks allowlist, gitignore rules, "
-        "package manifests)"
+        "security_guards: OK (permissions allowlist, skill allowed-tools, hooks allowlist, "
+        "gitignore rules, package manifests)"
     )
     return 0
 

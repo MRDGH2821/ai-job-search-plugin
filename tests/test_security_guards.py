@@ -424,5 +424,32 @@ class RealRepoTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
 
+
+class TestSkillAllowedTools(unittest.TestCase):
+    def _run(self, tools_line):
+        import importlib
+        tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, tmp, ignore_errors=True)
+        skill = tmp / "plugins" / "p" / "skills" / "x"
+        skill.mkdir(parents=True)
+        (skill / "SKILL.md").write_text(
+            f"---\nname: x\ndescription: d\nallowed-tools: {tools_line}\n---\n# x\n", encoding="utf-8")
+        mod = importlib.reload(security_guards)
+        mod.ROOT = tmp
+        mod.errors.clear()
+        mod.check_skill_tools()
+        found = list(mod.errors)
+        importlib.reload(security_guards)
+        return found
+
+    def test_unreviewed_bash_entry_fails(self):
+        errs = self._run("Read, Bash(curl:*)")
+        self.assertTrue(any("not in the reviewed allowlist" in e for e in errs), errs)
+
+    def test_reviewed_entry_passes(self):
+        errs = self._run("Read, Bash(python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/rank_state.py:*)")
+        self.assertEqual(errs, [])
+
+
 if __name__ == "__main__":
     unittest.main()

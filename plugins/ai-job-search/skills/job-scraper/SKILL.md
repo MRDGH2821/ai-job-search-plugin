@@ -5,7 +5,7 @@ description: >
   (LinkedIn, local job boards, and any skills added with /add-portal). Deduplicates
   across runs. Triggers on: job scrape, find jobs, search jobs, new jobs, job search,
   scrape jobs, /scrape
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash(bun --version), Bash(bun run .agents/skills/*/cli/src/cli.ts *), Bash(python ${CLAUDE_SKILL_DIR}/../job-tools/scripts/job_key.py:*), Bash(python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/job_key.py:*), WebFetch, WebSearch, Agent, AskUserQuestion
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash(bun --version), Bash(bun run .agents/skills/*/cli/src/cli.ts *), WebFetch, WebSearch, Agent, AskUserQuestion, Bash(python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/job_key.py:*)
 ---
 
 # Job Scraper

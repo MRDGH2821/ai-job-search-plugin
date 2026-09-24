@@ -3,6 +3,7 @@ name: rank
 description: "Triage Scraped Jobs into a Ranked Shortlist. Use when the user runs /rank."
 argument-hint: "[count | filter]"
 disable-model-invocation: true
+allowed-tools: Bash(python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/rank_state.py:*)
 ---
 # /rank - Triage Scraped Jobs into a Ranked Shortlist
 
