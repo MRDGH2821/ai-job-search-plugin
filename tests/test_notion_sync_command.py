@@ -20,7 +20,7 @@ except ImportError:
 
 REPO = Path(__file__).resolve().parent.parent
 COMMAND = paths.command_file("notion-sync")
-GITIGNORE = REPO / ".gitignore"
+GITIGNORE = paths.WT / "gitignore.template"
 
 
 class NotionSyncCommandSpec(unittest.TestCase):

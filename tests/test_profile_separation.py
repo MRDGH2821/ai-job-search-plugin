@@ -179,7 +179,7 @@ class TestClaudeMdAndApply(unittest.TestCase):
         self.assertIsNone(SETUP_TOKEN.search(text), "CLAUDE.md must hold no /setup slots")
         self.assertNotIn("## Candidate Profile", text)
         self.assertNotIn("## Verification Checklist", text)
-        agents = (REPO / "AGENTS.md").read_text(encoding="utf-8")
+        agents = (paths.JOB_TOOLS / "agents-block.md").read_text(encoding="utf-8")
         self.assertIn("10-verification.md", agents)
         self.assertIn("profile/", agents)
 
@@ -212,7 +212,7 @@ def strip_setup_migration(text: str) -> str:
 class TestNoLegacyReferences(unittest.TestCase):
     def test_claude_tree_names_no_legacy_profile_files(self):
         offenders = []
-        files = paths.framework_markdown() + [REPO / "CLAUDE.md", REPO / "documents" / "README.md"]
+        files = paths.framework_markdown() + [REPO / "CLAUDE.md", paths.WT / "documents" / "README.md"]
         for path in files:
             text = strip_setup_migration(path.read_text(encoding="utf-8"))
             for name in LEGACY_NAMES:

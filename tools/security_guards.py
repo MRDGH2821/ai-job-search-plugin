@@ -256,22 +256,25 @@ def check_permissions() -> None:
 WORKSPACE_GITIGNORE = "plugins/ai-job-search-plugin/skills/job-tools/workspace-template/gitignore.template"
 
 
+# The repository is plugin source, not a workspace: its own .gitignore only has
+# to keep a developer's personal files out.
+ROOT_REQUIRED_IGNORE_RULES = ["profile/", "salary_data.json", ".env", ".env.*"]
+
+
 def check_gitignore() -> None:
-    _check_gitignore_file(ROOT / ".gitignore", ".gitignore")
-    template = ROOT / WORKSPACE_GITIGNORE
-    if template.exists():
-        # /init-workspace copies this into every new workspace: it must carry the same rules.
-        _check_gitignore_file(template, WORKSPACE_GITIGNORE)
+    _check_gitignore_file(ROOT / ".gitignore", ".gitignore", ROOT_REQUIRED_IGNORE_RULES)
+    # /init-workspace copies this into every new workspace: it protects the user's data.
+    _check_gitignore_file(ROOT / WORKSPACE_GITIGNORE, WORKSPACE_GITIGNORE, REQUIRED_IGNORE_RULES)
 
 
-def _check_gitignore_file(path, label: str) -> None:
+def _check_gitignore_file(path, label: str, required: list[str]) -> None:
     try:
         lines = [line.strip() for line in path.read_text(encoding="utf-8").splitlines()]
     except OSError as exc:
         errors.append(f"{label}: unreadable: {exc}")
         return
     rules = set(lines)
-    for rule in REQUIRED_IGNORE_RULES:
+    for rule in required:
         if rule not in rules:
             errors.append(
                 f"{label}: required personal-data rule missing: {rule!r}. "

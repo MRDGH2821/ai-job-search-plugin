@@ -34,7 +34,7 @@ INTERVIEW = paths.command_file("interview")
 NOTION_SYNC = paths.command_file("notion-sync")
 SKILL = paths.FW / "SKILL.md"
 SCRAPER = paths.skill_file("job-scraper")
-DOCS_README = REPO / "documents" / "README.md"
+DOCS_README = paths.WT / "documents" / "README.md"
 
 TRACKER_HEADER = (
     "date,company,sector,role,role_type,channel,status,contact_person,"

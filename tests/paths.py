@@ -10,6 +10,7 @@ SKILLS = PLUGIN / "skills"
 FW = SKILLS / "job-application-assistant"
 TPL = FW / "profile-templates"
 JOB_TOOLS = SKILLS / "job-tools" / "scripts"
+WT = SKILLS / "job-tools" / "workspace-template"
 SETTINGS = REPO / ".claude" / "settings.json"
 SALARY_LOOKUP = JOB_TOOLS / "salary_lookup.py"
 

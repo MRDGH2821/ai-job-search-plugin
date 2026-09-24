@@ -42,7 +42,7 @@ def tracked_document_subfolders():
     """Names of documents/ subfolders tracked in git (ignores local noise)."""
     out = subprocess.run(
         ["git", "ls-files", "documents/"],
-        cwd=REPO,
+        cwd=paths.WT,
         capture_output=True,
         text=True,
         check=True,

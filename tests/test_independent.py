@@ -55,3 +55,27 @@ class TestNames(unittest.TestCase):
                 if old in text:
                     offenders.append(f"{rel}: {old}")
         self.assertEqual(offenders, [])
+
+
+ROOT_WORKSPACE = ("cv", "cover_letters", "templates", "documents", "job_scraper", "company_research", "upskill")
+
+
+class TestNotAWorkspace(unittest.TestCase):
+    def test_root_has_no_workspace_folders(self):
+        self.assertEqual([d for d in ROOT_WORKSPACE if (REPO / d).exists()], [])
+
+    def test_root_gitignore_guards_personal_data(self):
+        rules = {l.strip() for l in (REPO / ".gitignore").read_text(encoding="utf-8").splitlines()}
+        for rule in ("profile/", "salary_data.json", ".env", ".env.*"):
+            self.assertIn(rule, rules)
+
+    def test_ci_compiles_from_an_init_workspace(self):
+        ci = (REPO / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+        self.assertIn("init_workspace.py --root", ci)
+        self.assertNotIn("cd cv\n", ci)
+        self.assertNotIn("github.repository == 'MadsLorentzen", ci)
+
+    def test_agents_md_is_a_contributor_guide(self):
+        text = (REPO / "AGENTS.md").read_text(encoding="utf-8")
+        self.assertIn("## Working on this plugin", text)
+        self.assertNotIn("<!-- ai-job-search-plugin:start", text)

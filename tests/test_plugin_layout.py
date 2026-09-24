@@ -191,7 +191,7 @@ class TestDocs(unittest.TestCase):
             self.assertIn(needle, section)
 
     def test_agents_md_and_contributing_point_at_capa(self):
-        for name in ("AGENTS.md", "CONTRIBUTING.md"):
+        for name in ("CONTRIBUTING.md",):
             text = (REPO / name).read_text(encoding="utf-8")
             self.assertIn("capa", text, name)
             self.assertNotIn("auto-discovered", text, name)

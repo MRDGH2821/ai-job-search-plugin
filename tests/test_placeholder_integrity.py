@@ -1,6 +1,6 @@
 """Guards for CI's placeholder-integrity sentinels.
 
-The job exists to catch personal data committed to the upstream template.
+The job exists to catch personal data committed to the plugin templates.
 That only works when each sentinel sits IN the data /setup replaces: the
 CV's old sentinel was `[YOUR_NAME]`, whose only occurrences were a header
 comment and the hyperref pdftitle - /setup's documented edit ("replace
@@ -15,16 +15,13 @@ the sentinels exist in the pristine files, and (c) that simulating the
 /setup edit destroys at least one checked sentinel per file - i.e. the
 guard actually fires on the failure it exists to catch.
 """
-import os
 import unittest
 from pathlib import Path
 from tests import paths
 
-UPSTREAM = "MadsLorentzen/ai-job-search"
-
 REPO = Path(__file__).resolve().parent.parent
 CI = REPO / ".github" / "workflows" / "ci.yml"
-EXAMPLE_CV = REPO / "cv" / "main_example.tex"
+EXAMPLE_CV = paths.WT / "cv" / "main_example.tex"
 PROFILE = paths.FW / "profile-templates" / "candidate.md"
 
 # The literal sentinel strings (unescaped) that ci.yml's grep patterns match.
@@ -45,10 +42,6 @@ def personalize_cv(text: str) -> str:
     )
 
 
-@unittest.skipIf(
-    os.environ.get("GITHUB_REPOSITORY", UPSTREAM) != UPSTREAM,
-    "placeholder-integrity guards the pristine upstream template; forks personalize these files via /setup",
-)
 class TestCvSentinelsAreDataLocated(unittest.TestCase):
     def setUp(self):
         self.ci = CI.read_text(encoding="utf-8")
@@ -56,12 +49,12 @@ class TestCvSentinelsAreDataLocated(unittest.TestCase):
 
     def test_ci_checks_the_name_and_email_data_lines(self):
         self.assertIn(
-            "check cv/main_example.tex '\\\\name{\\[First\\]}{\\[Last\\]}'",
+            "check plugins/ai-job-search-plugin/skills/job-tools/workspace-template/cv/main_example.tex '\\\\name{\\[First\\]}{\\[Last\\]}'",
             self.ci,
             "ci.yml must assert the sentinel inside the \\name{} data line",
         )
         self.assertIn(
-            "check cv/main_example.tex '\\\\email{\\[your\\.email@example\\.com\\]}'",
+            "check plugins/ai-job-search-plugin/skills/job-tools/workspace-template/cv/main_example.tex '\\\\email{\\[your\\.email@example\\.com\\]}'",
             self.ci,
             "ci.yml must assert the sentinel inside the \\email{} data line",
         )
@@ -82,10 +75,6 @@ class TestCvSentinelsAreDataLocated(unittest.TestCase):
         )
 
 
-@unittest.skipIf(
-    os.environ.get("GITHUB_REPOSITORY", UPSTREAM) != UPSTREAM,
-    "placeholder-integrity guards the pristine upstream template; forks personalize these files via /setup",
-)
 class TestProfileSentinelIsDataLocated(unittest.TestCase):
     def test_ci_checks_a_data_placeholder_not_the_header_comment(self):
         ci = CI.read_text(encoding="utf-8")
@@ -97,7 +86,7 @@ class TestProfileSentinelIsDataLocated(unittest.TestCase):
 
     def test_ci_forbids_a_tracked_profile_folder(self):
         ci = CI.read_text(encoding="utf-8")
-        self.assertIn("profile/ must not be committed to the upstream template", ci)
+        self.assertIn("profile/ must not be committed to the plugin repository", ci)
 
     def test_ci_no_longer_checks_claude_md_for_a_name(self):
         ci = CI.read_text(encoding="utf-8")
