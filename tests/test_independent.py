@@ -75,6 +75,12 @@ class TestNotAWorkspace(unittest.TestCase):
         self.assertNotIn("cd cv\n", ci)
         self.assertNotIn("github.repository == 'MadsLorentzen", ci)
 
+    def test_ci_python_tests_install_what_the_tests_import(self):
+        # tests/test_plugin_layout.py imports yaml; without it the module errors in CI.
+        ci = (REPO / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+        job = ci.split("  python-tests:", 1)[1].split("\n  latex-smoke:", 1)[0]
+        self.assertIn("pyyaml", job)
+
     def test_agents_md_is_a_contributor_guide(self):
         text = (REPO / "AGENTS.md").read_text(encoding="utf-8")
         self.assertIn("## Working on this plugin", text)
