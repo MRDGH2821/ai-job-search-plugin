@@ -200,3 +200,18 @@ class TestDocs(unittest.TestCase):
         text = (REPO / "CHANGELOG.md").read_text(encoding="utf-8")
         unreleased = text.split("## [Unreleased]", 1)[1].split("\n## [", 1)[0]
         self.assertIn("BREAKING (forks): the framework moves into plugins", unreleased)
+
+
+class TestProfileGuardReachable(unittest.TestCase):
+    def test_guard_references_resolve_from_a_plugin_install(self):
+        # A bare `job-application-assistant/SKILL.md` resolves in a clone but not from a
+        # plugin cache: the model cannot find the guard and improvises (Task 8 probe).
+        offenders = []
+        for p in paths.all_skill_files():
+            if p.parent.name == "job-application-assistant":
+                continue
+            for line in p.read_text(encoding="utf-8").splitlines():
+                if "Profile Guard" in line and ("${CLAUDE_SKILL_DIR}/../job-application-assistant/SKILL.md" not in line
+                                                or "/setup" not in line):
+                    offenders.append(f"{p.relative_to(REPO)}: {line.strip()[:80]}")
+        self.assertEqual(offenders, [])

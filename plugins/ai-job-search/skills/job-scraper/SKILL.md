@@ -42,7 +42,7 @@ Optional arguments:
 
 ### Step 0: Load State
 
-Run the Profile Guard (`job-application-assistant/SKILL.md`) first.
+Run the Profile Guard first (`${CLAUDE_SKILL_DIR}/../job-application-assistant/SKILL.md`, section Profile Guard): if `profile/` is missing or `profile/candidate.md` still contains `[YOUR_EMAIL]`, stop and tell the user to run `/setup` first.
 
 1. Read `job_scraper/seen_jobs.json` (create if missing - start with `{"seen": {}}`)
 2. Read `job_search_tracker.csv` to extract already-applied companies+roles

@@ -41,7 +41,7 @@ This rule is the input side of the Step 3 Factual Grounding Audit, not a competi
 
 ## Step 1: DRAFTER - Evaluate Fit
 
-**Run the Profile Guard first** (`job-application-assistant/SKILL.md`, section Profile Guard). If it stops, stop here too.
+**Run the Profile Guard first** (`${CLAUDE_SKILL_DIR}/../job-application-assistant/SKILL.md`, section Profile Guard): if `profile/` is missing or `profile/candidate.md` still contains `[YOUR_EMAIL]`, stop and tell the user to run `/setup` first. If it stops, stop here too.
 
 Read the evaluation framework:
 - `${CLAUDE_SKILL_DIR}/../job-application-assistant/04-job-evaluation.md`

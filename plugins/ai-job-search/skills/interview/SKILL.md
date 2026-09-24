@@ -18,7 +18,7 @@ Follow these steps **in order**.
 
 ## Step 0: Parse Input
 
-Run the Profile Guard (`job-application-assistant/SKILL.md`) first.
+Run the Profile Guard first (`${CLAUDE_SKILL_DIR}/../job-application-assistant/SKILL.md`, section Profile Guard): if `profile/` is missing or `profile/candidate.md` still contains `[YOUR_EMAIL]`, stop and tell the user to run `/setup` first.
 
 `$ARGUMENTS` may contain a company name (optionally with a role), e.g. `/interview acme`.
 

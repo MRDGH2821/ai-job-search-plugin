@@ -5,6 +5,8 @@ disable-model-invocation: true
 ---
 # /expand - Competency Expansion from Documents and Online Presence
 
+`${CLAUDE_SKILL_DIR}` is this skill's folder. If your tool does not expand it, read paths as relative to the folder containing this SKILL.md.
+
 You are enriching the candidate profile by discovering competencies hidden in documents and public online presence. This command is additive only — it never modifies existing profile content, only extends it.
 
 Follow these steps **exactly in order**. Do not skip steps.
@@ -13,7 +15,7 @@ Follow these steps **exactly in order**. Do not skip steps.
 
 ## Step 0: Read Existing Profile Files
 
-Run the Profile Guard (`job-application-assistant/SKILL.md`) first.
+Run the Profile Guard first (`${CLAUDE_SKILL_DIR}/../job-application-assistant/SKILL.md`, section Profile Guard): if `profile/` is missing or `profile/candidate.md` still contains `[YOUR_EMAIL]`, stop and tell the user to run `/setup` first.
 
 Read these two files in parallel before doing anything else. You must know what is already there so you do not propose duplicates.
 
