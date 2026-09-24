@@ -20,4 +20,4 @@ It keeps one managed block between `<!-- ai-job-search:start … -->` and `<!-- 
 Report the script's output lines to the user. Then:
 - Exit 0: done. If `AGENTS.md` or `CLAUDE.md` says `created` or `updated`, tell the user the new instructions apply from their next Claude Code session.
 - Exit 1 (only with `--check`): list the problems it printed and offer to run `/sync-instructions` without `--check`.
-- Exit 2: the markers in `AGENTS.md` are broken (usually a hand edit). Show the line numbers it printed and ask the user to fix or delete the broken marker lines; do not edit `AGENTS.md` yourself.
+- Exit 2: it refused to write anything: broken markers in `AGENTS.md` (usually a hand edit), an unreadable file or broken symlink. Show its message (it names the file and, for markers, the line numbers) and ask the user to fix that; do not edit `AGENTS.md` or `CLAUDE.md` yourself.

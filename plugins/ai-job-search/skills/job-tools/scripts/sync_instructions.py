@@ -9,13 +9,15 @@ AGENTS.md, and makes sure CLAUDE.md contains an `@AGENTS.md` line. Text outside
 the markers, in either file, is never changed. --root defaults to the current
 directory: the workspace root, never this script's folder.
 
-Exit codes: 0 done / in sync, 1 --check found drift, 2 malformed markers
-(nothing written).
+Exit codes: 0 done / in sync, 1 --check found drift, 2 cannot proceed safely
+(malformed markers, unreadable file, broken symlink); nothing is written.
 """
 from __future__ import annotations
 
 import argparse
+import os
 import re
+import shutil
 import sys
 from pathlib import Path
 
@@ -26,8 +28,11 @@ IMPORT = "@AGENTS.md"
 BOM = b"\xef\xbb\xbf"
 
 
-class MarkerError(Exception):
-    pass
+class SyncError(Exception):
+    """A state the script refuses to guess about. Nothing has been written."""
+
+
+MarkerError = SyncError
 
 
 def load_template() -> tuple[str, str]:
@@ -50,7 +55,14 @@ def managed_block() -> list[str]:
 
 def read(path: Path) -> tuple[str, bool, str]:
     """(text with \\n newlines, had BOM, the file's newline)."""
-    raw = path.read_bytes()
+    try:
+        raw = path.read_bytes()
+    except OSError as exc:
+        raise SyncError(f"{path.name}: cannot read it ({exc.strerror}). Nothing was written.") from exc
+    try:
+        (raw[len(BOM):] if raw.startswith(BOM) else raw).decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise SyncError(f"{path.name}: not UTF-8 text. Convert it to UTF-8 first; nothing was written.") from exc
     bom = raw.startswith(BOM)
     text = (raw[len(BOM):] if bom else raw).decode("utf-8")
     newline = "\r\n" if "\r\n" in text else "\n"
@@ -58,8 +70,14 @@ def read(path: Path) -> tuple[str, bool, str]:
 
 
 def write(path: Path, text: str, bom: bool, newline: str) -> None:
-    data = text.replace("\n", newline).encode("utf-8")
-    path.write_bytes((BOM if bom else b"") + data)
+    """Replace the file atomically; a symlink keeps pointing at its (updated) target."""
+    target = path.resolve() if path.is_symlink() else path
+    data = (BOM if bom else b"") + text.replace("\n", newline).encode("utf-8")
+    tmp = target.with_name(target.name + ".sync-tmp")
+    tmp.write_bytes(data)
+    if target.exists():
+        shutil.copymode(target, tmp)
+    os.replace(tmp, target)
 
 
 def locate(lines: list[str]) -> tuple[int, int] | None:
@@ -92,9 +110,21 @@ def has_import(text: str) -> bool:
     return any(line.strip() == IMPORT for line in text.split("\n"))
 
 
-def claude_is_symlink_to_agents(root: Path) -> bool:
-    claude = root / "CLAUDE.md"
-    return claude.is_symlink() and claude.resolve() == (root / "AGENTS.md").resolve()
+def claude_mode(root: Path) -> str:
+    """How CLAUDE.md relates to AGENTS.md: "file", "missing", "symlink-to-agents",
+    "same-file" (AGENTS.md is a link to it), or "symlink-elsewhere"."""
+    agents, claude = root / "AGENTS.md", root / "CLAUDE.md"
+    for path in (agents, claude):
+        if path.is_symlink() and not path.exists():
+            raise SyncError(f"{path.name}: broken symlink. Fix or remove it; nothing was written.")
+        if path.is_dir():
+            raise SyncError(f"{path.name}: is a directory. Nothing was written.")
+    same = agents.exists() and claude.exists() and agents.resolve() == claude.resolve()
+    if claude.is_symlink():
+        return "symlink-to-agents" if same else "symlink-elsewhere"
+    if same:
+        return "same-file"
+    return "file" if claude.exists() else "missing"
 
 
 def plan(root: Path) -> dict:
@@ -106,8 +136,9 @@ def plan(root: Path) -> dict:
         agents_plan = (desired_agents(text, block), text, bom, nl)
     else:
         agents_plan = (desired_agents(None, block), None, False, "\n")
-    if claude_is_symlink_to_agents(root):
-        claude_plan = "symlink"
+    mode = claude_mode(root)
+    if mode != "file" and mode != "missing":
+        claude_plan = mode
     elif claude.exists():
         text, bom, nl = read(claude)
         new = text if has_import(text) else IMPORT + "\n\n" + text
@@ -130,8 +161,13 @@ def sync(root: Path) -> list[str]:
     if new != old:
         write(root / "AGENTS.md", new, bom, nl)
     out.append(f"AGENTS.md: {status(new, old)}")
-    if p["claude"] == "symlink":
-        out.append("CLAUDE.md: unchanged (symlink to AGENTS.md)")
+    notes = {
+        "symlink-to-agents": "CLAUDE.md: unchanged (symlink to AGENTS.md)",
+        "same-file": "CLAUDE.md: unchanged (same file as AGENTS.md)",
+        "symlink-elsewhere": "CLAUDE.md: unchanged (symlink to a file outside this workspace; add @AGENTS.md there yourself if you want it)",
+    }
+    if isinstance(p["claude"], str):
+        out.append(notes[p["claude"]])
     else:
         new, old, bom, nl = p["claude"]
         if new != old:
@@ -151,7 +187,7 @@ def check(root: Path) -> list[str]:
         problems.append("AGENTS.md: no ai-job-search block - run /sync-instructions")
     elif new != old:
         problems.append("AGENTS.md: the ai-job-search block is out of date - run /sync-instructions")
-    if p["claude"] != "symlink":
+    if not isinstance(p["claude"], str):
         new, old, _, _ = p["claude"]
         if new != old:
             problems.append("CLAUDE.md: missing the @AGENTS.md import - run /sync-instructions")
@@ -177,8 +213,11 @@ def main(argv: list[str] | None = None) -> int:
         for line in sync(root):
             print(line)
         return 0
-    except MarkerError as exc:
+    except SyncError as exc:
         print(exc, file=sys.stderr)
+        return 2
+    except OSError as exc:
+        print(f"cannot write: {exc}. Check the file permissions and run again.", file=sys.stderr)
         return 2
 
 

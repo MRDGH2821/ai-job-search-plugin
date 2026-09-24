@@ -202,3 +202,73 @@ class RepoRootTests(unittest.TestCase):
         changelog = (paths.REPO / "CHANGELOG.md").read_text(encoding="utf-8")
         unreleased = changelog.split("## [Unreleased]", 1)[1].split("\n## [", 1)[0]
         self.assertIn("/sync-instructions", unreleased)
+
+
+class ReviewFixTests(unittest.TestCase):
+    """Final review, branch 3: symlinks, unreadable files, and writes outside the workspace."""
+
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.root = Path(tmp.name)
+        self.agents = self.root / "AGENTS.md"
+        self.claude = self.root / "CLAUDE.md"
+
+    def _symlink(self, target, link):
+        try:
+            os.symlink(target, link)
+        except (OSError, NotImplementedError):
+            self.skipTest("symlinks unavailable")
+
+    def test_agents_symlink_to_claude_gets_the_block_in_one_run(self):
+        self.claude.write_text("notes\n", encoding="utf-8")
+        self._symlink("CLAUDE.md", self.agents)
+        proc = run(self.root)
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        text = self.claude.read_text(encoding="utf-8")
+        self.assertTrue(text.startswith("notes\n"))
+        self.assertIn(START, text)
+        self.assertNotIn("\n@AGENTS.md", "\n" + text)  # no self-import line
+        self.assertIn("CLAUDE.md: unchanged (same file as AGENTS.md)", proc.stdout)
+        self.assertIn("unchanged", run(self.root).stdout)
+
+    def test_unreadable_file_exits_2_and_writes_nothing(self):
+        self.agents.write_bytes(b"\xff\xfe not utf-8 \x81")
+        proc = run(self.root)
+        self.assertEqual(proc.returncode, 2, proc.stdout + proc.stderr)
+        self.assertIn("AGENTS.md", proc.stderr)
+        self.assertEqual(self.agents.read_bytes(), b"\xff\xfe not utf-8 \x81")
+        self.assertFalse(self.claude.exists())
+        self.assertEqual(run(self.root, "--check").returncode, 2)
+
+    def test_dangling_claude_symlink_exits_2_before_writing(self):
+        self._symlink("missing-target.md", self.claude)
+        proc = run(self.root)
+        self.assertEqual(proc.returncode, 2, proc.stdout + proc.stderr)
+        self.assertFalse(self.agents.exists(), "AGENTS.md must not be written when CLAUDE.md cannot be")
+
+    def test_claude_symlink_outside_the_workspace_is_left_alone(self):
+        shared_dir = tempfile.TemporaryDirectory()
+        self.addCleanup(shared_dir.cleanup)
+        shared = Path(shared_dir.name) / "SHARED.md"
+        shared.write_text("shared rules\n", encoding="utf-8")
+        self._symlink(str(shared), self.claude)
+        proc = run(self.root)
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertEqual(shared.read_text(encoding="utf-8"), "shared rules\n")
+        self.assertIn("CLAUDE.md: unchanged (symlink", proc.stdout)
+
+    def test_symlinked_agents_md_stays_a_symlink(self):
+        (self.root / "docs").mkdir()
+        target = self.root / "docs" / "AGENTS.md"
+        target.write_text("team notes\n", encoding="utf-8")
+        self._symlink("docs/AGENTS.md", self.agents)
+        run(self.root)
+        self.assertTrue(self.agents.is_symlink())
+        self.assertIn(START, target.read_text(encoding="utf-8"))
+        self.assertEqual([p.name for p in (self.root / "docs").iterdir()], ["AGENTS.md"], "no temp files left behind")
+
+    def test_callers_describe_every_exit_2_cause(self):
+        for text in (paths.skill_file("sync-instructions").read_text(encoding="utf-8"),
+                     paths.command_file("setup").read_text(encoding="utf-8")):
+            self.assertIn("unreadable file or broken symlink", text)

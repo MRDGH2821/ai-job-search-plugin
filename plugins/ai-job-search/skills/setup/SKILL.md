@@ -24,7 +24,7 @@ Your candidate data lives in `profile/` at the workspace root. Before anything e
 1. Create `profile/` if it does not exist.
 2. If `profile/` did not exist before step 1, run **Legacy fork migration** below first. Then, for each file in `${CLAUDE_SKILL_DIR}/../job-application-assistant/profile-templates/`, copy it to `profile/<same name>` **only if that file is missing**. Copy only the missing files and never overwrite an existing profile file: it may hold the user's data.
 3. Tell the user in one line which files were created, if any.
-4. Refresh this workspace's instructions: run `python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/sync_instructions.py` exactly as written, as one command from the current directory (no `cd`, no `&&`). It writes the framework's block into `AGENTS.md` and makes `CLAUDE.md` import it, leaving everything else in both files alone. Mention its result in one line. If it exits 2 (broken markers in `AGENTS.md`), show its message and continue with setup.
+4. Refresh this workspace's instructions: run `python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/sync_instructions.py` exactly as written, as one command from the current directory (no `cd`, no `&&`). It writes the framework's block into `AGENTS.md` and makes `CLAUDE.md` import it, leaving everything else in both files alone. Mention its result in one line. If it exits 2 (broken markers in `AGENTS.md`, an unreadable file or broken symlink), show its message and continue with setup.
 
 Every write below goes to `profile/`. Framework files in the plugin are never edited by this command.
 
