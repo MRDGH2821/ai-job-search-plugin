@@ -12,20 +12,19 @@ MadsLorentzen/ai-job-search, which this project was forked from.
 
 ### Added
 
-- **`/init-workspace`: lay out a workspace from the plugin** (`plugins/ai-job-search/skills/init-workspace/`,
+- **`/init-workspace`: lay out a workspace from the plugin** (`plugins/ai-job-search-plugin/skills/init-workspace/`,
   `job-tools/scripts/init_workspace.py`, `job-tools/workspace-template/`) - a plugin install
   has no repository folders, so this copies the author's layout (CV and cover-letter
   sources, fonts, `documents/` tree, state folders, privacy `.gitignore`) into any folder,
   never overwriting, then writes the workspace instructions and offers `git init`. `/setup`
-  runs it first. A test keeps the template identical to this repository's own files.
+  runs it first.
 
 - **`/sync-instructions`: workspace instructions for any harness** (#493,
-  `plugins/ai-job-search/skills/sync-instructions/`, `job-tools/scripts/sync_instructions.py`,
+  `plugins/ai-job-search-plugin/skills/sync-instructions/`, `job-tools/scripts/sync_instructions.py`,
   `AGENTS.md`, `CLAUDE.md`) - plugins cannot ship `CLAUDE.md` and capa cannot carry
   instruction snippets, so a workspace got the skills without the standing rules. The
   script keeps one managed block in `AGENTS.md` and one `@AGENTS.md` import in `CLAUDE.md`,
-  never touching other text; `/setup` runs it. The repository's own `CLAUDE.md` is now that
-  import.
+  never touching other text; `/setup` and `/init-workspace` run it.
 
 - **Real Excel workbook integration tests for the salary converter**
   (`tests/test_convert_salary_excel_integration.py`, `.github/workflows/ci.yml`) -
@@ -97,31 +96,24 @@ MadsLorentzen/ai-job-search, which this project was forked from.
   version bump whenever a plugin's files change.
 - **Upstream triage maps paths.** `tools/upstream_triage.py` translates the original project's
   paths to the plugin layout (`tools/upstream_paths.py`), prints `git show` lines to port by
-  hand, and skips SHAs listed in `.github/upstream-handled.txt` (was `upstream-wontport.txt`).
+  hand, always reports commits that add files (new commands, skills, portals), and skips SHAs
+  listed in `.github/upstream-handled.txt` (was `upstream-wontport.txt`).
 
-### Removed
-
-- `/setup`'s legacy fork migration, `tools/check_upstream_updates.py`,
-  `tools/check_framework_version.py`, the fork-upgrade sections of SETUP.md and FUNDING.yml.
-
-- **BREAKING (forks): the framework moves into plugins** (`.claude-plugin/marketplace.json`,
-  `plugins/ai-job-search/`, `plugins/danish-job-portals/`, `.claude/settings.json`,
+- **BREAKING: the framework moves into plugins** (`.claude-plugin/marketplace.json`,
+  `plugins/ai-job-search-plugin/`, `plugins/danish-job-portals/`, `.claude/settings.json`,
   `tools/security_guards.py`) - commands become user-only plugin skills (still `/apply`
   etc.), the six shipped portals and the runtime scripts move into the plugins, and each
   skill pre-approves its own scripts in `allowed-tools`, reviewed by a new
-  `security_guards.py` check. The clone loads the core plugin in place once the folder is
-  trusted (the Danish portals become a separate plugin, off by default); `/plugin marketplace add MadsLorentzen/ai-job-search` installs them anywhere.
-  `salary_data.json` is read from the workspace root. Upgrading: SETUP.md section 10.
+  `security_guards.py` check. Install with `/plugin marketplace add MRDGH2821/ai-job-search-plugin`;
+  the Danish portals are a separate plugin, off by default. `salary_data.json` is read from
+  the workspace root.
 
-- **BREAKING (personalized forks): candidate data moves to `profile/`**
-  (`.claude/skills/job-application-assistant/profile-templates/`, `.claude/commands/setup.md`,
-  `.claude/commands/reset.md`, `CLAUDE.md`, `10-verification.md`) - `/setup` now writes
+- **BREAKING: candidate data moves to `profile/`**
+  (`job-application-assistant/profile-templates/`, `setup`, `reset`, `10-verification.md`) - `/setup` now writes
   every personal detail into a workspace `profile/` folder created from framework-owned
-  templates, and framework files hold rules only. Upstream merges stop conflicting with
-  your personalization. `01-candidate-profile.md`, `02-behavioral-profile.md` and
-  `job-scraper/search-queries.md` are removed; the workflow and verification checklist
-  move from `CLAUDE.md` to `10-verification.md`. Upgrading a personalized fork: see
-  SETUP.md section 9; `/setup` migrates your old profile from git history.
+  templates, and framework files hold rules only. `01-candidate-profile.md`,
+  `02-behavioral-profile.md` and `job-scraper/search-queries.md` are removed; the workflow
+  and verification checklist move from `CLAUDE.md` to `10-verification.md`.
 
 - **`/add-template` keeps a registered template's intermediates in `build/`**
   (#473, `.claude/commands/add-template.md`, `.gitignore`,
@@ -133,6 +125,11 @@ MadsLorentzen/ai-job-search, which this project was forked from.
   redirect (`typst compile`) keep their command unchanged. The `ACTIVE-TEMPLATE` block now
   tells `/apply` to run the command from the output directory and to delete `build/` in
   its Step 5e cleanup. Stock templates are unchanged.
+
+### Removed
+
+- `/setup`'s legacy fork migration, `tools/check_upstream_updates.py`,
+  `tools/check_framework_version.py`, the fork-upgrade sections of SETUP.md and FUNDING.yml.
 
 ### Fixed
 

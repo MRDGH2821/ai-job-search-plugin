@@ -28,6 +28,15 @@ def template_targets():
     return sorted(out)
 
 
+class TestTemplateIsShipped(unittest.TestCase):
+    def test_no_template_file_is_ignored(self):
+        # The repo's own .gitignore (*.pdf, build/, *.log, ...) must never hide a
+        # template file, or /init-workspace ships an incomplete workspace.
+        files = [str(p.relative_to(paths.REPO)) for p in WT.rglob("*") if p.is_file()]
+        proc = subprocess.run(["git", "check-ignore", "--no-index", *files], cwd=paths.REPO, capture_output=True, text=True)
+        self.assertEqual(proc.stdout.strip(), "", "template files ignored by the repo's .gitignore")
+
+
 class TestInitScript(unittest.TestCase):
     def setUp(self):
         tmp = tempfile.TemporaryDirectory()

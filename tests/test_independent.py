@@ -119,3 +119,17 @@ class TestIdentityDocs(unittest.TestCase):
         first = text.split("\n## [", 2)[1]
         self.assertTrue(first.startswith("2.0.0] - Unreleased"), first[:40])
         self.assertIn("Forked from MadsLorentzen/ai-job-search v1.7.1", first)
+
+    def test_changelog_2_0_0_is_well_formed_and_current(self):
+        text = (REPO / "CHANGELOG.md").read_text(encoding="utf-8")
+        section = text.split("\n## [", 2)[1]
+        headings = [line[4:] for line in section.splitlines() if line.startswith("### ")]
+        order = ["Added", "Changed", "Deprecated", "Removed", "Fixed", "Security"]
+        self.assertEqual(headings, sorted(headings, key=order.index), "Keep a Changelog heading order")
+        removed = section.split("### Removed", 1)[1].split("\n### ", 1)[0]
+        self.assertNotIn("BREAKING", removed, "Changed entries must not sit under Removed")
+        for stale in ("SETUP.md section 9", "SETUP.md section 10", "/plugin marketplace add MadsLorentzen",
+                      "migrates your old profile from git history",
+                      "A test keeps the template identical to this repository's own files"):
+            self.assertNotIn(stale, section)
+

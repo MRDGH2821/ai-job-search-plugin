@@ -19,6 +19,8 @@ def map_upstream_path(path: str) -> list[str]:
     parts = path.split("/")
     if path.startswith(".claude/commands/") and path.endswith(".md") and len(parts) == 3:
         return [f"{SKILLS}/{parts[2][:-3]}/SKILL.md"]
+    if path == ".claude/skills/job-scraper/search-queries.md":
+        return [f"{SKILLS}/job-application-assistant/profile-templates/search-queries.md"]
     if path.startswith(".claude/skills/job-application-assistant/") and parts[-1] in PROFILE_TEMPLATES:
         return [f"{SKILLS}/job-application-assistant/profile-templates/{PROFILE_TEMPLATES[parts[-1]]}"]
     if path.startswith(".claude/skills/"):

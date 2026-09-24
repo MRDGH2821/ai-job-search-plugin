@@ -17,8 +17,10 @@ Two signals drive the sort:
    subject) matches as already applied.
 
 2. Relevant to this fork? Each touched upstream path is mapped to where the
-   same file lives here (upstream_paths.map_upstream_path). A commit whose
-   mapped paths all no longer exist here is almost certainly N/A.
+   same file lives here (upstream_paths.map_upstream_path). A file the commit
+   adds is always relevant (a new command, skill or portal to port); a commit
+   that only changes files whose mapped paths no longer exist here is almost
+   certainly N/A.
 
 3. Handled? Ported or rejected SHAs listed in .github/upstream-handled.txt are
    skipped: after the path move, patch-ids of ported commits no longer match.
@@ -68,6 +70,13 @@ def subject(sha: str) -> str:
 def files_touched(sha: str) -> list[str]:
     out = git("show", "--name-only", "--format=", sha).strip()
     return [f for f in out.splitlines() if f]
+
+
+def files_added(sha: str) -> set[str]:
+    """Paths the commit creates. A new upstream file is a feature to port, even
+    though its mapped path does not exist here yet."""
+    out = git("show", "--name-status", "--no-renames", "--format=", sha).strip()
+    return {line.split("\t", 1)[1] for line in out.splitlines() if line.startswith("A\t")}
 
 
 def path_exists(path: str) -> bool:
@@ -156,7 +165,9 @@ def main() -> int:
             continue
         touched = files_touched(sha)
         # (upstream path, path here) for every touched file that still exists here.
-        present = [(f, ours) for f in touched for ours in map_upstream_path(f) if path_exists(ours)]
+        added = files_added(sha)
+        present = [(f, ours) for f in touched for ours in map_upstream_path(f)
+                   if path_exists(ours) or f in added]
         # A commit whose only surviving footprint is the changelog is one whose
         # real change lives in files this fork removed - the code doesn't apply,
         # only a doc line would. Low signal; demote it.

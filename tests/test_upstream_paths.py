@@ -27,6 +27,8 @@ class TestMap(unittest.TestCase):
             "cv/main_example.tex": [f"{P}/job-tools/workspace-template/cv/main_example.tex"],
             "documents/README.md": [f"{P}/job-tools/workspace-template/documents/README.md"],
             ".gitignore": [f"{P}/job-tools/workspace-template/gitignore.template", ".gitignore"],
+            ".claude/skills/job-scraper/search-queries.md":
+                [f"{P}/job-application-assistant/profile-templates/search-queries.md"],
             "tools/lint_skills.py": ["tools/lint_skills.py"],
             "README.md": ["README.md"],
         }
