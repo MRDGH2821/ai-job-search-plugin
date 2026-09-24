@@ -139,3 +139,36 @@ class CheckTests(unittest.TestCase):
             proc = run(self.root, "--check")
             self.assertEqual(proc.returncode, 1, proc.stdout)
             self.assertEqual({p.name: p.read_bytes() for p in self.root.iterdir()}, snapshot)
+
+
+import re as _re  # noqa: E402
+
+ENTRY = "Bash(python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/sync_instructions.py:*)"
+
+
+def _frontmatter(path):
+    m = _re.match(r"^---\n(.*?)\n---\n", path.read_text(encoding="utf-8"), _re.DOTALL)
+    return m.group(1) if m else ""
+
+
+class WiringTests(unittest.TestCase):
+    def test_skill_is_user_only_and_preapproved(self):
+        skill = paths.skill_file("sync-instructions")
+        fm = _frontmatter(skill)
+        self.assertIn("name: sync-instructions", fm)
+        self.assertIn("disable-model-invocation: true", fm)
+        self.assertIn(ENTRY, fm)
+        body = skill.read_text(encoding="utf-8").split("\n---\n", 1)[1]
+        self.assertTrue(body.lstrip().startswith("# /sync-instructions "))
+        self.assertIn("python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/sync_instructions.py", body)
+
+    def test_setup_runs_the_sync_in_step_0a(self):
+        setup = paths.command_file("setup")
+        self.assertIn(ENTRY, _frontmatter(setup))
+        text = setup.read_text(encoding="utf-8")
+        step0a = text.split("### Step 0a:", 1)[1].split("#### Legacy fork migration", 1)[0]
+        self.assertIn("python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/sync_instructions.py", step0a)
+
+    def test_guard_reviews_the_entry(self):
+        guards = (paths.REPO / "tools" / "security_guards.py").read_text(encoding="utf-8")
+        self.assertIn(ENTRY, guards)
