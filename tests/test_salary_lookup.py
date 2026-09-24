@@ -602,5 +602,19 @@ class TestSearchCompanyScoreThreshold(unittest.TestCase):
         self.assertEqual(results[0]["company"], "Novo Nordisk")
 
 
+class TestDataFileLocation(unittest.TestCase):
+    def test_data_file_is_read_from_the_workspace_root(self):
+        import importlib, os, tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            old = os.getcwd()
+            os.chdir(tmp)
+            try:
+                module = importlib.reload(salary_lookup)
+                self.assertEqual(module.DATA_FILE, Path(tmp).resolve() / "salary_data.json")
+            finally:
+                os.chdir(old)
+                importlib.reload(salary_lookup)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -1,5 +1,7 @@
 # Salary Benchmark Tool
 
+Paths below are for a clone of the repository. Plugin installs: ask Claude to run it, the skills know the path.
+
 ## What is this?
 
 The salary lookup tool (`salary_lookup.py`) lets you benchmark company salaries against a baseline from your own data. It's used during the `/apply` workflow to show how a company's compensation compares to market rates.
@@ -8,7 +10,7 @@ The salary lookup tool (`salary_lookup.py`) lets you benchmark company salaries 
 
 ## How it works
 
-The tool reads a `salary_data.json` file in the repo root containing company salary benchmarks. It uses fuzzy matching to find companies by name, handling Danish/Nordic characters, legal suffixes (A/S, ApS), and common spelling variations.
+The tool reads a `salary_data.json` file in your workspace root (the folder you run Claude in) containing company salary benchmarks. It uses fuzzy matching to find companies by name, handling Danish/Nordic characters, legal suffixes (A/S, ApS), and common spelling variations.
 
 The data format supports any index-based or absolute salary data. For example:
 - Index 100 = median salary, higher is better
@@ -69,7 +71,7 @@ If you have salary data in an Excel file:
 
 ```bash
 pip install openpyxl
-python3 tools/convert_salary_excel.py path/to/salary-data.xlsx \
+python3 plugins/ai-job-search/skills/job-tools/scripts/convert_salary_excel.py path/to/salary-data.xlsx \
   --source "My Salary Data 2025" \
   --baseline 100 \
   --baseline-desc "Index 100 = median salary"
@@ -109,11 +111,11 @@ Start with an empty template and add companies as you research them:
 ## Usage
 
 ```bash
-python3 salary_lookup.py "Novo Nordisk"
-python3 salary_lookup.py "Ørsted" --city "Fredericia"
-python3 salary_lookup.py "COWI" --json
-python3 salary_lookup.py --list-all
-python3 salary_lookup.py --validate      # pre-flight check your salary_data.json
+python3 plugins/ai-job-search/skills/job-tools/scripts/salary_lookup.py "Novo Nordisk"
+python3 plugins/ai-job-search/skills/job-tools/scripts/salary_lookup.py "Ørsted" --city "Fredericia"
+python3 plugins/ai-job-search/skills/job-tools/scripts/salary_lookup.py "COWI" --json
+python3 plugins/ai-job-search/skills/job-tools/scripts/salary_lookup.py --list-all
+python3 plugins/ai-job-search/skills/job-tools/scripts/salary_lookup.py --validate      # pre-flight check your salary_data.json
 ```
 
 ## Important notes

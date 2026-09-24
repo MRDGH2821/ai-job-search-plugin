@@ -371,6 +371,13 @@ class DetectColumnTypeTests(unittest.TestCase):
         self.assertIn("No salary data columns detected", stderr.getvalue())
 
 
+class TestDefaultOutputLocation(unittest.TestCase):
+    def test_default_output_is_the_workspace_root(self):
+        src = (paths.JOB_TOOLS / "convert_salary_excel.py").read_text(encoding="utf-8")
+        self.assertIn('Path.cwd() / "salary_data.json"', src)
+        self.assertNotIn("Path(__file__).parent.parent", src)
+
+
 if __name__ == "__main__":
     unittest.main()
 

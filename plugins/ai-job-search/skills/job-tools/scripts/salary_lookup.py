@@ -24,7 +24,8 @@ import argparse
 import unicodedata
 from pathlib import Path
 
-DATA_FILE = Path(__file__).parent / "salary_data.json"
+# The workspace root (where you run Claude), never the plugin folder: plugin updates replace that folder.
+DATA_FILE = Path.cwd().resolve() / "salary_data.json"
 
 # Common Danish <-> anglicized spelling variants
 SPELLING_VARIANTS = {
