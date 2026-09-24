@@ -1,5 +1,6 @@
 """Structure of the plugin marketplace (spec: 2026-09-24-plugin-layout-design.md)."""
 import json
+import subprocess
 import re
 import unittest
 
@@ -32,8 +33,10 @@ class TestMarketplace(unittest.TestCase):
     def test_old_trees_are_gone(self):
         for old in (".claude/commands", ".claude/skills", ".claude/agents"):
             self.assertFalse((REPO / old).exists(), old)
-        leftovers = [p.name for p in (REPO / ".agents" / "skills").iterdir() if p.is_dir()]
-        self.assertEqual(leftovers, [], "shipped portals must live in the plugins")
+        # .agents/skills/ belongs to the workspace (/add-portal output); the repo ships none.
+        tracked = subprocess.run(["git", "ls-files", ".agents/"], cwd=REPO, capture_output=True, text=True,
+                                 check=True).stdout.split()
+        self.assertEqual(tracked, [], "shipped portals must live in the plugins")
 
 
 class TestConvertedCommands(unittest.TestCase):
