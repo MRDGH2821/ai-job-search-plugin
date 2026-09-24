@@ -64,7 +64,12 @@ If this fails (bun not installed), skip to **1c (WebSearch fallback)** for all p
 
 #### 1b. Run CLI tools (primary — run these in parallel where possible)
 
-Discover all installed portal CLI skills by reading every `SKILL.md` found under `.agents/skills/*/SKILL.md`. Each file documents that portal's exact CLI flags and usage examples. **Use each portal's own documented interface — do not guess flags.** This approach automatically includes any new portals added via `/add-portal` without requiring changes to this file.
+Discover the installed portal CLI skills in two places:
+
+1. **Portals from installed plugins:** every available skill whose name ends in `-search` and whose instructions run a `cli/src/cli.ts` command. Load each one with the Skill tool; its content gives the exact `bun run …` invocation, flags and examples, and loading it pre-approves that CLI.
+2. **Your own portals:** every `.agents/skills/*/SKILL.md` in the workspace (written by `/add-portal`). Read these files directly.
+
+Each portal documents its own flags and usage. **Use each portal's own documented interface — do not guess flags.** List which portals you used, and from which of the two places, in the Step 5 summary.
 
 **Honor the `enabled` toggle.** A portal is enabled unless its `SKILL.md` frontmatter sets `enabled: false` (a missing key means enabled — the default). Skip each disabled portal and record it for the Step 5 summary. A fork can thus keep a portal installed but sit out a run without deleting its directory.
 
@@ -76,14 +81,14 @@ For each **enabled** portal skill:
 4. Cap results to ~20 per call using the portal's limit flag.
 5. Use `--format json` for machine-readable output.
 
-Run all portal CLI calls in parallel where possible using the Agent tool. Collect all `results` arrays into a single pool for Step 2, keeping each result tagged with its source portal skill (for Step 2 `detail` lookups).
+Run all portal CLI calls in parallel where possible using the Agent tool: each subagent must first load its portal skill with the Skill tool (plugin portals), so the portal's own permissions apply inside the subagent, and must run the portal's command exactly as that skill writes it (one command, no `cd`, no chaining): the permission matches only that exact form. Collect all `results` arrays into a single pool for Step 2, keeping each result tagged with its source portal skill (for Step 2 `detail` lookups).
 
 If a CLI tool exits with a non-zero code, log the error message and continue — do not abort the whole search.
 
 #### 1c. WebSearch fallback
 
 Use `WebSearch` for:
-- Portals listed in `profile/search-queries.md` that do **not** have a corresponding directory under `.agents/skills/`
+- Portals listed in `profile/search-queries.md` that have no portal skill in either place above
 - Any portal whose CLI fails at runtime
 - When bun is unavailable (Step 1a failed)
 

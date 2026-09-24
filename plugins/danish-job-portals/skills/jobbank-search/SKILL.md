@@ -20,12 +20,14 @@ description: >
   projektleder stilling, konsulent job, data analyse job.
 context: fork
 enabled: false  # Danish demo portal - ships opt-in; /setup enables it when your market is Denmark, or set true here yourself
-allowed-tools: Bash(bun run ${CLAUDE_SKILL_DIR}/cli/src/cli.ts *)
+allowed-tools: Bash(bun run ${CLAUDE_SKILL_DIR}/cli/src/cli.ts *), Bash(bun install --cwd ${CLAUDE_SKILL_DIR}/cli)
 ---
 
 # Jobbank Search Skill
 
 `${CLAUDE_SKILL_DIR}` is this skill's folder. If your tool does not expand it, read paths as relative to the folder containing this SKILL.md.
+
+**First run after an install or update:** if `${CLAUDE_SKILL_DIR}/cli/node_modules` is missing, run `bun install --cwd ${CLAUDE_SKILL_DIR}/cli` before any command below. Bun's auto-install cannot resolve this CLI's dependencies.
 
 Search live Danish job listings from [Akademikernes Jobbank](https://jobbank.dk) — Denmark's primary job portal for highly educated candidates. Uses the RSS feed for search (up to 100 results) and JSON-LD parsing for detailed job information. Jobbank may block automated requests with Cloudflare bot protection; if that happens, report the portal as unavailable and use WebSearch fallback instead of retrying.
 

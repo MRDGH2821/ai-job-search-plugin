@@ -18,12 +18,14 @@ description: >
   apprentice denmark, internship denmark, part-time denmark, full-time denmark.
 context: fork
 enabled: false  # Danish demo portal - ships opt-in; /setup enables it when your market is Denmark, or set true here yourself
-allowed-tools: Bash(bun run ${CLAUDE_SKILL_DIR}/cli/src/cli.ts *)
+allowed-tools: Bash(bun run ${CLAUDE_SKILL_DIR}/cli/src/cli.ts *), Bash(bun install --cwd ${CLAUDE_SKILL_DIR}/cli)
 ---
 
 # Jobdanmark Search Skill
 
 `${CLAUDE_SKILL_DIR}` is this skill's folder. If your tool does not expand it, read paths as relative to the folder containing this SKILL.md.
+
+**First run after an install or update:** if `${CLAUDE_SKILL_DIR}/cli/node_modules` is missing, run `bun install --cwd ${CLAUDE_SKILL_DIR}/cli` before any command below. Bun's auto-install cannot resolve this CLI's dependencies.
 
 Access live Danish job listings from the Jobdanmark.dk public API. No authentication needed.
 Covers ~15,000+ active job listings across 10 categories and all Danish municipalities.

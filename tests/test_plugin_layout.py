@@ -144,3 +144,32 @@ class TestPermissions(unittest.TestCase):
         offenders = [str(p.relative_to(REPO)) for p in paths.all_skill_files()
                      if re.search(r"(^|[^3])python \$\{CLAUDE_SKILL_DIR\}", p.read_text(encoding="utf-8"), re.M)]
         self.assertEqual(offenders, [])
+
+
+class TestPortals(unittest.TestCase):
+    def test_portals_run_their_cli_from_their_own_folder(self):
+        for d in paths.portal_dirs():
+            text = (d / "SKILL.md").read_text(encoding="utf-8")
+            self.assertNotIn(".agents/skills/", text, d.name)
+            self.assertIn("bun run ${CLAUDE_SKILL_DIR}/cli/src/cli.ts", text, d.name)
+            self.assertIn("Bash(bun run ${CLAUDE_SKILL_DIR}/cli/src/cli.ts *)",
+                          frontmatter(d / "SKILL.md").get("allowed-tools", ""), d.name)
+
+    def test_danish_portals_self_install(self):
+        for d in paths.portal_dirs():
+            deps = json.loads((d / "cli" / "package.json").read_text(encoding="utf-8")).get("dependencies", {})
+            text = (d / "SKILL.md").read_text(encoding="utf-8")
+            if deps:
+                self.assertIn("bun install --cwd ${CLAUDE_SKILL_DIR}/cli", text, d.name)
+                self.assertIn("Bash(bun install --cwd ${CLAUDE_SKILL_DIR}/cli)",
+                              frontmatter(d / "SKILL.md").get("allowed-tools", ""), d.name)
+
+    def test_scrape_discovers_plugin_and_workspace_portals(self):
+        text = paths.skill_file("job-scraper").read_text(encoding="utf-8")
+        self.assertIn("ends in `-search`", text)
+        self.assertIn("Skill tool", text)
+        self.assertIn(".agents/skills/*/SKILL.md", text)
+
+    def test_scrape_subagents_load_portal_skill(self):
+        text = paths.skill_file("job-scraper").read_text(encoding="utf-8")
+        self.assertIn("each subagent must first load its portal skill with the Skill tool", text)
