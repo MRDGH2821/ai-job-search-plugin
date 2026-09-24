@@ -251,18 +251,28 @@ def check_permissions() -> None:
         print(f"note: allowlisted permission not present in settings.json: {entry!r}")
 
 
+WORKSPACE_GITIGNORE = "plugins/ai-job-search/skills/job-tools/workspace-template/gitignore.template"
+
+
 def check_gitignore() -> None:
-    path = ROOT / ".gitignore"
+    _check_gitignore_file(ROOT / ".gitignore", ".gitignore")
+    template = ROOT / WORKSPACE_GITIGNORE
+    if template.exists():
+        # /init-workspace copies this into every new workspace: it must carry the same rules.
+        _check_gitignore_file(template, WORKSPACE_GITIGNORE)
+
+
+def _check_gitignore_file(path, label: str) -> None:
     try:
         lines = [line.strip() for line in path.read_text(encoding="utf-8").splitlines()]
     except OSError as exc:
-        errors.append(f".gitignore: unreadable: {exc}")
+        errors.append(f"{label}: unreadable: {exc}")
         return
     rules = set(lines)
     for rule in REQUIRED_IGNORE_RULES:
         if rule not in rules:
             errors.append(
-                f".gitignore: required personal-data rule missing: {rule!r}. "
+                f"{label}: required personal-data rule missing: {rule!r}. "
                 "These rules keep fork users from committing personal data. If the rule moved "
                 "or was renamed intentionally, update REQUIRED_IGNORE_RULES in "
                 "tools/security_guards.py in the same PR."
@@ -270,7 +280,7 @@ def check_gitignore() -> None:
     for line in lines:
         if line.startswith("!") and line not in ALLOWED_IGNORE_NEGATIONS:
             errors.append(
-                f".gitignore: negation rule not in the reviewed allowlist: {line!r}. "
+                f"{label}: negation rule not in the reviewed allowlist: {line!r}. "
                 "A negation re-includes a path an earlier rule excluded and can silently "
                 "re-expose personal data (a required ignore rule stays present but stops "
                 "taking effect). If this negation is intentional, add it to "

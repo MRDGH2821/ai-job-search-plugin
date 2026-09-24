@@ -519,5 +519,25 @@ class TestPluginSurfaceGuards(unittest.TestCase):
             self.assertTrue(self._errors(tmp, "check_permissions"), settings)
 
 
+
+class TestTemplateGitignoreGuard(unittest.TestCase):
+    def test_template_missing_a_required_rule_fails(self):
+        import importlib
+        tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, tmp, ignore_errors=True)
+        full = "\n".join(security_guards.REQUIRED_IGNORE_RULES) + "\n"
+        (tmp / ".gitignore").write_text(full, encoding="utf-8")
+        wt = tmp / "plugins" / "ai-job-search" / "skills" / "job-tools" / "workspace-template"
+        wt.mkdir(parents=True)
+        (wt / "gitignore.template").write_text(full.replace("salary_data.json\n", ""), encoding="utf-8")
+        mod = importlib.reload(security_guards)
+        mod.ROOT = tmp
+        mod.errors.clear()
+        mod.check_gitignore()
+        found = list(mod.errors)
+        importlib.reload(security_guards)
+        self.assertTrue(any("gitignore.template" in e and "salary_data.json" in e for e in found), found)
+
+
 if __name__ == "__main__":
     unittest.main()
