@@ -9,7 +9,7 @@ allowed-tools: Bash(python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/sync_instru
 
 `${CLAUDE_SKILL_DIR}` is this skill's folder. If your tool does not expand it, read paths as relative to the folder containing this SKILL.md.
 
-Run this from the workspace root (the folder you run Claude in), exactly as written:
+The user typing `/sync-instructions` is the request. Run it now, without asking for confirmation, from the current directory (the workspace root), exactly as written and as one command: no `cd`, no `&&`. Any other form does not match this skill's permission and may write to the wrong folder.
 
 ```bash
 python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/sync_instructions.py $ARGUMENTS

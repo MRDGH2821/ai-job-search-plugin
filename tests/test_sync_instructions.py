@@ -162,12 +162,20 @@ class WiringTests(unittest.TestCase):
         self.assertTrue(body.lstrip().startswith("# /sync-instructions "))
         self.assertIn("python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/sync_instructions.py", body)
 
+    def test_skill_runs_without_asking_again(self):
+        # Task 4 probe: the model asked "Would you like me to proceed?" and wrote nothing.
+        body = paths.skill_file("sync-instructions").read_text(encoding="utf-8")
+        self.assertIn("Run it now, without asking for confirmation", body)
+        # A `cd … &&` prefix does not match the permission and can target the wrong folder.
+        self.assertIn("as one command: no `cd`, no `&&`", body)
+
     def test_setup_runs_the_sync_in_step_0a(self):
         setup = paths.command_file("setup")
         self.assertIn(ENTRY, _frontmatter(setup))
         text = setup.read_text(encoding="utf-8")
         step0a = text.split("### Step 0a:", 1)[1].split("#### Legacy fork migration", 1)[0]
         self.assertIn("python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/sync_instructions.py", step0a)
+        self.assertIn("no `cd`, no `&&`", step0a)
 
     def test_guard_reviews_the_entry(self):
         guards = (paths.REPO / "tools" / "security_guards.py").read_text(encoding="utf-8")
