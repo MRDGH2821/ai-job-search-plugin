@@ -59,3 +59,110 @@ class TestTemplateSync(unittest.TestCase):
         files = [str(p.relative_to(paths.REPO)) for p in WT.rglob("*") if p.is_file()]
         proc = subprocess.run(["git", "check-ignore", "--no-index", *files], cwd=paths.REPO, capture_output=True, text=True)
         self.assertEqual(proc.stdout.strip(), "", "template files ignored by the repo's .gitignore")
+
+
+import sys  # noqa: E402
+import tempfile  # noqa: E402
+
+SCRIPT = paths.JOB_TOOLS / "init_workspace.py"
+HEADER = "# Added by /init-workspace: personal data must never be committed"
+
+
+def run(root, *args):
+    return subprocess.run([sys.executable, str(SCRIPT), *args], cwd=root, capture_output=True, text=True,
+                          encoding="utf-8")
+
+
+def template_targets():
+    out = []
+    for p in WT.rglob("*"):
+        if p.is_file():
+            rel = p.relative_to(WT)
+            out.append(Path(".gitignore") if rel.name == "gitignore.template" else rel)
+    return sorted(out)
+
+
+class TestInitScript(unittest.TestCase):
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.root = Path(tmp.name)
+
+    def snapshot(self):
+        return {str(p.relative_to(self.root)): (p.read_bytes() if p.is_file() else None)
+                for p in self.root.rglob("*")}
+
+    def test_empty_folder_gets_the_whole_tree(self):
+        proc = run(self.root)
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        for rel in template_targets():
+            self.assertTrue((self.root / rel).is_file(), rel)
+        font = next((WT / "cover_letters" / "OpenFonts").rglob("*.ttf"))
+        self.assertEqual((self.root / font.relative_to(WT)).read_bytes(), font.read_bytes())
+        self.assertIn("created: cv/main_example.tex", proc.stdout)
+        self.assertNotIn("profile", proc.stdout)
+        self.assertFalse((self.root / "AGENTS.md").exists())
+
+    def test_second_run_is_unchanged(self):
+        run(self.root)
+        before = self.snapshot()
+        proc = run(self.root)
+        self.assertNotIn("created:", proc.stdout)
+        self.assertIn(f"kept: {len(template_targets())} existing files", proc.stdout)
+        self.assertEqual(self.snapshot(), before)
+
+    def test_existing_files_are_never_overwritten(self):
+        (self.root / "cv").mkdir()
+        (self.root / "cv" / "main_example.tex").write_text("mine", encoding="utf-8")
+        run(self.root)
+        self.assertEqual((self.root / "cv" / "main_example.tex").read_text(encoding="utf-8"), "mine")
+
+    def test_existing_gitignore_gains_only_missing_rules(self):
+        (self.root / ".gitignore").write_text("my-secret-dir/\nsalary_data.json\n", encoding="utf-8")
+        proc = run(self.root)
+        text = (self.root / ".gitignore").read_text(encoding="utf-8")
+        self.assertTrue(text.startswith("my-secret-dir/\nsalary_data.json\n"))
+        self.assertEqual(text.count("salary_data.json"), 1)
+        self.assertIn(HEADER, text)
+        self.assertIn("job_search_tracker.csv", text)
+        self.assertRegex(proc.stdout, r"updated: \.gitignore \(\+\d+ rules\)")
+        before = text
+        run(self.root)
+        self.assertEqual((self.root / ".gitignore").read_text(encoding="utf-8"), before)
+
+    def test_gitignore_append_respects_newlines(self):
+        (self.root / ".gitignore").write_bytes(b"a/\r\nb/")
+        run(self.root)
+        data = (self.root / ".gitignore").read_bytes()
+        self.assertTrue(data.startswith(b"a/\r\nb/\r\n"))
+        self.assertNotIn(b"\n", data.replace(b"\r\n", b""))
+
+    def test_clone_root_gitignore_needs_no_additions(self):
+        (self.root / ".gitignore").write_bytes((paths.REPO / ".gitignore").read_bytes())
+        proc = run(self.root)
+        self.assertNotIn("updated: .gitignore", proc.stdout)
+
+    def test_blocked_target_writes_nothing(self):
+        for make in (lambda r: (r / "cv").write_text("a file", encoding="utf-8"),
+                     lambda r: (r / "cv" / "main_example.tex").mkdir(parents=True)):
+            with tempfile.TemporaryDirectory() as t:
+                r = Path(t)
+                make(r)
+                before = {str(p.relative_to(r)) for p in r.rglob("*")}
+                proc = run(r)
+                self.assertEqual(proc.returncode, 2, proc.stdout)
+                self.assertIn("cv", proc.stderr)
+                self.assertEqual({str(p.relative_to(r)) for p in r.rglob("*")}, before)
+
+    def test_unreadable_gitignore_writes_nothing(self):
+        (self.root / ".gitignore").write_bytes(b"\xff\xfe\x81")
+        proc = run(self.root)
+        self.assertEqual(proc.returncode, 2)
+        self.assertEqual({p.name for p in self.root.iterdir()}, {".gitignore"})
+
+    def test_root_flag(self):
+        other = self.root / "ws"
+        other.mkdir()
+        self.assertEqual(run(self.root, "--root", str(other)).returncode, 0)
+        self.assertTrue((other / "cv" / "main_example.tex").exists())
+        self.assertFalse((self.root / "cv").exists())
