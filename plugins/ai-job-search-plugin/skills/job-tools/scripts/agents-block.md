@@ -1,5 +1,5 @@
 ---
-framework_version: 1.0.0
+version: 2.0.0
 ---
 <!-- Managed by /sync-instructions: text between these markers is replaced on every sync. Put your own notes outside them. -->
 ## Job search workspace (ai-job-search-plugin)

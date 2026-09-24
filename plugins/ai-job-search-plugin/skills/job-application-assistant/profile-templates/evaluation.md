@@ -1,7 +1,3 @@
----
-framework_version: 1.0.0
----
-
 # Evaluation Inputs
 
 <!-- Your personal inputs to the scoring framework in 04-job-evaluation.md. /setup creates profile/evaluation.md from this template and fills it. -->

@@ -1,6 +1,6 @@
 {
   "name": "danish-job-portals",
-  "version": "1.8.0",
+  "version": "2.0.0",
   "description": "Job portal search skills for Denmark (Jobbank, Jobdanmark, Jobindex, Jobnet), used by /scrape from the ai-job-search-plugin plugin.",
   "author": { "name": "MRDGH2821" },
   "homepage": "https://github.com/MRDGH2821/ai-job-search-plugin",

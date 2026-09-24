@@ -1,7 +1,3 @@
----
-framework_version: 1.0.0
----
-
 # CV Inputs
 
 <!-- Your CV-specific inputs. /setup creates profile/cv.md from this template. Tailoring rules stay in 05-cv-templates.md. -->

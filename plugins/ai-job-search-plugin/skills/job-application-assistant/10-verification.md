@@ -1,7 +1,3 @@
----
-framework_version: 1.1.0
----
-
 # Application Workflow and Verification
 
 `<job-tools>` is the `job-tools` helper-scripts folder; the skill that loaded this file gives its full path.

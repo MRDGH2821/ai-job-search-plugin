@@ -1,7 +1,3 @@
----
-framework_version: 1.1.0
----
-
 # Application Form Fields
 
 `/apply` produces two artifacts: a CV and a cover letter. Many applications need a **third** — free-text fields typed directly into an application portal. Graduate programs, large-employer ATS systems and startup forms routinely ask for things neither document covers, under a character or word limit, in a box with no formatting.

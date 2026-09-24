@@ -1,7 +1,3 @@
----
-framework_version: 1.0.0
----
-
 # Writing Patterns
 
 <!-- Observations from your own past applications. The rules in 03-writing-style.md win on any conflict. -->

@@ -1,7 +1,3 @@
----
-framework_version: 1.6.0
----
-
 # CV Templates and Tailoring Guide
 
 `<job-tools>` is the `job-tools` helper-scripts folder; the skill that loaded this file gives its full path.

@@ -1,7 +1,3 @@
----
-framework_version: 1.1.0
----
-
 # Interview Preparation Guide
 
 ## STAR Format

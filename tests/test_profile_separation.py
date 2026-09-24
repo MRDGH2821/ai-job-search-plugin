@@ -66,21 +66,11 @@ def headings(path: Path) -> set[str]:
     return found
 
 
-def frontmatter_version(path: Path):
-    text = path.read_text(encoding="utf-8")
-    m = re.match(r"^---\n(.*?)\n---\n", text, re.DOTALL)
-    if not m:
-        return None
-    v = re.search(r"^framework_version:\s*(\S+)", m.group(1), re.MULTILINE)
-    return v.group(1) if v else None
-
-
 class TestTemplates(unittest.TestCase):
-    def test_every_template_exists_with_framework_version(self):
+    def test_every_template_exists(self):
         for name in TEMPLATES:
             path = TPL / name
             self.assertTrue(path.is_file(), f"missing template {path}")
-            self.assertIsNotNone(frontmatter_version(path), f"{name}: no framework_version")
 
     def test_templates_carry_their_setup_sentinel(self):
         for name, sentinel in SENTINELS.items():
@@ -237,10 +227,6 @@ class TestLegacyFilesRemoved(unittest.TestCase):
         for path in (FW / "01-candidate-profile.md", FW / "02-behavioral-profile.md",
                      REPO / ".claude" / "skills" / "job-scraper" / "search-queries.md"):
             self.assertFalse(path.exists(), f"{path.relative_to(REPO)} should be deleted")
-
-    def test_version_guard_covers_templates(self):
-        src = (REPO / "tools" / "check_framework_version.py").read_text(encoding="utf-8")
-        self.assertIn("profile-templates", src)
 
 
 class TestDocs(unittest.TestCase):

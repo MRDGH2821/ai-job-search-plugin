@@ -1,7 +1,3 @@
----
-framework_version: 1.3.0
----
-
 # Writing Style Guide
 
 Also apply the candidate's own observed patterns in `profile/writing-patterns.md#patterns-observed-in-past-applications`, if any. The rules in this file win on any conflict.

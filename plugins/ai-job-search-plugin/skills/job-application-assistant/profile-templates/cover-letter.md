@@ -1,7 +1,3 @@
----
-framework_version: 1.0.0
----
-
 # Cover Letter Inputs
 
 <!-- Your cover-letter inputs. /setup creates profile/cover-letter.md from this template. Structure rules stay in 06-cover-letter-templates.md. -->

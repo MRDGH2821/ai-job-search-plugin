@@ -1,7 +1,3 @@
----
-framework_version: 1.0.0
----
-
 # Candidate Profile
 
 <!-- Your profile. /setup creates profile/candidate.md from this template and fills it. Edit freely. -->

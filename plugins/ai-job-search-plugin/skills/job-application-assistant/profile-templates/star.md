@@ -1,7 +1,3 @@
----
-framework_version: 1.0.0
----
-
 # STAR Examples
 
 <!-- Your STAR examples. /setup creates profile/star.md from this template and fills it; /interview appends approved answers. -->

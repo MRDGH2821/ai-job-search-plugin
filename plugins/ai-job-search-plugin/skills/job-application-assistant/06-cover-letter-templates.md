@@ -1,7 +1,3 @@
----
-framework_version: 1.1.0
----
-
 # Cover Letter Templates and Tailoring Guide
 
 If `profile/cover-letter.md#active-template` holds an `ACTIVE-TEMPLATE` block (written by `/add-template`), that block wins wherever it conflicts with the stock guidance below. Reuse the candidate's own openings and closings from `profile/cover-letter.md#patterns-from-past-letters` where they fit.

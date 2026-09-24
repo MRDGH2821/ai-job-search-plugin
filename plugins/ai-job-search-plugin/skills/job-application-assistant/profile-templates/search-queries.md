@@ -1,7 +1,3 @@
----
-framework_version: 1.0.0
----
-
 # Search Queries for Job Scraper
 
 <!-- Your search queries. /setup creates profile/search-queries.md from this template and fills it; /scrape reads it. -->

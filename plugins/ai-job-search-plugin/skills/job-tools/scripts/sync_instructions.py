@@ -44,7 +44,7 @@ def load_template() -> tuple[str, str]:
     version, body = "0.0.0", text
     m = re.match(r"^---\n(.*?)\n---\n", text, re.DOTALL)
     if m:
-        v = re.search(r"^framework_version:\s*(\S+)", m.group(1), re.MULTILINE)
+        v = re.search(r"^version:\s*(\S+)", m.group(1), re.MULTILINE)
         if v:
             version = v.group(1)
         body = text[m.end():]
