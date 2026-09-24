@@ -11,6 +11,7 @@ GUARD_SCRIPT = REPO_ROOT / "tools" / "security_guards.py"
 
 sys.path.insert(0, str(REPO_ROOT / "tools"))
 import security_guards  # noqa: E402  (imported for its allowlist constants)
+from tests import paths
 
 
 def run_guards(root: Path) -> subprocess.CompletedProcess:
@@ -313,7 +314,7 @@ class GitignorePatternBehaviorTests(unittest.TestCase):
         # so either half can move independently and each must be pinned.
         folder = "documents/applications/<company>_<role>/"
         filename = "interview_prep_<stage>.md"
-        spec = (REPO_ROOT / ".claude" / "commands" / "interview.md").read_text(encoding="utf-8")
+        spec = (paths.command_file("interview")).read_text(encoding="utf-8")
         for fragment in (folder, filename):
             # assertTrue, not assertIn: the haystack is the whole command spec,
             # and dumping it buries the one sentence explaining the failure.

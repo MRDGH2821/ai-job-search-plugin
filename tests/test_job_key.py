@@ -13,11 +13,12 @@ import sys
 import unittest
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
+from tests import paths  # noqa: E402
+paths.add_job_tools_to_sys_path()
 from job_key import is_canonical, is_legacy_shape, make_key, slugify  # noqa: E402
 
 REPO = Path(__file__).resolve().parent.parent
-TOOL = REPO / "tools" / "job_key.py"
+TOOL = paths.JOB_TOOLS / "job_key.py"
 
 
 class Slugify(unittest.TestCase):

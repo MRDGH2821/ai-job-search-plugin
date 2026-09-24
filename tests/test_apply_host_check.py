@@ -12,9 +12,10 @@ import re
 import unittest
 from pathlib import Path
 from urllib.parse import urlparse
+from tests import paths
 
 REPO = Path(__file__).resolve().parent.parent
-APPLY_COMMAND_FILE = REPO / ".claude" / "commands" / "apply.md"
+APPLY_COMMAND_FILE = paths.command_file("apply")
 
 KNOWN_ATS_APEXES = {
     "greenhouse.io",

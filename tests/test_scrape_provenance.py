@@ -10,9 +10,10 @@ entry, and a job with no entry at all each point at a different mechanism.
 """
 import unittest
 from pathlib import Path
+from tests import paths
 
 REPO = Path(__file__).resolve().parent.parent
-SKILL = REPO / ".claude" / "skills" / "job-scraper" / "SKILL.md"
+SKILL = paths.skill_file("job-scraper")
 
 
 def _steps(text: str) -> dict[str, str]:

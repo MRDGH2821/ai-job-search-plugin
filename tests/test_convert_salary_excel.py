@@ -3,8 +3,10 @@ import unittest
 from contextlib import redirect_stderr
 from types import SimpleNamespace
 
+from tests import paths  # noqa: E402
+paths.add_job_tools_to_sys_path()
 from salary_lookup import format_entry
-from tools.convert_salary_excel import (
+from convert_salary_excel import (
     INDEX_PATTERNS,
     detect_column_type,
     header_matches,

@@ -7,6 +7,8 @@ from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from unittest import mock
 
+from tests import paths  # noqa: E402
+paths.add_job_tools_to_sys_path()
 import salary_lookup
 from salary_lookup import (
     format_entry,

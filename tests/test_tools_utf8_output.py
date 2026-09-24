@@ -18,6 +18,7 @@ import sys
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from tests import paths
 
 try:
     import openpyxl
@@ -92,7 +93,7 @@ class ToolsWriteUtf8(unittest.TestCase):
         self.assertIn(CYRILLIC, proc.stdout.decode("utf-8"))
 
     def test_salary_lookup_prints_a_company_outside_cp1252(self):
-        shutil.copy(REPO / "salary_lookup.py", self.tmp / "salary_lookup.py")
+        shutil.copy(paths.SALARY_LOOKUP, self.tmp / "salary_lookup.py")
         (self.tmp / "salary_data.json").write_text(json.dumps({
             "metadata": {"source": "fixture", "index_baseline": 100, "index_label": "Index",
                          "baseline_description": "Index 100 = baseline"},

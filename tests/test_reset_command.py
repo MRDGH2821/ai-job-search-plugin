@@ -31,10 +31,11 @@ import re
 import subprocess
 import unittest
 from pathlib import Path
+from tests import paths
 
 REPO = Path(__file__).resolve().parent.parent
-RESET = REPO / ".claude" / "commands" / "reset.md"
-SETUP = REPO / ".claude" / "commands" / "setup.md"
+RESET = paths.command_file("reset")
+SETUP = paths.command_file("setup")
 
 
 def tracked_document_subfolders():
@@ -91,7 +92,7 @@ def section(text: str, start: str, end: str) -> str:
     return text[begin : text.index(end, begin)]
 
 
-TPL = REPO / ".claude" / "skills" / "job-application-assistant" / "profile-templates"
+TPL = paths.FW / "profile-templates"
 
 
 def setup_step3_profile_files():

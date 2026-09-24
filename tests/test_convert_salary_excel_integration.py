@@ -11,9 +11,11 @@ try:
 except ImportError:
     openpyxl = None
 
+from tests import paths  # noqa: E402
+paths.add_job_tools_to_sys_path()
 from salary_lookup import collect_validation_issues, format_entry
 
-TOOL = Path(__file__).resolve().parent.parent / "tools" / "convert_salary_excel.py"
+TOOL = paths.JOB_TOOLS / "convert_salary_excel.py"
 
 
 @unittest.skipUnless(openpyxl, "requires optional openpyxl (installed in CI)")

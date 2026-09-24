@@ -13,9 +13,10 @@ Pins the invariants for batch-resolving quiet applications:
 import re
 import unittest
 from pathlib import Path
+from tests import paths
 
 REPO = Path(__file__).resolve().parent.parent
-COMMAND = REPO / ".claude" / "commands" / "outcome.md"
+COMMAND = paths.command_file("outcome")
 
 
 class OutcomeStaleBranchSpecTests(unittest.TestCase):

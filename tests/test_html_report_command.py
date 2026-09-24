@@ -10,6 +10,7 @@ import subprocess
 import sys
 import unittest
 from pathlib import Path
+from tests import paths
 
 try:
     import yaml  # noqa: F401 - only probing availability for the lint integration test
@@ -18,7 +19,7 @@ except ImportError:
     _HAVE_YAML = False
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-COMMAND_FILE = REPO_ROOT / ".claude" / "commands" / "html-report.md"
+COMMAND_FILE = paths.command_file("html-report")
 LINT_SCRIPT = REPO_ROOT / "tools" / "lint_skills.py"
 GITIGNORE = REPO_ROOT / ".gitignore"
 
@@ -58,7 +59,7 @@ class HtmlReportTrackerFieldTests(unittest.TestCase):
     # clean list diff naming the missing column instead.
     CANONICAL_HEADER = re.search(
         r"^\s*(date,company,[a-z_,]+)$",
-        (REPO_ROOT / ".claude" / "commands" / "apply.md").read_text(encoding="utf-8"),
+        (paths.command_file("apply")).read_text(encoding="utf-8"),
         re.M,
     ).group(1).split(",")
 

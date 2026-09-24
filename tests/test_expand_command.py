@@ -2,9 +2,10 @@
 
 import unittest
 from pathlib import Path
+from tests import paths
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-EXPAND_COMMAND_FILE = REPO_ROOT / ".claude" / "commands" / "expand.md"
+EXPAND_COMMAND_FILE = paths.command_file("expand")
 
 
 class ExpandCommandTests(unittest.TestCase):

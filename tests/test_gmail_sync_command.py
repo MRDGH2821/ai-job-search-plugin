@@ -12,9 +12,10 @@ missed rejection or interview invite just looks like "no updates".
 """
 import unittest
 from pathlib import Path
+from tests import paths
 
 REPO = Path(__file__).resolve().parent.parent
-GMAIL_SYNC = REPO / ".claude" / "commands" / "gmail-sync.md"
+GMAIL_SYNC = paths.command_file("gmail-sync")
 
 
 class TestGmailQueryOperators(unittest.TestCase):

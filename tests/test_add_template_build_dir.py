@@ -7,9 +7,10 @@ inspect; dropping the `mv` leaves no PDF beside the source at all.
 """
 import unittest
 from pathlib import Path
+from tests import paths
 
 REPO = Path(__file__).resolve().parent.parent
-ADD_TEMPLATE = REPO / ".claude" / "commands" / "add-template.md"
+ADD_TEMPLATE = paths.command_file("add-template")
 
 LATEX_COMMAND = (
     "rm -f <file>.pdf && mkdir -p build && lualatex -interaction=nonstopmode "

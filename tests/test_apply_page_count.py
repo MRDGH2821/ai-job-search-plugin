@@ -14,10 +14,11 @@ check to another step that does not run it.
 import re
 import unittest
 from pathlib import Path
+from tests import paths
 
 REPO = Path(__file__).resolve().parent.parent
-APPLY = REPO / ".claude" / "commands" / "apply.md"
-VERIFY_LAYOUT = REPO / "tools" / "verify_layout.py"
+APPLY = paths.command_file("apply")
+VERIFY_LAYOUT = paths.JOB_TOOLS / "verify_layout.py"
 
 
 def section(path, heading):

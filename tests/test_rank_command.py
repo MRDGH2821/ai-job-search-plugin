@@ -12,6 +12,7 @@ import subprocess
 import sys
 import unittest
 from pathlib import Path
+from tests import paths
 
 try:
     import yaml  # noqa: F401 - only probing availability for the lint integration test
@@ -20,10 +21,10 @@ except ImportError:
     _HAVE_YAML = False
 
 REPO = Path(__file__).resolve().parent.parent
-COMMAND = REPO / ".claude" / "commands" / "rank.md"
-SCRAPER_SKILL = REPO / ".claude" / "skills" / "job-scraper" / "SKILL.md"
+COMMAND = paths.command_file("rank")
+SCRAPER_SKILL = paths.skill_file("job-scraper")
 EVALUATION = (
-    REPO / ".claude" / "skills" / "job-application-assistant" / "04-job-evaluation.md"
+    paths.FW / "04-job-evaluation.md"
 )
 
 
@@ -631,7 +632,7 @@ class RankStateToolSpec(unittest.TestCase):
         )
 
     def test_settings_and_guards_allow_the_new_tool(self):
-        settings = json.loads((REPO / ".claude" / "settings.json").read_text(encoding="utf-8"))
+        settings = json.loads((paths.SETTINGS).read_text(encoding="utf-8"))
         allow = settings["permissions"]["allow"]
         guards = (REPO / "tools" / "security_guards.py").read_text(encoding="utf-8")
         for entry in ("Bash(python tools/rank_state.py:*)", "Bash(python3 tools/rank_state.py:*)"):

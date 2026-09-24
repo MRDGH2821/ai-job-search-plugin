@@ -23,10 +23,11 @@ excluded: the contract is about the search output /scrape consumes.
 import re
 import unittest
 from pathlib import Path
+from tests import paths
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-SCRAPER_SKILL = REPO_ROOT / ".claude" / "skills" / "job-scraper" / "SKILL.md"
-PORTAL_CLIS = sorted((REPO_ROOT / ".agents" / "skills").glob("*-search"))
+SCRAPER_SKILL = paths.skill_file("job-scraper")
+PORTAL_CLIS = paths.portal_dirs()
 
 # Derived, never copied: a hardcoded field list drifts in lockstep with
 # nothing - if Step 2's prose drops or adds a field, the known-good portals
