@@ -133,3 +133,10 @@ class TestIdentityDocs(unittest.TestCase):
                       "A test keeps the template identical to this repository's own files"):
             self.assertNotIn(stale, section)
 
+    def test_security_md_does_not_claim_the_profile_is_ignored(self):
+        # profile/ is tracked in the workspace (/setup says so); telling users it is
+        # gitignored invites pushing it to a public repository.
+        text = (REPO / "SECURITY.md").read_text(encoding="utf-8")
+        self.assertNotIn("your populated profile, tracker, salary data, and application archive are gitignored", text)
+        self.assertIn("private", text)
+

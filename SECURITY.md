@@ -12,7 +12,7 @@ This is an agentic workflow: an LLM with file access reads untrusted web content
 
 - **Untrusted-input rules**: `/apply` and `/rank` treat posting text as data, never instructions - agents are told not to follow directions embedded in postings and not to fetch URLs found inside posting text (the user-supplied posting URL is the one exception). Reviewer research starts from the company identity the user confirmed, never from links in the posting body.
 - **Permission allowlist**: each skill's `allowed-tools` and this repository's `.claude/settings.json` pre-approve only the specific commands the workflow needs; the `security-guards` CI job fails any PR that widens it, adds package-manifest lifecycle scripts, or weakens the personal-data gitignore rules. Note the allowlist governs Bash commands - the model's native WebFetch/WebSearch tools are outside its reach, which is exactly why the instruction-level rules above exist.
-- **Personal data boundaries**: your populated profile, tracker, salary data, and application archive are gitignored; documents never leave the machine by design (`/notion-sync` syncs filenames only; nothing uploads document content anywhere).
+- **Personal data boundaries**: your workspace's `.gitignore` keeps the tracker, salary data, application archive and generated output out of git, but `profile/` and your CV source are tracked, so keep the workspace local or in a **private** repository. Documents never leave the machine by design (`/notion-sync` syncs filenames only; nothing uploads document content anywhere).
 
 Instruction-level defenses raise the bar; they are not a sandbox. If you run this workflow against job boards you do not trust at all, review what the agent fetched and wrote before sending anything out.
 
