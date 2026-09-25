@@ -7,8 +7,8 @@ comment and the hyperref pdftitle - /setup's documented edit ("replace
 placeholder personal data with their actual name, contact info") touches
 neither, so a fully personalized CV with a real name, address, phone and
 email passed the check (review finding F28, 2026-08-19; proven
-empirically). Same weakness for 01-candidate-profile.md's `<!-- SETUP`
-comment sentinel.
+empirically). Same weakness for the profile template's (now
+profile-templates/candidate.md) `<!-- SETUP` comment sentinel.
 
 These tests pin (a) that ci.yml checks data-located sentinels, (b) that
 the sentinels exist in the pristine files, and (c) that simulating the
@@ -24,7 +24,7 @@ UPSTREAM = "MadsLorentzen/ai-job-search"
 REPO = Path(__file__).resolve().parent.parent
 CI = REPO / ".github" / "workflows" / "ci.yml"
 EXAMPLE_CV = REPO / "cv" / "main_example.tex"
-PROFILE = REPO / ".claude" / "skills" / "job-application-assistant" / "01-candidate-profile.md"
+PROFILE = REPO / ".claude" / "skills" / "job-application-assistant" / "profile-templates" / "candidate.md"
 
 # The literal sentinel strings (unescaped) that ci.yml's grep patterns match.
 CV_SENTINELS = ["\\name{[First]}{[Last]}", "\\email{[your.email@example.com]}"]
@@ -89,11 +89,18 @@ class TestProfileSentinelIsDataLocated(unittest.TestCase):
     def test_ci_checks_a_data_placeholder_not_the_header_comment(self):
         ci = CI.read_text(encoding="utf-8")
         self.assertIn(
-            "check .claude/skills/job-application-assistant/01-candidate-profile.md '\\[YOUR_EMAIL\\]'",
+            "check .claude/skills/job-application-assistant/profile-templates/candidate.md '\\[YOUR_EMAIL\\]'",
             ci,
-            "01's sentinel must sit in the Identity data /setup fills, not in "
-            "a header comment the model may leave untouched",
+            "candidate.md's sentinel must sit in the Identity data /setup fills",
         )
+
+    def test_ci_forbids_a_tracked_profile_folder(self):
+        ci = CI.read_text(encoding="utf-8")
+        self.assertIn("profile/ must not be committed to the upstream template", ci)
+
+    def test_ci_no_longer_checks_claude_md_for_a_name(self):
+        ci = CI.read_text(encoding="utf-8")
+        self.assertNotIn("check CLAUDE.md", ci)
 
     def test_pristine_profile_carries_the_sentinel(self):
         self.assertIn(PROFILE_SENTINEL, PROFILE.read_text(encoding="utf-8"))

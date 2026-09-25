@@ -1,10 +1,10 @@
 ---
-framework_version: 1.4.4
+framework_version: 1.5.0
 ---
 
 # CV Templates and Tailoring Guide
 
-<!-- SETUP: Profile statements and section ordering are personalized by running /setup -->
+If `profile/cv.md#active-template` holds an `ACTIVE-TEMPLATE` block (written by `/add-template`), that block wins wherever it conflicts with the stock guidance below.
 
 ## Template: LaTeX moderncv (Banking Style)
 
@@ -59,7 +59,7 @@ Expected output: `Output written on main_<company>_<role>.pdf (2 pages, ...)`. A
     linkcolor=blue,
     filecolor=magenta,
     urlcolor=blue,
-    pdftitle={[YOUR_NAME] - CV},
+    pdftitle={[CANDIDATE_NAME] - CV},
     % Keep pdfpagemode=UseNone: this block runs after moderncv's own
     % \AtEndPreamble (moderncv.cls sets pdfpagemode there), so a FullScreen
     % value here would win and open every CV in fullscreen presentation mode.
@@ -69,13 +69,13 @@ Expected output: `Output written on main_<company>_<role>.pdf (2 pages, ...)`. A
 \usepackage{import}
 
 % Personal data
-\name{[FIRST_NAME]}{[LAST_NAME]}
+\name{[CANDIDATE_FIRST_NAME]}{[CANDIDATE_LAST_NAME]}
 % If you have no address to list, DELETE this whole line. \address{}{}{} fails
 % with "There's no line here to end" on every moderncv version.
-\address{[YOUR_ADDRESS]}{}{}
-\phone[mobile]{[YOUR_PHONE]}
-\email{[YOUR_EMAIL]}
-\extrainfo{\href{[YOUR_LINKEDIN_URL]}{LinkedIn}, \href{[YOUR_GITHUB_URL]}{GitHub}}
+\address{[CANDIDATE_ADDRESS]}{}{}
+\phone[mobile]{[CANDIDATE_PHONE]}
+\email{[CANDIDATE_EMAIL]}
+\extrainfo{\href{[CANDIDATE_LINKEDIN_URL]}{LinkedIn}, \href{[CANDIDATE_GITHUB_URL]}{GitHub}}
 
 \begin{document}
 \makecvtitle
@@ -90,6 +90,8 @@ Expected output: `Output written on main_<company>_<role>.pdf (2 pages, ...)`. A
 
 \end{document}
 ```
+
+Fill every `[CANDIDATE_*]` token from `profile/candidate.md#identity` when drafting a CV. Never edit the tokens in this file.
 
 ### Color overrides
 
@@ -136,14 +138,7 @@ When the role sits outside your home domain, **lead with the domain-transfer arg
 
 **Create 2-3 profile statement templates for your main role types:**
 
-<!-- SETUP: These are populated based on your background -->
-**For [YOUR_PRIMARY_ROLE_TYPE] roles:**
-> [YOUR_PROFILE_STATEMENT_TEMPLATE_1]
-
-**For [YOUR_SECONDARY_ROLE_TYPE] roles:**
-> [YOUR_PROFILE_STATEMENT_TEMPLATE_2]
-
-Statements labeled *[Used for: <company>_<role>]* were extracted from archived application drafts by `/setup` Path A. They are **phrasing references, never fact sources**: when drafting from one, every factual claim still comes from `01-candidate-profile.md` - a past tailored draft does not vouch for its own accuracy.
+Start from the candidate's own statements in `profile/cv.md#profile-statements`. Statements labeled *[Used for: <company>_<role>]* are phrasing references, never fact sources: every factual claim still comes from `profile/candidate.md`.
 
 ### Core Competencies / Skills Section (Best Practice)
 Reorder and emphasize based on the role. Use bold category labels.

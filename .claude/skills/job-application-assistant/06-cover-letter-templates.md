@@ -1,8 +1,10 @@
 ---
-framework_version: 1.0.2
+framework_version: 1.1.0
 ---
 
 # Cover Letter Templates and Tailoring Guide
+
+If `profile/cover-letter.md#active-template` holds an `ACTIVE-TEMPLATE` block (written by `/add-template`), that block wins wherever it conflicts with the stock guidance below. Reuse the candidate's own openings and closings from `profile/cover-letter.md#patterns-from-past-letters` where they fit.
 
 ## Template: Custom cover.cls (XeLaTeX)
 
@@ -76,7 +78,7 @@ The font wrapper is mandatory — if you just move `\begin{itemize}` outside `\l
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %     TITLE NAME
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\namesection{}{\Huge{[YOUR_NAME]}}{  \href{mailto:[YOUR_EMAIL]}{[YOUR_EMAIL]} | [YOUR_PHONE] |  \urlstyle{same}\href{[YOUR_LINKEDIN_URL]}{LinkedIn}
+\namesection{}{\Huge{[CANDIDATE_NAME]}}{  \href{mailto:[CANDIDATE_EMAIL]}{[CANDIDATE_EMAIL]} | [CANDIDATE_PHONE] |  \urlstyle{same}\href{[CANDIDATE_LINKEDIN_URL]}{LinkedIn}
 }
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -108,10 +110,12 @@ The font wrapper is mandatory — if you just move `\begin{itemize}` outside `\l
 % doubled break triggers "! LaTeX Error: There's no line here to end."
 \closing{Kind regards,}
 
-\signature{[YOUR_NAME]}
+\signature{[CANDIDATE_NAME]}
 \end{flushright}
 \end{document}
 ```
+
+Fill every `[CANDIDATE_*]` token from `profile/candidate.md#identity` when drafting a letter. Never edit the tokens in this file.
 
 ## Key Commands Reference
 

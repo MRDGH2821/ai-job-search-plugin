@@ -10,6 +10,8 @@ Follow these steps **in order**.
 
 ## Step 0: Parse Input
 
+Run the Profile Guard (`job-application-assistant/SKILL.md`) first.
+
 `$ARGUMENTS` may contain:
 
 - Nothing → rank up to 10 jobs with status `new` in `job_scraper/seen_jobs.json`
@@ -36,7 +38,8 @@ If it reports no candidates, say so ("Nothing new to rank - run /scrape to find 
 
 Then read the scoring framework and profile **once**:
 - `.claude/skills/job-application-assistant/04-job-evaluation.md`
-- `.claude/skills/job-application-assistant/01-candidate-profile.md`
+- `profile/candidate.md`
+- `profile/evaluation.md`
 
 State how many jobs will be ranked and how many are deferred before proceeding.
 

@@ -13,8 +13,6 @@ TEMPLATE_URL = "https://github.com/MadsLorentzen/ai-job-search.git"
 FORK_URL = "https://github.com/octocat/ai-job-search.git"
 
 FRAMEWORK_FILES = [
-    ".claude/skills/job-application-assistant/01-candidate-profile.md",
-    ".claude/skills/job-application-assistant/02-behavioral-profile.md",
     ".claude/skills/job-application-assistant/03-writing-style.md",
     ".claude/skills/job-application-assistant/04-job-evaluation.md",
     ".claude/skills/job-application-assistant/05-cv-templates.md",
@@ -22,7 +20,16 @@ FRAMEWORK_FILES = [
     ".claude/skills/job-application-assistant/07-interview-prep.md",
     ".claude/skills/job-application-assistant/08-application-forms.md",
     ".claude/skills/job-application-assistant/09-web-research.md",
+    ".claude/skills/job-application-assistant/10-verification.md",
     ".claude/skills/job-application-assistant/SKILL.md",
+    ".claude/skills/job-application-assistant/profile-templates/behavioral.md",
+    ".claude/skills/job-application-assistant/profile-templates/candidate.md",
+    ".claude/skills/job-application-assistant/profile-templates/cover-letter.md",
+    ".claude/skills/job-application-assistant/profile-templates/cv.md",
+    ".claude/skills/job-application-assistant/profile-templates/evaluation.md",
+    ".claude/skills/job-application-assistant/profile-templates/search-queries.md",
+    ".claude/skills/job-application-assistant/profile-templates/star.md",
+    ".claude/skills/job-application-assistant/profile-templates/writing-patterns.md",
     "AGENTS.md",
 ]
 

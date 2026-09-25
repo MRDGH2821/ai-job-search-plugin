@@ -7,7 +7,8 @@ This script:
 1. Identifies the upstream remote (defaults to 'upstream', falls back to 'origin').
 2. Fetches the latest commits from the upstream remote.
 3. Compares the 'framework_version' in your local files under
-   .claude/skills/job-application-assistant/ with those in the upstream remote.
+   .claude/skills/job-application-assistant/ (including profile-templates/) with those
+   in the upstream remote.
 4. Alerts you if a file has been updated upstream with a newer version.
 """
 
@@ -21,8 +22,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 FRAMEWORK_FILES = [
-    ".claude/skills/job-application-assistant/01-candidate-profile.md",
-    ".claude/skills/job-application-assistant/02-behavioral-profile.md",
     ".claude/skills/job-application-assistant/03-writing-style.md",
     ".claude/skills/job-application-assistant/04-job-evaluation.md",
     ".claude/skills/job-application-assistant/05-cv-templates.md",
@@ -30,7 +29,16 @@ FRAMEWORK_FILES = [
     ".claude/skills/job-application-assistant/07-interview-prep.md",
     ".claude/skills/job-application-assistant/08-application-forms.md",
     ".claude/skills/job-application-assistant/09-web-research.md",
+    ".claude/skills/job-application-assistant/10-verification.md",
     ".claude/skills/job-application-assistant/SKILL.md",
+    ".claude/skills/job-application-assistant/profile-templates/behavioral.md",
+    ".claude/skills/job-application-assistant/profile-templates/candidate.md",
+    ".claude/skills/job-application-assistant/profile-templates/cover-letter.md",
+    ".claude/skills/job-application-assistant/profile-templates/cv.md",
+    ".claude/skills/job-application-assistant/profile-templates/evaluation.md",
+    ".claude/skills/job-application-assistant/profile-templates/search-queries.md",
+    ".claude/skills/job-application-assistant/profile-templates/star.md",
+    ".claude/skills/job-application-assistant/profile-templates/writing-patterns.md",
     "AGENTS.md",
 ]
 

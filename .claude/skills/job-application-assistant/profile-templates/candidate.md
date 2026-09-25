@@ -1,11 +1,10 @@
 ---
-framework_version: 1.1.1
+framework_version: 1.0.0
 ---
 
 # Candidate Profile
 
-<!-- SETUP: This file is populated by running /setup -->
-<!-- After running /setup, all sections will be filled with your actual information -->
+<!-- Your profile. /setup creates profile/candidate.md from this template and fills it. Edit freely. -->
 
 ## Identity
 - **Name:** [YOUR_NAME]
@@ -15,11 +14,13 @@ framework_version: 1.1.1
 - **LinkedIn:** [YOUR_LINKEDIN_URL]
 - **GitHub:** [YOUR_GITHUB_URL]
 - **Status:** [YOUR_EMPLOYMENT_STATUS]
+- **LinkedIn headline:** "[YOUR_LINKEDIN_HEADLINE]"
+- **CV language:** [YOUR_CV_LANGUAGE] <!-- English unless your market expects otherwise; /setup asks -->
 - **Constraints:** [YOUR_COMMUTE_OR_LOCATION_CONSTRAINTS]
 
 ### Languages
 <!-- Every language you can work in professionally, with your honest level. Used by the
-Language Gate in 04-job-evaluation.md and by job-scraper/search-queries.md's query-language
+Language Gate in 04-job-evaluation.md and by profile/search-queries.md's query-language
 generation. Omit any language you don't actually work in - an undeclared language is treated as
 a hard no, not a gap to smooth over. -->
 
@@ -59,6 +60,9 @@ a hard no, not a gap to smooth over. -->
 
 ### Software & Tools
 - [TOOL_LIST]
+
+## Certifications
+- **[CERTIFICATION_NAME]** - [HOURS]h - completed [DATE]
 
 ## Publications
 <!-- List peer-reviewed publications, if any -->

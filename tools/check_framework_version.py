@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """CI check: ensure that modified framework files have updated version markers.
 
-Fails if any markdown file under .claude/skills/job-application-assistant/ is
+Fails if any markdown file under .claude/skills/job-application-assistant/ (including profile-templates/) is
 modified in git without a change/bump to its 'framework_version' frontmatter key.
 Also ensures all framework files have a valid 'framework_version' frontmatter key.
 """
@@ -15,7 +15,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SKILL_DIR = ROOT / ".claude/skills/job-application-assistant"
-FRAMEWORK_FILES = sorted(SKILL_DIR.glob("*.md"))
+FRAMEWORK_FILES = sorted(SKILL_DIR.glob("*.md")) + sorted(SKILL_DIR.glob("profile-templates/*.md"))
 
 # Add root AGENTS.md if it exists
 root_agents = ROOT / "AGENTS.md"

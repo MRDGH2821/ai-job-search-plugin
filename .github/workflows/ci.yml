@@ -1,8 +1,8 @@
 # CI for the framework itself: LaTeX smoke compiles, skill/command lint,
 # CLI typechecks, and (upstream only) placeholder integrity.
 #
-# Fork-friendly by design: forks personalize CLAUDE.md, the skill files, and
-# cv/main_example.tex via /setup, so the placeholder-integrity job and the
+# Fork-friendly by design: forks personalize profile/ and cv/main_example.tex
+# via /setup, so the placeholder-integrity job and the
 # exact page-count/content assertions run only on the upstream template repo.
 # Compile success, lint correctness, and an extractable PDF text layer are
 # asserted everywhere.
@@ -242,10 +242,13 @@ jobs:
               fail=1
             fi
           }
-          check CLAUDE.md '\[YOUR_NAME\]'
           check cv/main_example.tex '\\name{\[First\]}{\[Last\]}'
           check cv/main_example.tex '\\email{\[your\.email@example\.com\]}'
           check cover_letters/cover_example.tex '\[YOUR NAME\]'
-          check .claude/skills/job-application-assistant/01-candidate-profile.md '\[YOUR_EMAIL\]'
-          check .claude/skills/job-application-assistant/04-job-evaluation.md '\[YOUR_PRIMARY_SKILLS\]'
+          check .claude/skills/job-application-assistant/profile-templates/candidate.md '\[YOUR_EMAIL\]'
+          check .claude/skills/job-application-assistant/profile-templates/evaluation.md '\[YOUR_PRIMARY_SKILLS\]'
+          if [ -e profile ]; then
+            echo "::error file=profile::profile/ must not be committed to the upstream template - personal data may have been committed"
+            fail=1
+          fi
           exit $fail
