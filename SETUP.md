@@ -179,6 +179,8 @@ Or manually: fork on GitHub, then clone your fork.
 > personalization there is still the right move. Everything else in this guide works
 > identically either way.
 
+**Starting from the plugin instead of a clone?** Install it (`/plugin marketplace add MadsLorentzen/ai-job-search`, then `/plugin install ai-job-search@ai-job-search`), open Claude Code in an empty folder and run `/init-workspace`. It lays out the same folders this repository has, then points you to `/setup`.
+
 ## 3. Install job search CLI dependencies
 Run these from the repository root. First start Claude Code here once and accept the folder-trust prompt: that is what loads the `ai-job-search` plugin from `plugins/` (the `danish-job-portals` plugin stays off until you turn it on, see section 10).
 
