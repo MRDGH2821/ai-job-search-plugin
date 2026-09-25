@@ -41,7 +41,13 @@ class GuardRepoFixture(unittest.TestCase):
         self.settings.parent.mkdir()
         self.write_settings(sorted(security_guards.ALLOWED_PERMISSIONS))
 
-        self.gitignore = self.root / ".gitignore"
+        # The workspace rules live in the template; the repo root has its own short list.
+        (self.root / ".gitignore").write_text("\n".join(security_guards.ROOT_REQUIRED_IGNORE_RULES) + "\n")
+        self.gitignore = self.root / security_guards.WORKSPACE_GITIGNORE
+        self.gitignore.parent.mkdir(parents=True)
+        manifest = self.root / "plugins" / "ai-job-search-plugin" / ".claude-plugin" / "plugin.json"
+        manifest.parent.mkdir(parents=True)
+        manifest.write_text('{"name": "ai-job-search-plugin"}')
         self.write_gitignore(security_guards.REQUIRED_IGNORE_RULES)
 
         self.manifest = self.root / ".agents" / "skills" / "example-search" / "cli" / "package.json"
@@ -261,6 +267,14 @@ class GitignoreGuardTests(GuardRepoFixture):
         self.assertIn("**/upskill/report-*.md", result.stdout)
 
 
+class RootGitignoreGuardTests(GuardRepoFixture):
+    def test_root_missing_profile_rule_fails(self):
+        (self.root / ".gitignore").write_text("salary_data.json\n.env\n.env.*\n")
+        result = run_guards(self.root)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn(".gitignore: required personal-data rule missing: 'profile/'", result.stdout)
+
+
 class GitignorePatternBehaviorTests(unittest.TestCase):
     """Pin the match semantics of the shipped .gitignore, not just rule presence.
 
@@ -275,7 +289,7 @@ class GitignorePatternBehaviorTests(unittest.TestCase):
         subprocess.run(
             ["git", "init", "-q", str(self.root)], check=True, capture_output=True
         )
-        shutil.copy(REPO_ROOT / ".gitignore", self.root / ".gitignore")
+        shutil.copy(REPO_ROOT / security_guards.WORKSPACE_GITIGNORE, self.root / ".gitignore")
 
     def test_upskill_reports_ignored_at_depth_but_skill_md_stays_tracked(self):
         # The upskill skill resolves `upskill/` relative to its own directory
@@ -527,7 +541,7 @@ class TestTemplateGitignoreGuard(unittest.TestCase):
         self.addCleanup(shutil.rmtree, tmp, ignore_errors=True)
         full = "\n".join(security_guards.REQUIRED_IGNORE_RULES) + "\n"
         (tmp / ".gitignore").write_text(full, encoding="utf-8")
-        wt = tmp / "plugins" / "ai-job-search" / "skills" / "job-tools" / "workspace-template"
+        wt = tmp / "plugins" / "ai-job-search-plugin" / "skills" / "job-tools" / "workspace-template"
         wt.mkdir(parents=True)
         (wt / "gitignore.template").write_text(full.replace("salary_data.json\n", ""), encoding="utf-8")
         mod = importlib.reload(security_guards)

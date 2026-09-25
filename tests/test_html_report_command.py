@@ -21,7 +21,7 @@ except ImportError:
 REPO_ROOT = Path(__file__).resolve().parent.parent
 COMMAND_FILE = paths.command_file("html-report")
 LINT_SCRIPT = REPO_ROOT / "tools" / "lint_skills.py"
-GITIGNORE = REPO_ROOT / ".gitignore"
+GITIGNORE = paths.WT / "gitignore.template"
 
 
 class HtmlReportCommandFileTests(unittest.TestCase):

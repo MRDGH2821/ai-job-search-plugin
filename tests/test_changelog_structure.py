@@ -13,6 +13,7 @@ the same line. Two failure shapes have reached master or a merge queue:
 test does, on every PR. It only inspects [Unreleased]; released sections are
 history and stay as they are.
 """
+import re
 import unittest
 from pathlib import Path
 
@@ -28,9 +29,10 @@ def unreleased_block(text: str) -> str:
 
     An absent heading (right after a release cut) yields an empty block:
     nothing to check is not a defect."""
-    start = text.find("## [Unreleased]")
-    if start == -1:
+    m = re.search(r"^## \[(?:Unreleased\]|[^\]]+\] - Unreleased)", text, re.M)
+    if not m:
         return ""
+    start = m.start()
     end = text.find("\n## [", start + 1)
     return text[start:] if end == -1 else text[start:end]
 

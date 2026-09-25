@@ -9,12 +9,10 @@ were not, so a full Path B/C run left `[YOUR_NAME]`, `[YOUR_EMAIL]` and
 on the drafter noticing. A real user (#420) ran `/setup` and then hand-edited both
 files to close the gap.
 """
-import os
 import unittest
 from pathlib import Path
 from tests import paths
 
-UPSTREAM = "MadsLorentzen/ai-job-search"
 
 REPO = Path(__file__).resolve().parent.parent
 COMMAND = paths.command_file("setup")
@@ -83,10 +81,6 @@ class SetupWritesOnlyToProfile(unittest.TestCase):
         self.assertNotIn(".claude/skills/", summary)
 
 
-@unittest.skipIf(
-    os.environ.get("GITHUB_REPOSITORY", UPSTREAM) != UPSTREAM,
-    "template-placeholder guard targets the pristine upstream template; forks personalize 05-cv-templates.md and 06-cover-letter-templates.md via /setup",
-)
 class TemplatesStillCarryThePlaceholders(unittest.TestCase):
     """The instructions above target real tokens; if a template renames them,
     the instruction and this test must move together."""
@@ -126,69 +120,12 @@ class SetupPathAProjectsIngestion(unittest.TestCase):
         self.assertIn("New independent project:", self.text)
 
 
-class SetupLegacyMigration(unittest.TestCase):
-    def setUp(self):
+class NoUpstreamMigration(unittest.TestCase):
+    def test_setup_has_no_fork_migration_or_fork_warning(self):
         text = COMMAND.read_text(encoding="utf-8")
-        step0 = _sections(text)["Step 0: Welcome & Choose Path"]
-        self.assertIn("#### Legacy fork migration", step0)
-        self.block = step0.split("#### Legacy fork migration", 1)[1].split("\n### ", 1)[0]
-
-    def test_detection_uses_git_history_and_the_sentinel(self):
-        self.assertIn("git show", self.block)
-        self.assertIn("ORIG_HEAD", self.block)
-        self.assertIn("[YOUR_EMAIL]", self.block)
-        self.assertIn("01-candidate-profile.md", self.block)
-
-    def test_mapping_covers_every_legacy_region(self):
-        for legacy in ("01-candidate-profile.md", "02-behavioral-profile.md", "03-writing-style.md",
-                       "04-job-evaluation.md", "05-cv-templates.md", "06-cover-letter-templates.md",
-                       "07-interview-prep.md", "search-queries.md", "CLAUDE.md"):
-            self.assertIn(legacy, self.block, f"migration mapping omits {legacy}")
-
-    def test_migration_carries_active_template(self):
-        self.assertIn("ACTIVE-TEMPLATE", self.block)
-        self.assertIn("profile/cv.md", self.block)
-        self.assertIn("profile/cover-letter.md", self.block)
-
-    def test_migration_reports_conflicts(self):
-        self.assertIn("conflict", self.block.lower())
-        self.assertIn("never silently", self.block.lower())
-
-    def test_migration_repairs_templates_polluted_by_rename_detection(self):
-        # git's rename detection merges a fork's personalized 01/02/search-queries
-        # INTO the new templates without a conflict (seen in a scratch-fork merge).
-        self.assertIn("rename", self.block.lower())
-        self.assertIn("profile-templates/", self.block)
-        self.assertIn("[PROFILE_TYPE]", self.block)
-        self.assertIn("[YOUR_JOB_BOARD]", self.block)
-
-    def test_history_walk_survives_a_merge_without_orig_head(self):
-        # Default `git log -- <path>` simplification follows the merge's TREESAME
-        # (upstream) parent and never reaches the fork's personalizing commit.
-        self.assertIn("--full-history", self.block)
-        self.assertIn("no legacy profile", self.block.lower())
-
-    def test_other_files_are_read_from_the_pre_merge_tip(self):
-        # 04 calibration, 05/06 ACTIVE-TEMPLATE and 07 STAR may be edited after the
-        # last commit that touched 01; read them from the fork's side of the upgrade
-        # merge. (--diff-filter=D finds upstream's deleting commit, whose parent is
-        # pristine - verified in a scratch fork.)
-        self.assertIn("git log --no-show-signature --merges", self.block)
-        self.assertIn("^1", self.block)
-        self.assertNotIn("--diff-filter=D", self.block)
-
-    def test_git_log_output_is_not_polluted_by_signatures(self):
-        # log.showSignature=true prints gpg lines into --format=%H output.
-        for line in self.block.splitlines():
-            if "git log" in line:
-                self.assertIn("--no-show-signature", line, line)
-
-    def test_migration_confirms_and_never_deletes(self):
-        low = self.block.lower()
-        self.assertIn("confirm", low)
-        self.assertIn("deletes nothing", low)
-        self.assertIn("git checkout --theirs", self.block)
-
+        self.assertNotIn("#### Legacy fork migration", text)
+        self.assertNotIn("public GitHub fork", text)
+        self.assertIn("public repository", text)
 
 if __name__ == "__main__":
     unittest.main()

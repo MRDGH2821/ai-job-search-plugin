@@ -1,68 +1,14 @@
 """Workspace init (spec: docs/superpowers/specs/2026-09-24-workspace-init-design.md)."""
 import os
 import subprocess
+import sys
+import tempfile
 import unittest
 from pathlib import Path
 
 from tests import paths
 
-UPSTREAM = "MadsLorentzen/ai-job-search"
-WT = paths.SKILLS / "job-tools" / "workspace-template"
-REPO_ONLY_IGNORE = {"plugins/**/node_modules/",
-                    "# Brainstorm mockups (superpowers visual companion) - never ship",
-                    ".superpowers/"}
-ALWAYS_SYNCED_DIRS = ("cover_letters/OpenFonts",)
-ALWAYS_SYNCED_FILES = ("cover_letters/cover.cls", "templates/README.md", "documents/README.md")
-UPSTREAM_SYNCED = ("cv/main_example.tex", "cover_letters/cover_example.tex")
-GITKEEP_ROOTS = ("documents", "job_scraper", "company_research", "upskill")
-
-
-def expected_gitignore_template(root_text: str) -> str:
-    kept = [line for line in root_text.splitlines() if line.strip() not in REPO_ONLY_IGNORE]
-    while kept and not kept[-1].strip():
-        kept.pop()
-    return "\n".join(kept) + "\n"
-
-
-def tracked(prefix):
-    out = subprocess.run(["git", "ls-files", prefix], cwd=paths.REPO, capture_output=True, text=True, check=True).stdout
-    return [line for line in out.splitlines() if line]
-
-
-class TestTemplateSync(unittest.TestCase):
-    def test_always_synced_files_match(self):
-        rels = list(ALWAYS_SYNCED_FILES)
-        for d in ALWAYS_SYNCED_DIRS:
-            rels += tracked(d)
-        for root in GITKEEP_ROOTS:
-            rels += [p for p in tracked(root) if p.endswith(".gitkeep")]
-        self.assertGreater(len(rels), 25)
-        for rel in rels:
-            self.assertEqual((WT / rel).read_bytes(), (paths.REPO / rel).read_bytes(), rel)
-
-    @unittest.skipIf(os.environ.get("GITHUB_REPOSITORY", UPSTREAM) != UPSTREAM,
-                     "forks personalize these files")
-    def test_upstream_examples_match(self):
-        for rel in UPSTREAM_SYNCED:
-            self.assertEqual((WT / rel).read_bytes(), (paths.REPO / rel).read_bytes(), rel)
-
-    def test_template_has_nothing_the_root_lacks(self):
-        extra = [str(p.relative_to(WT)) for p in WT.rglob("*")
-                 if p.is_file() and p.name != "gitignore.template" and not (paths.REPO / p.relative_to(WT)).exists()]
-        self.assertEqual(extra, [])
-
-    def test_gitignore_template_is_the_root_minus_repo_only_lines(self):
-        root = (paths.REPO / ".gitignore").read_text(encoding="utf-8")
-        self.assertEqual((WT / "gitignore.template").read_text(encoding="utf-8"), expected_gitignore_template(root))
-
-    def test_no_template_file_is_ignored(self):
-        files = [str(p.relative_to(paths.REPO)) for p in WT.rglob("*") if p.is_file()]
-        proc = subprocess.run(["git", "check-ignore", "--no-index", *files], cwd=paths.REPO, capture_output=True, text=True)
-        self.assertEqual(proc.stdout.strip(), "", "template files ignored by the repo's .gitignore")
-
-
-import sys  # noqa: E402
-import tempfile  # noqa: E402
+WT = paths.WT
 
 SCRIPT = paths.JOB_TOOLS / "init_workspace.py"
 HEADER = "# Added by /init-workspace: personal data must never be committed"
@@ -80,6 +26,15 @@ def template_targets():
             rel = p.relative_to(WT)
             out.append(Path(".gitignore") if rel.name == "gitignore.template" else rel)
     return sorted(out)
+
+
+class TestTemplateIsShipped(unittest.TestCase):
+    def test_no_template_file_is_ignored(self):
+        # The repo's own .gitignore (*.pdf, build/, *.log, ...) must never hide a
+        # template file, or /init-workspace ships an incomplete workspace.
+        files = [str(p.relative_to(paths.REPO)) for p in WT.rglob("*") if p.is_file()]
+        proc = subprocess.run(["git", "check-ignore", "--no-index", *files], cwd=paths.REPO, capture_output=True, text=True)
+        self.assertEqual(proc.stdout.strip(), "", "template files ignored by the repo's .gitignore")
 
 
 class TestInitScript(unittest.TestCase):
@@ -137,11 +92,6 @@ class TestInitScript(unittest.TestCase):
         self.assertTrue(data.startswith(b"a/\r\nb/\r\n"))
         self.assertNotIn(b"\n", data.replace(b"\r\n", b""))
 
-    def test_clone_root_gitignore_needs_no_additions(self):
-        (self.root / ".gitignore").write_bytes((paths.REPO / ".gitignore").read_bytes())
-        proc = run(self.root)
-        self.assertNotIn("updated: .gitignore", proc.stdout)
-
     def test_blocked_target_writes_nothing(self):
         for make in (lambda r: (r / "cv").write_text("a file", encoding="utf-8"),
                      lambda r: (r / "cv" / "main_example.tex").mkdir(parents=True)):
@@ -197,7 +147,7 @@ class TestWiring(unittest.TestCase):
     def test_setup_runs_init_first(self):
         setup = paths.command_file("setup")
         self.assertIn(INIT_ENTRY, frontmatter(setup))
-        step0a = setup.read_text(encoding="utf-8").split("### Step 0a:", 1)[1].split("#### Legacy fork migration", 1)[0]
+        step0a = setup.read_text(encoding="utf-8").split("### Step 0a:", 1)[1].split("\n### ", 1)[0]
         self.assertIn("init_workspace.py", step0a)
         self.assertLess(step0a.index("init_workspace.py"), step0a.index("Create `profile/`"))
 
@@ -210,7 +160,7 @@ class TestWiring(unittest.TestCase):
         self.assertNotIn("arrives in a later release", readme)
         self.assertIn("/init-workspace", (paths.REPO / "SETUP.md").read_text(encoding="utf-8"))
         changelog = (paths.REPO / "CHANGELOG.md").read_text(encoding="utf-8")
-        self.assertIn("/init-workspace", changelog.split("## [Unreleased]", 1)[1].split("\n## [", 1)[0])
+        self.assertIn("/init-workspace", changelog.split("\n## [", 2)[1])
 
 
 class TestReviewFixes(unittest.TestCase):
@@ -251,7 +201,7 @@ class TestReviewFixes(unittest.TestCase):
 
     def test_callers_stop_on_exit_2(self):
         setup = paths.command_file("setup").read_text(encoding="utf-8")
-        step0a = setup.split("### Step 0a:", 1)[1].split("#### Legacy fork migration", 1)[0]
+        step0a = setup.split("### Step 0a:", 1)[1].split("\n### ", 1)[0]
         item1 = step0a.split("\n2. ", 1)[0]
         self.assertIn("stop", item1.lower())
         self.assertNotIn("show its message and continue", item1)

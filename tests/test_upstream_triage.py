@@ -29,6 +29,7 @@ class TriageRepoFixture(unittest.TestCase):
 
         (self.root / "tools").mkdir()
         shutil.copy(SCRIPT, self.root / "tools" / "upstream_triage.py")
+        shutil.copy(SCRIPT.parent / "upstream_paths.py", self.root / "tools" / "upstream_paths.py")
         (self.root / ".github").mkdir()
 
         git(self.root, "init", "-b", "master")
@@ -71,13 +72,15 @@ class UpToDateTests(TriageRepoFixture):
 
 class RelevanceFilterTests(TriageRepoFixture):
     def test_commit_touching_only_removed_files_is_skipped(self):
-        # Upstream edits a file this fork never had -> not relevant.
+        # Upstream edits a file this fork deleted -> not relevant.
         self.write("portals/removed_portal.py", "x = 1\n")
-        self.commit("upstream: add removed_portal")
+        self.commit("base: removed_portal")
+        self.write("portals/removed_portal.py", "x = 2\n")
+        self.commit("upstream: change removed_portal")
         self.set_upstream_to_head()
-        # Fork drops back to before that commit and deletes nothing extra;
-        # the file simply is not in fork HEAD.
         git(self.root, "reset", "--hard", "HEAD~1")
+        git(self.root, "rm", "-q", "portals/removed_portal.py")
+        self.commit("fork: drop removed_portal")
 
         result = self.run_triage()
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -94,22 +97,74 @@ class RelevanceFilterTests(TriageRepoFixture):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("Worth reviewing", result.stdout)
         self.assertIn("kept.py", result.stdout)
-        # Ready-to-run cherry-pick lines are offered, not executed.
-        self.assertIn("git cherry-pick", result.stdout)
+        # Read-the-change commands are offered; porting is by hand.
+        self.assertIn("git show", result.stdout)
+        self.assertNotIn("git cherry-pick", result.stdout)
+
+    def test_command_commit_is_mapped_and_relevant(self):
+        # Upstream edits a command at its old path; this repo has it as a plugin skill.
+        ours = "plugins/ai-job-search-plugin/skills/apply/SKILL.md"
+        self.write(ours, "ours\n")
+        self.commit("fork layout")
+        self.write(".claude/commands/apply.md", "upstream change\n")
+        sha = self.commit("feat(apply): upstream improvement")
+        self.set_upstream_to_head()
+        git(self.root, "reset", "--hard", "HEAD~1")
+
+        out = self.run_triage().stdout
+        section = out.split("Worth reviewing", 1)[1].split("Probably skip", 1)[0]
+        self.assertIn("upstream improvement", section)
+        self.assertIn(ours, section)
+        self.assertIn(f"git show {sha} -- .claude/commands/apply.md", out)
 
     def test_changelog_only_footprint_is_skipped(self):
+        self.write("portals/gone.py", "y = 1\n")
+        self.write("CHANGELOG.md", "- base\n")
+        self.commit("base: gone + changelog")
         self.write("portals/gone.py", "y = 2\n")
         self.write("CHANGELOG.md", "- did a thing\n")
         self.commit("upstream: feature living in removed area + changelog")
         self.set_upstream_to_head()
         # Fork ships CHANGELOG.md but not the removed portal file.
         git(self.root, "reset", "--hard", "HEAD~1")
+        git(self.root, "rm", "-q", "portals/gone.py")
         self.write("CHANGELOG.md", "- fork changelog\n")
-        self.commit("fork changelog")
+        self.commit("fork: drop gone, own changelog")
 
         result = self.run_triage()
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("changelog-only footprint in this fork", result.stdout)
+
+
+class NewUpstreamFileTests(TriageRepoFixture):
+    def test_new_upstream_command_is_worth_reviewing(self):
+        # A brand-new upstream command maps to a skill that does not exist here
+        # yet: that is a feature to port, not a commit to skip.
+        self.write(".claude/commands/negotiate.md", "new command\n")
+        sha = self.commit("feat: /negotiate")
+        self.set_upstream_to_head()
+        git(self.root, "reset", "--hard", "HEAD~1")
+
+        out = self.run_triage().stdout
+        section = out.split("Worth reviewing", 1)[1].split("Probably skip", 1)[0]
+        self.assertIn("/negotiate", section)
+        self.assertIn("plugins/ai-job-search-plugin/skills/negotiate/SKILL.md", section)
+        self.assertIn(f"git show {sha} -- .claude/commands/negotiate.md", out)
+
+    def test_modified_file_this_fork_removed_is_still_skipped(self):
+        # Modifying a file this repo never had stays skippable (not an addition).
+        self.write("portals/gone.py", "x = 1\n")
+        self.commit("base: gone")
+        self.set_upstream_to_head()
+        self.write("portals/gone.py", "x = 2\n")
+        self.commit("upstream: tweak gone")
+        git(self.root, "update-ref", "refs/remotes/upstream/master", "HEAD")
+        git(self.root, "reset", "--hard", "HEAD~1")
+        git(self.root, "rm", "-q", "portals/gone.py")
+        self.commit("fork: drop gone")
+
+        out = self.run_triage().stdout
+        self.assertIn("touches only files not in this fork", out)
 
 
 class AlreadyAppliedTests(TriageRepoFixture):
@@ -137,19 +192,19 @@ class AlreadyAppliedTests(TriageRepoFixture):
         self.assertIn("**1** worth reviewing", result.stdout)
 
 
-class WontPortTests(TriageRepoFixture):
+class HandledListTests(TriageRepoFixture):
     def test_listed_sha_is_excluded(self):
         self.write("kept.py", "print('rejected feature')\n")
         rejected = self.commit("upstream: feature the fork rejects")
         self.set_upstream_to_head()
         git(self.root, "reset", "--hard", "HEAD~1")
-        self.write(".github/upstream-wontport.txt",
-                   f"{rejected[:9]}  # rejected on purpose\n")
-        self.commit("fork: won't-port list")
+        self.write(".github/upstream-handled.txt",
+                   f"# comment line\n{rejected[:9]}  # rejected: test\n")
+        self.commit("fork: handled list")
 
         result = self.run_triage()
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("on the fork's won't-port list", result.stdout)
+        self.assertIn("listed in upstream-handled.txt", result.stdout)
 
 
 class MissingUpstreamRefTests(TriageRepoFixture):

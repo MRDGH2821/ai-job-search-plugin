@@ -24,8 +24,8 @@ SKILL_DIR = paths.FW
 CV_TEMPLATES = SKILL_DIR / "05-cv-templates.md"
 COVER_TEMPLATES = SKILL_DIR / "06-cover-letter-templates.md"
 APPLY = paths.command_file("apply")
-EXAMPLE_CV = REPO / "cv" / "main_example.tex"
-EXAMPLE_COVER = REPO / "cover_letters" / "cover_example.tex"
+EXAMPLE_CV = paths.WT / "cv" / "main_example.tex"
+EXAMPLE_COVER = paths.WT / "cover_letters" / "cover_example.tex"
 
 # \item whose body starts with [ - with or without whitespace between.
 # LaTeX skips spaces while scanning for the optional argument, so

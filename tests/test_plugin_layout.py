@@ -1,5 +1,6 @@
 """Structure of the plugin marketplace (spec: 2026-09-24-plugin-layout-design.md)."""
 import json
+import subprocess
 import re
 import unittest
 
@@ -21,9 +22,9 @@ def frontmatter(path):
 class TestMarketplace(unittest.TestCase):
     def test_marketplace_lists_both_plugins(self):
         data = json.loads((REPO / ".claude-plugin" / "marketplace.json").read_text(encoding="utf-8"))
-        self.assertEqual(data["name"], "ai-job-search")
+        self.assertEqual(data["name"], "ai-job-search-plugin")
         entries = {p["name"]: p["source"] for p in data["plugins"]}
-        self.assertEqual(entries, {"ai-job-search": "./plugins/ai-job-search",
+        self.assertEqual(entries, {"ai-job-search-plugin": "./plugins/ai-job-search-plugin",
                                    "danish-job-portals": "./plugins/danish-job-portals"})
         for name, source in entries.items():
             manifest = json.loads((REPO / source / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
@@ -32,8 +33,10 @@ class TestMarketplace(unittest.TestCase):
     def test_old_trees_are_gone(self):
         for old in (".claude/commands", ".claude/skills", ".claude/agents"):
             self.assertFalse((REPO / old).exists(), old)
-        leftovers = [p.name for p in (REPO / ".agents" / "skills").iterdir() if p.is_dir()]
-        self.assertEqual(leftovers, [], "shipped portals must live in the plugins")
+        # .agents/skills/ belongs to the workspace (/add-portal output); the repo ships none.
+        tracked = subprocess.run(["git", "ls-files", ".agents/"], cwd=REPO, capture_output=True, text=True,
+                                 check=True).stdout.split()
+        self.assertEqual(tracked, [], "shipped portals must live in the plugins")
 
 
 class TestConvertedCommands(unittest.TestCase):
@@ -69,23 +72,13 @@ FALLBACK = ("`${CLAUDE_SKILL_DIR}` is this skill's folder. If your tool does not
 SKILL_DIR_REF = re.compile(r"\$\{CLAUDE_SKILL_DIR\}(/[^\s`'\")|*>]+)")
 
 
-def strip_setup_migration(text):
-    """/setup's Legacy fork migration reads old paths from git history; they stay literal."""
-    marker = "#### Legacy fork migration"
-    if marker not in text:
-        return text
-    head, tail = text.split(marker, 1)
-    rest = tail.split("\n### ", 1)
-    return head + ("\n### " + rest[1] if len(rest) > 1 else "")
-
-
 class TestSkillPaths(unittest.TestCase):
     def test_no_legacy_paths_in_framework_text(self):
         bad = re.compile(r"\.claude/(commands|skills|agents)/|(?<![\w/.])tools/(%s)\.py|python3? salary_lookup\.py"
                          % "|".join(RUNTIME))
         offenders = []
         for md in paths.framework_markdown() + [REPO / "CLAUDE.md"]:
-            text = strip_setup_migration(md.read_text(encoding="utf-8"))
+            text = md.read_text(encoding="utf-8")
             for i, line in enumerate(text.splitlines(), 1):
                 if bad.search(line):
                     offenders.append(f"{md.relative_to(REPO)}:{i}")
@@ -121,10 +114,10 @@ class TestSkillPaths(unittest.TestCase):
 class TestPermissions(unittest.TestCase):
     def test_settings_load_both_plugins_and_hold_no_script_paths(self):
         data = json.loads(paths.SETTINGS.read_text(encoding="utf-8"))
-        self.assertEqual(data["extraKnownMarketplaces"]["ai-job-search"]["source"],
+        self.assertEqual(data["extraKnownMarketplaces"]["ai-job-search-plugin"]["source"],
                          {"source": "directory", "path": "./"})
-        self.assertIs(data["enabledPlugins"]["ai-job-search@ai-job-search"], True)
-        self.assertIn("danish-job-portals@ai-job-search", data["enabledPlugins"])
+        self.assertIs(data["enabledPlugins"]["ai-job-search-plugin@ai-job-search-plugin"], True)
+        self.assertIn("danish-job-portals@ai-job-search-plugin", data["enabledPlugins"])
         allow = data["permissions"]["allow"]
         self.assertFalse([a for a in allow if "tools/" in a or "salary_lookup" in a or ".agents/skills/" in a], allow)
 
@@ -178,29 +171,17 @@ class TestPortals(unittest.TestCase):
 class TestDocs(unittest.TestCase):
     def test_readme_explains_both_install_routes_and_capa(self):
         text = (REPO / "README.md").read_text(encoding="utf-8")
-        self.assertIn("/plugin marketplace add MadsLorentzen/ai-job-search", text)
-        self.assertIn("/plugin install ai-job-search@ai-job-search", text)
-        self.assertIn("capa registry add MadsLorentzen/ai-job-search", text)
+        self.assertIn("/plugin marketplace add MRDGH2821/ai-job-search-plugin", text)
+        self.assertIn("/plugin install ai-job-search-plugin@ai-job-search-plugin", text)
+        self.assertIn("capa registry add MRDGH2821/ai-job-search-plugin", text)
         self.assertIn("untested outside Claude Code", text)
         self.assertNotIn(".claude/commands/", text)
 
-    def test_setup_md_has_the_upgrade_section(self):
-        text = (REPO / "SETUP.md").read_text(encoding="utf-8")
-        section = text.split("## 10. Upgrading across the plugin layout change", 1)[1].split("\n## ", 1)[0]
-        for needle in ("trust", "plugins/ai-job-search/skills/", "settings.local.json", "danish-job-portals"):
-            self.assertIn(needle, section)
-
     def test_agents_md_and_contributing_point_at_capa(self):
-        for name in ("AGENTS.md", "CONTRIBUTING.md"):
+        for name in ("CONTRIBUTING.md",):
             text = (REPO / name).read_text(encoding="utf-8")
             self.assertIn("capa", text, name)
             self.assertNotIn("auto-discovered", text, name)
-
-    def test_changelog_flags_the_layout_break(self):
-        text = (REPO / "CHANGELOG.md").read_text(encoding="utf-8")
-        unreleased = text.split("## [Unreleased]", 1)[1].split("\n## [", 1)[0]
-        self.assertIn("BREAKING (forks): the framework moves into plugins", unreleased)
-
 
 class TestProfileGuardReachable(unittest.TestCase):
     def test_guard_references_resolve_from_a_plugin_install(self):
@@ -236,10 +217,10 @@ class TestReviewFixes(unittest.TestCase):
         for d in paths.portal_dirs():
             self.assertTrue(str(frontmatter(d / "SKILL.md").get("enabled")).lower().startswith("true"), d.name)
         data = json.loads(paths.SETTINGS.read_text(encoding="utf-8"))
-        self.assertIs(data["enabledPlugins"]["danish-job-portals@ai-job-search"], False)
+        self.assertIs(data["enabledPlugins"]["danish-job-portals@ai-job-search-plugin"], False)
         setup = paths.command_file("setup").read_text(encoding="utf-8")
         self.assertNotIn("edit each of the four Danish `SKILL.md` files", setup)
-        self.assertIn("danish-job-portals@ai-job-search", setup)
+        self.assertIn("danish-job-portals@ai-job-search-plugin", setup)
 
     def test_portal_opt_outs_live_in_the_workspace(self):
         self.assertIn("disabled-portals", {h for h in __import__("tests.test_profile_separation", fromlist=["headings"]).headings(paths.TPL / "search-queries.md")})

@@ -66,21 +66,11 @@ def headings(path: Path) -> set[str]:
     return found
 
 
-def frontmatter_version(path: Path):
-    text = path.read_text(encoding="utf-8")
-    m = re.match(r"^---\n(.*?)\n---\n", text, re.DOTALL)
-    if not m:
-        return None
-    v = re.search(r"^framework_version:\s*(\S+)", m.group(1), re.MULTILINE)
-    return v.group(1) if v else None
-
-
 class TestTemplates(unittest.TestCase):
-    def test_every_template_exists_with_framework_version(self):
+    def test_every_template_exists(self):
         for name in TEMPLATES:
             path = TPL / name
             self.assertTrue(path.is_file(), f"missing template {path}")
-            self.assertIsNotNone(frontmatter_version(path), f"{name}: no framework_version")
 
     def test_templates_carry_their_setup_sentinel(self):
         for name, sentinel in SENTINELS.items():
@@ -179,7 +169,7 @@ class TestClaudeMdAndApply(unittest.TestCase):
         self.assertIsNone(SETUP_TOKEN.search(text), "CLAUDE.md must hold no /setup slots")
         self.assertNotIn("## Candidate Profile", text)
         self.assertNotIn("## Verification Checklist", text)
-        agents = (REPO / "AGENTS.md").read_text(encoding="utf-8")
+        agents = (paths.JOB_TOOLS / "agents-block.md").read_text(encoding="utf-8")
         self.assertIn("10-verification.md", agents)
         self.assertIn("profile/", agents)
 
@@ -199,22 +189,12 @@ class TestClaudeMdAndApply(unittest.TestCase):
 LEGACY_NAMES = ("01-candidate-profile.md", "02-behavioral-profile.md", "job-scraper/search-queries.md")
 
 
-def strip_setup_migration(text: str) -> str:
-    """Remove /setup's Legacy fork migration subsection, the one allowed mention."""
-    marker = "#### Legacy fork migration"
-    if marker not in text:
-        return text
-    head, tail = text.split(marker, 1)
-    rest = tail.split("\n### ", 1)
-    return head + ("\n### " + rest[1] if len(rest) > 1 else "")
-
-
 class TestNoLegacyReferences(unittest.TestCase):
     def test_claude_tree_names_no_legacy_profile_files(self):
         offenders = []
-        files = paths.framework_markdown() + [REPO / "CLAUDE.md", REPO / "documents" / "README.md"]
+        files = paths.framework_markdown() + [REPO / "CLAUDE.md", paths.WT / "documents" / "README.md"]
         for path in files:
-            text = strip_setup_migration(path.read_text(encoding="utf-8"))
+            text = path.read_text(encoding="utf-8")
             for name in LEGACY_NAMES:
                 if name in text:
                     offenders.append(f"{path.relative_to(REPO)}: {name}")
@@ -238,42 +218,13 @@ class TestLegacyFilesRemoved(unittest.TestCase):
                      REPO / ".claude" / "skills" / "job-scraper" / "search-queries.md"):
             self.assertFalse(path.exists(), f"{path.relative_to(REPO)} should be deleted")
 
-    def test_version_guard_covers_templates(self):
-        src = (REPO / "tools" / "check_framework_version.py").read_text(encoding="utf-8")
-        self.assertIn("profile-templates", src)
-
 
 class TestDocs(unittest.TestCase):
-    def test_docs_name_no_legacy_profile_files_outside_migration(self):
-        setup_md = (REPO / "SETUP.md").read_text(encoding="utf-8")
-        migration = "## 9. Merging the profile-separation change into a personalized fork"
-        self.assertIn(migration, setup_md)
-        before, after = setup_md.split(migration, 1)
-        rest = after.split("\n## ", 1)
-        outside = before + (rest[1] if len(rest) > 1 else "")
-        for text, where in ((outside, "SETUP.md"), ((REPO / "README.md").read_text(encoding="utf-8"), "README.md"),
+    def test_docs_name_no_legacy_profile_files(self):
+        for text, where in (((REPO / "SETUP.md").read_text(encoding="utf-8"), "SETUP.md"), ((REPO / "README.md").read_text(encoding="utf-8"), "README.md"),
                             ((REPO / "AGENTS.md").read_text(encoding="utf-8"), "AGENTS.md")):
             for name in ("01-candidate-profile.md", "02-behavioral-profile.md"):
                 self.assertNotIn(name, text, f"{where} still names {name}")
-
-    def test_setup_md_restores_templates_before_committing_the_merge(self):
-        setup_md = (REPO / "SETUP.md").read_text(encoding="utf-8")
-        section9 = setup_md.split("## 9. Merging the profile-separation change", 1)[1].split("\n## ", 1)[0]
-        self.assertIn("git checkout MERGE_HEAD -- plugins/ai-job-search/skills/job-application-assistant/profile-templates/", section9)
-        self.assertLess(section9.index("MERGE_HEAD"), section9.index("Commit the merge"))
-
-    def test_setup_md_covers_claude_md_and_deleted_file_conflicts(self):
-        setup_md = (REPO / "SETUP.md").read_text(encoding="utf-8")
-        section9 = setup_md.split("## 9. Merging the profile-separation change", 1)[1].split("\n## ", 1)[0]
-        self.assertIn("CLAUDE.md", section9)
-        self.assertIn("git rm", section9)
-
-    def test_changelog_flags_the_fork_break(self):
-        text = (REPO / "CHANGELOG.md").read_text(encoding="utf-8")
-        unreleased = text.split("## [Unreleased]", 1)[1].split("\n## [", 1)[0]
-        self.assertIn("BREAKING (personalized forks)", unreleased)
-        self.assertIn("profile/", unreleased)
-
 
 if __name__ == "__main__":
     unittest.main()

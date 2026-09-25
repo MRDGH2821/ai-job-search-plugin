@@ -4,12 +4,13 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-PLUGIN = REPO / "plugins" / "ai-job-search"
+PLUGIN = REPO / "plugins" / "ai-job-search-plugin"
 MARKET = REPO / "plugins" / "danish-job-portals"
 SKILLS = PLUGIN / "skills"
 FW = SKILLS / "job-application-assistant"
 TPL = FW / "profile-templates"
 JOB_TOOLS = SKILLS / "job-tools" / "scripts"
+WT = SKILLS / "job-tools" / "workspace-template"
 SETTINGS = REPO / ".claude" / "settings.json"
 SALARY_LOOKUP = JOB_TOOLS / "salary_lookup.py"
 

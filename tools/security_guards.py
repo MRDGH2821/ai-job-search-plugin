@@ -41,7 +41,7 @@ errors: list[str] = []
 # skill's allowed-tools in the plugin layout change; ALLOWED_SKILL_TOOLS below
 # reviews those.
 ALLOWED_PERMISSIONS = {
-    "Skill(ai-job-search:job-application-assistant)",
+    "Skill(ai-job-search-plugin:job-application-assistant)",
     "Bash(pdftotext:*)",
 }
 
@@ -74,9 +74,9 @@ ALLOWED_BARE_BASH = {"job-application-assistant"}
 # that points the clone at another marketplace or plugin makes every fork load
 # code nobody reviewed here, so it must change these values in the same PR.
 ALLOWED_MARKETPLACES = {
-    "ai-job-search": {"source": {"source": "directory", "path": "./"}},
+    "ai-job-search-plugin": {"source": {"source": "directory", "path": "./"}},
 }
-ALLOWED_PLUGINS = {"ai-job-search@ai-job-search", "danish-job-portals@ai-job-search"}
+ALLOWED_PLUGINS = {"ai-job-search-plugin@ai-job-search-plugin", "danish-job-portals@ai-job-search-plugin"}
 
 # Plugin components that run code without a model decision or a prompt. The
 # template ships none; like ALLOWED_HOOKS, adding one needs a guard change.
@@ -253,25 +253,28 @@ def check_permissions() -> None:
         print(f"note: allowlisted permission not present in settings.json: {entry!r}")
 
 
-WORKSPACE_GITIGNORE = "plugins/ai-job-search/skills/job-tools/workspace-template/gitignore.template"
+WORKSPACE_GITIGNORE = "plugins/ai-job-search-plugin/skills/job-tools/workspace-template/gitignore.template"
+
+
+# The repository is plugin source, not a workspace: its own .gitignore only has
+# to keep a developer's personal files out.
+ROOT_REQUIRED_IGNORE_RULES = ["profile/", "salary_data.json", ".env", ".env.*"]
 
 
 def check_gitignore() -> None:
-    _check_gitignore_file(ROOT / ".gitignore", ".gitignore")
-    template = ROOT / WORKSPACE_GITIGNORE
-    if template.exists():
-        # /init-workspace copies this into every new workspace: it must carry the same rules.
-        _check_gitignore_file(template, WORKSPACE_GITIGNORE)
+    _check_gitignore_file(ROOT / ".gitignore", ".gitignore", ROOT_REQUIRED_IGNORE_RULES)
+    # /init-workspace copies this into every new workspace: it protects the user's data.
+    _check_gitignore_file(ROOT / WORKSPACE_GITIGNORE, WORKSPACE_GITIGNORE, REQUIRED_IGNORE_RULES)
 
 
-def _check_gitignore_file(path, label: str) -> None:
+def _check_gitignore_file(path, label: str, required: list[str]) -> None:
     try:
         lines = [line.strip() for line in path.read_text(encoding="utf-8").splitlines()]
     except OSError as exc:
         errors.append(f"{label}: unreadable: {exc}")
         return
     rules = set(lines)
-    for rule in REQUIRED_IGNORE_RULES:
+    for rule in required:
         if rule not in rules:
             errors.append(
                 f"{label}: required personal-data rule missing: {rule!r}. "

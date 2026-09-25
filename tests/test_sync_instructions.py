@@ -10,8 +10,8 @@ from pathlib import Path
 from tests import paths
 
 SCRIPT = paths.JOB_TOOLS / "sync_instructions.py"
-START = "<!-- ai-job-search:start v"
-END = "<!-- ai-job-search:end -->"
+START = "<!-- ai-job-search-plugin:start v"
+END = "<!-- ai-job-search-plugin:end -->"
 
 
 def run(root, *args):
@@ -173,7 +173,7 @@ class WiringTests(unittest.TestCase):
         setup = paths.command_file("setup")
         self.assertIn(ENTRY, _frontmatter(setup))
         text = setup.read_text(encoding="utf-8")
-        step0a = text.split("### Step 0a:", 1)[1].split("#### Legacy fork migration", 1)[0]
+        step0a = text.split("### Step 0a:", 1)[1].split("\n### ", 1)[0]
         self.assertIn("python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/sync_instructions.py", step0a)
         self.assertIn("no `cd`, no `&&`", step0a)
 
@@ -183,24 +183,13 @@ class WiringTests(unittest.TestCase):
 
 
 class RepoRootTests(unittest.TestCase):
-    def test_repo_root_is_in_sync(self):
-        proc = run(paths.REPO, "--check", "--root", str(paths.REPO))
-        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
-
     def test_claude_md_is_just_the_import(self):
         self.assertEqual((paths.REPO / "CLAUDE.md").read_text(encoding="utf-8"), "@AGENTS.md\n")
-
-    def test_agents_md_keeps_repo_notes_outside_the_block(self):
-        text = (paths.REPO / "AGENTS.md").read_text(encoding="utf-8")
-        outside = text.split(START, 1)[0] + text.split(END, 1)[1]
-        self.assertIn("## Repository layout", outside)
-        self.assertIn("plugins/ai-job-search/", outside)
-        self.assertIn("framework_version:", text.split(START, 1)[0])
 
     def test_readme_and_changelog_mention_the_command(self):
         self.assertIn("/sync-instructions", (paths.REPO / "README.md").read_text(encoding="utf-8"))
         changelog = (paths.REPO / "CHANGELOG.md").read_text(encoding="utf-8")
-        unreleased = changelog.split("## [Unreleased]", 1)[1].split("\n## [", 1)[0]
+        unreleased = changelog.split("\n## [", 2)[1]
         self.assertIn("/sync-instructions", unreleased)
 
 
@@ -272,3 +261,26 @@ class ReviewFixTests(unittest.TestCase):
         for text in (paths.skill_file("sync-instructions").read_text(encoding="utf-8"),
                      paths.command_file("setup").read_text(encoding="utf-8")):
             self.assertIn("unreadable file or broken symlink", text)
+
+
+class LegacyMarkerTests(unittest.TestCase):
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.root = Path(tmp.name)
+
+    def test_legacy_markers_are_upgraded(self):
+        (self.root / "AGENTS.md").write_text(
+            "mine\n<!-- ai-job-search:start v1.0.0 -->\nold\n<!-- ai-job-search:end -->\ntail\n", encoding="utf-8")
+        proc = run(self.root)
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        text = (self.root / "AGENTS.md").read_text(encoding="utf-8")
+        self.assertTrue(text.startswith("mine\n<!-- ai-job-search-plugin:start v"))
+        self.assertTrue(text.endswith("<!-- ai-job-search-plugin:end -->\ntail\n"))
+        self.assertNotIn("<!-- ai-job-search:start", text)
+        self.assertEqual(run(self.root, "--check").returncode, 0)
+
+    def test_mixed_old_and_new_markers_are_malformed(self):
+        (self.root / "AGENTS.md").write_text(
+            "<!-- ai-job-search:start v1 -->\nx\n<!-- ai-job-search-plugin:end -->\n", encoding="utf-8")
+        self.assertEqual(run(self.root).returncode, 2)

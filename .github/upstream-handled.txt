@@ -1,0 +1,9 @@
+# Upstream commits (MadsLorentzen/ai-job-search) already ported or rejected.
+# tools/upstream_triage.py skips anything listed here, so it stops re-surfacing
+# in the weekly Upstream watch report.
+#
+# One SHA per line (short or full), then a note:
+#   <sha>  # ported|rejected: <note>
+#
+# List every commit you port, too: this project moved the original's files
+# into plugins, so a ported change no longer matches by patch-id.

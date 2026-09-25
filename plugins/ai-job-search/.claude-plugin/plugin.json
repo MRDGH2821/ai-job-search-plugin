@@ -1,9 +1,0 @@
-{
-  "name": "ai-job-search",
-  "version": "1.8.0",
-  "description": "Job application workflow: fit evaluation, tailored LaTeX CVs and cover letters, job scraping and ranking, interview prep. Candidate data lives in your workspace's profile/ folder.",
-  "author": { "name": "Mads Lorentzen" },
-  "homepage": "https://github.com/MadsLorentzen/ai-job-search",
-  "repository": "https://github.com/MadsLorentzen/ai-job-search",
-  "license": "MIT"
-}

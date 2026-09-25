@@ -1,6 +1,6 @@
 {
   "extraKnownMarketplaces": {
-    "ai-job-search": {
+    "ai-job-search-plugin": {
       "source": {
         "source": "directory",
         "path": "./"
@@ -8,12 +8,12 @@
     }
   },
   "enabledPlugins": {
-    "ai-job-search@ai-job-search": true,
-    "danish-job-portals@ai-job-search": false
+    "ai-job-search-plugin@ai-job-search-plugin": true,
+    "danish-job-portals@ai-job-search-plugin": false
   },
   "permissions": {
     "allow": [
-      "Skill(ai-job-search:job-application-assistant)",
+      "Skill(ai-job-search-plugin:job-application-assistant)",
       "Bash(pdftotext:*)"
     ]
   }
