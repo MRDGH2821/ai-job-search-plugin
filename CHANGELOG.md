@@ -15,6 +15,14 @@ per-file diff commands.
 
 ### Added
 
+- **`/sync-instructions`: workspace instructions for any harness** (#493,
+  `plugins/ai-job-search/skills/sync-instructions/`, `job-tools/scripts/sync_instructions.py`,
+  `AGENTS.md`, `CLAUDE.md`) - plugins cannot ship `CLAUDE.md` and capa cannot carry
+  instruction snippets, so a workspace got the skills without the standing rules. The
+  script keeps one managed block in `AGENTS.md` and one `@AGENTS.md` import in `CLAUDE.md`,
+  never touching other text; `/setup` runs it. The repository's own `CLAUDE.md` is now that
+  import.
+
 - **Real Excel workbook integration tests for the salary converter**
   (`tests/test_convert_salary_excel_integration.py`, `.github/workflows/ci.yml`) -
   generate temporary `.xlsx` files and invoke the documented converter CLI,

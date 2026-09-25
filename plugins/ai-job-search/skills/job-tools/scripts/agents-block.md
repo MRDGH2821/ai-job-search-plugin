@@ -1,10 +1,6 @@
 ---
-framework_version: 1.3.0
+framework_version: 1.0.0
 ---
-
-# Agent Guidelines: AI Job Search
-
-<!-- ai-job-search:start v1.0.0 -->
 <!-- Managed by /sync-instructions: text between these markers is replaced on every sync. Put your own notes outside them. -->
 ## Job search workspace (ai-job-search)
 
@@ -26,20 +22,3 @@ This folder is a job-application workspace for the `ai-job-search` Claude Code p
 - **Commands:** `/setup`, `/scrape`, `/rank`, `/apply`, `/interview`, `/outcome`,
   `/upskill`, `/expand`, `/add-template`, `/add-portal`, `/reset`, `/html-report`,
   `/gmail-sync`, `/notion-sync`, `/sync-instructions`.
-<!-- ai-job-search:end -->
-
-## Repository layout
-
-This repository is both the plugin marketplace and a ready workspace.
-
-- `profile/` - candidate data (created by `/setup`; not in the template)
-- `cv/`, `cover_letters/` - LaTeX CV and cover-letter sources
-- `plugins/ai-job-search/` - the workflow as a Claude Code plugin (skills, portals, helper scripts)
-- `plugins/danish-job-portals/` - Danish job-portal search skills (off by default)
-- `.agents/skills/` - your own portal skills from `/add-portal`
-
-## Single source of truth
-
-- The workflow specifications are the skills in [plugins/ai-job-search/skills/](plugins/ai-job-search/skills/), one folder per command or workflow. Do not duplicate them.
-- Portal search skills ship inside the plugins (`plugins/*/skills/*-search/`) in the portable Agent Skills format. Other runtimes can install them, and the whole workflow, through capa (`capa registry add MadsLorentzen/ai-job-search`).
-- `CLAUDE.md` imports this file; the block above is maintained by `/sync-instructions`.
