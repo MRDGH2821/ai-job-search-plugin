@@ -17,6 +17,7 @@ import subprocess
 import sys
 import unittest
 from pathlib import Path
+from tests import paths
 
 try:
     import yaml  # noqa: F401 - only probing availability for the lint integration test
@@ -25,15 +26,14 @@ except ImportError:
     _HAVE_YAML = False
 
 REPO = Path(__file__).resolve().parent.parent
-COMMANDS = REPO / ".claude" / "commands"
-APPLY = COMMANDS / "apply.md"
-OUTCOME = COMMANDS / "outcome.md"
-GMAIL_SYNC = COMMANDS / "gmail-sync.md"
-HTML_REPORT = COMMANDS / "html-report.md"
-INTERVIEW = COMMANDS / "interview.md"
-NOTION_SYNC = COMMANDS / "notion-sync.md"
-SKILL = REPO / ".claude" / "skills" / "job-application-assistant" / "SKILL.md"
-SCRAPER = REPO / ".claude" / "skills" / "job-scraper" / "SKILL.md"
+APPLY = paths.command_file("apply")
+OUTCOME = paths.command_file("outcome")
+GMAIL_SYNC = paths.command_file("gmail-sync")
+HTML_REPORT = paths.command_file("html-report")
+INTERVIEW = paths.command_file("interview")
+NOTION_SYNC = paths.command_file("notion-sync")
+SKILL = paths.FW / "SKILL.md"
+SCRAPER = paths.skill_file("job-scraper")
 DOCS_README = REPO / "documents" / "README.md"
 
 TRACKER_HEADER = (

@@ -7,6 +7,8 @@ from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from unittest import mock
 
+from tests import paths  # noqa: E402
+paths.add_job_tools_to_sys_path()
 import salary_lookup
 from salary_lookup import (
     format_entry,
@@ -598,6 +600,20 @@ class TestSearchCompanyScoreThreshold(unittest.TestCase):
         )
         results = search_company(data, "Novo Nordisk")
         self.assertEqual(results[0]["company"], "Novo Nordisk")
+
+
+class TestDataFileLocation(unittest.TestCase):
+    def test_data_file_is_read_from_the_workspace_root(self):
+        import importlib, os, tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            old = os.getcwd()
+            os.chdir(tmp)
+            try:
+                module = importlib.reload(salary_lookup)
+                self.assertEqual(module.DATA_FILE, Path(tmp).resolve() / "salary_data.json")
+            finally:
+                os.chdir(old)
+                importlib.reload(salary_lookup)
 
 
 if __name__ == "__main__":

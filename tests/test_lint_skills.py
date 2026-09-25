@@ -45,11 +45,15 @@ class LinterRepoFixture(unittest.TestCase):
             encoding="utf-8",
         )
 
-        command = self.root / ".claude" / "commands" / "setup.md"
+        command = self.root / "plugins" / "p" / "skills" / "setup" / "SKILL.md"
         command.parent.mkdir(parents=True)
-        command.write_text("# /setup - Test setup command\n", encoding="utf-8")
+        command.write_text(
+            "---\nname: setup\ndescription: Test setup command\ndisable-model-invocation: true\n---\n"
+            "# /setup - Test setup command\n",
+            encoding="utf-8",
+        )
 
-        skill = self.root / ".claude" / "skills" / "example" / "SKILL.md"
+        skill = self.root / "plugins" / "p" / "skills" / "example" / "SKILL.md"
         skill.parent.mkdir(parents=True)
         skill.write_text(
             "---\nname: example\ndescription: Example skill\n---\n",
@@ -57,6 +61,7 @@ class LinterRepoFixture(unittest.TestCase):
         )
 
         self.settings = self.root / ".claude" / "settings.json"
+        self.settings.parent.mkdir(parents=True, exist_ok=True)
         self.write_settings({"permissions": {"allow": []}})
 
     def write_settings(self, data):
@@ -118,7 +123,7 @@ class SkillAndCommandCheckTests(LinterRepoFixture):
     finding F23, 2026-08-19)."""
 
     def write_skill(self, frontmatter: str):
-        skill = self.root / ".claude" / "skills" / "example" / "SKILL.md"
+        skill = self.root / "plugins" / "p" / "skills" / "example" / "SKILL.md"
         skill.write_text(frontmatter, encoding="utf-8")
 
     def test_allowed_tools_referencing_a_missing_file_fails(self):
@@ -126,7 +131,7 @@ class SkillAndCommandCheckTests(LinterRepoFixture):
             "---\n"
             "name: example\n"
             "description: Example skill\n"
-            "allowed-tools: Bash(bun run .claude/skills/example/DOES_NOT_EXIST.ts *)\n"
+            "allowed-tools: Bash(bun run plugins/p/skills/example/DOES_NOT_EXIST.ts *)\n"
             "---\n"
         )
 
@@ -137,13 +142,13 @@ class SkillAndCommandCheckTests(LinterRepoFixture):
         self.assertIn("DOES_NOT_EXIST.ts", result.stdout)
 
     def test_allowed_tools_referencing_an_existing_file_passes(self):
-        target = self.root / ".claude" / "skills" / "example" / "cli.ts"
+        target = self.root / "plugins" / "p" / "skills" / "example" / "cli.ts"
         target.write_text("// present\n", encoding="utf-8")
         self.write_skill(
             "---\n"
             "name: example\n"
             "description: Example skill\n"
-            "allowed-tools: Bash(bun run .claude/skills/example/cli.ts *)\n"
+            "allowed-tools: Bash(bun run plugins/p/skills/example/cli.ts *)\n"
             "---\n"
         )
 
@@ -160,13 +165,31 @@ class SkillAndCommandCheckTests(LinterRepoFixture):
         self.assertIn("missing required key 'description'", result.stdout)
 
     def test_command_without_slash_title_fails(self):
-        command = self.root / ".claude" / "commands" / "setup.md"
-        command.write_text("# setup - missing the slash\n", encoding="utf-8")
+        command = self.root / "plugins" / "p" / "skills" / "setup" / "SKILL.md"
+        command.write_text(
+            "---\nname: setup\ndescription: d\ndisable-model-invocation: true\n---\n# setup - missing the slash\n",
+            encoding="utf-8",
+        )
 
         result = run_linter(self.root)
 
         self.assertEqual(result.returncode, 1)
-        self.assertIn("must start with a '# /<name>' title", result.stdout)
+        self.assertIn("user-invoked skill must start its body with '# /setup - ...'", result.stdout)
+
+    def test_allowed_tools_skill_dir_is_expanded(self):
+        target = self.root / "plugins" / "p" / "skills" / "example" / "cli.ts"
+        target.write_text("// present\n", encoding="utf-8")
+        self.write_skill(
+            "---\n"
+            "name: example\n"
+            "description: Example skill\n"
+            "allowed-tools: Bash(bun run ${CLAUDE_SKILL_DIR}/cli.ts *)\n"
+            "---\n"
+        )
+
+        result = run_linter(self.root)
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
 
 if __name__ == "__main__":

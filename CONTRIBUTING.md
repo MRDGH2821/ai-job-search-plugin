@@ -33,7 +33,7 @@ Reviews here are empirical. Bug reports are reproduced on master before the fix 
 
 - State the failing case and how to reproduce it.
 - **Reproduce on the real path, not a constructed input.** A test that fails on master and passes on the fix is necessary but not sufficient: the failing input has to be one the workflow actually produces, not one the test hand-builds. Show the failure through the path the code really runs - the documented CLI invocation, real portal output, an actual data file - not a synthetic value fed straight to the function. A fix whose only demonstration is an input the real code path never receives gets declined even though its test is green.
-- Put CLI tests in `.agents/skills/<name>/cli/tests/` (bun test, network-free where possible); Python tool tests in `tests/`.
+- Put CLI tests in `plugins/<plugin>/skills/<name>/cli/tests/` (or `.agents/skills/<name>/cli/tests/` for your own portals) (bun test, network-free where possible); Python tool tests in `tests/`.
 - Run what CI runs: `python3 tools/lint_skills.py`, `python3 tools/check_framework_version.py`, `python3 tools/security_guards.py`, `python3 -m unittest discover -s tests`, and in touched CLIs `bun run typecheck` + `bun test`.
 
 **Credit norm:** a change that incorporates your actual code gets a `Co-authored-by` trailer; a change written independently from your observation or report gets a named mention in the commit message and PR. Both happen unprompted.
@@ -56,7 +56,7 @@ Claude Code is the reference runtime: it is what the maintainer runs daily and w
 
 What upstream maintains for other runtimes instead:
 
-- The portal search skills in `.agents/skills/` use the portable Agent Skills format (`SKILL.md` per portal) and are auto-discovered by Codex and Antigravity today.
+- The framework ships as Claude Code plugins in the portable Agent Skills format; capa (`capa registry add MadsLorentzen/ai-job-search`) installs them into other runtimes. Untested there, and CI cannot run those harnesses.
 - The root `AGENTS.md` points any agent at the canonical workflow specs and the profile entry point.
 - Framework instruction files carry `framework_version` markers, so a runtime fork can track methodology changes precisely (`python3 tools/check_upstream_updates.py`).
 

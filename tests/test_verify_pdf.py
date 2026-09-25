@@ -4,7 +4,9 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from tools.verify_pdf import (
+from tests import paths  # noqa: E402
+paths.add_job_tools_to_sys_path()
+from verify_pdf import (
     VerificationError,
     extract_text_layer,
     normalize_text,
@@ -70,8 +72,8 @@ class VerifyPdfTests(unittest.TestCase):
     def tearDown(self):
         self.temp_dir.cleanup()
 
-    @patch("tools.verify_pdf._extract_pypdf", return_value=None)
-    @patch("tools.verify_pdf.run_tool")
+    @patch("verify_pdf._extract_pypdf", return_value=None)
+    @patch("verify_pdf.run_tool")
     def test_accepts_expected_pages_and_text(self, mock_run_tool, _pypdf):
         mock_run_tool.side_effect = [
             "Professional\nExperience   [your.email@example.com]\n",
@@ -85,24 +87,24 @@ class VerifyPdfTests(unittest.TestCase):
             required_text=("Professional Experience", "[your.email@example.com]"),
         )
 
-    @patch("tools.verify_pdf._extract_pypdf", return_value=None)
-    @patch("tools.verify_pdf.run_tool")
+    @patch("verify_pdf._extract_pypdf", return_value=None)
+    @patch("verify_pdf.run_tool")
     def test_rejects_wrong_page_count(self, mock_run_tool, _pypdf):
         mock_run_tool.side_effect = ["ok", "Pages:          3\n"]
 
         with self.assertRaisesRegex(VerificationError, "expected 2 page.*found 3"):
             verify_pdf(self.pdf, expected_pages=2)
 
-    @patch("tools.verify_pdf._extract_pypdf", return_value=None)
-    @patch("tools.verify_pdf.run_tool")
+    @patch("verify_pdf._extract_pypdf", return_value=None)
+    @patch("verify_pdf.run_tool")
     def test_rejects_too_little_extractable_text(self, mock_run_tool, _pypdf):
         mock_run_tool.side_effect = ["short", "Pages:          1\n"]
 
         with self.assertRaisesRegex(VerificationError, "expected at least 20"):
             verify_pdf(self.pdf, min_chars=20)
 
-    @patch("tools.verify_pdf._extract_pypdf", return_value=None)
-    @patch("tools.verify_pdf.run_tool")
+    @patch("verify_pdf._extract_pypdf", return_value=None)
+    @patch("verify_pdf.run_tool")
     def test_rejects_missing_required_text(self, mock_run_tool, _pypdf):
         mock_run_tool.side_effect = [
             "Readable text, but not the expected section.",
@@ -112,8 +114,8 @@ class VerifyPdfTests(unittest.TestCase):
         with self.assertRaisesRegex(VerificationError, "Professional Experience"):
             verify_pdf(self.pdf, required_text=("Professional Experience",))
 
-    @patch("tools.verify_pdf._extract_pypdf", return_value=None)
-    @patch("tools.verify_pdf.run_tool")
+    @patch("verify_pdf._extract_pypdf", return_value=None)
+    @patch("verify_pdf.run_tool")
     def test_required_text_matches_latex_typographic_substitutions(self, mock_run_tool, _pypdf):
         # What the stock template's lualatex text layer actually contains for the
         # source `Master's degree ... 2016--2024` (code points measured, see class
@@ -125,8 +127,8 @@ class VerifyPdfTests(unittest.TestCase):
 
         verify_pdf(self.pdf, required_text=("Master's degree", "2016-2024"))
 
-    @patch("tools.verify_pdf._extract_pypdf", return_value=None)
-    @patch("tools.verify_pdf.run_tool")
+    @patch("verify_pdf._extract_pypdf", return_value=None)
+    @patch("verify_pdf.run_tool")
     def test_required_text_matches_decomposed_pdflatex_accents(self, mock_run_tool, _pypdf):
         mock_run_tool.side_effect = [
             "Universite\u0301 de Gene\u0300ve\n",  # pdflatex without T1 fontenc
@@ -135,8 +137,8 @@ class VerifyPdfTests(unittest.TestCase):
 
         verify_pdf(self.pdf, required_text=("Universit\u00e9 de Gen\u00e8ve",))
 
-    @patch("tools.verify_pdf._extract_pypdf", return_value=None)
-    @patch("tools.verify_pdf.run_tool")
+    @patch("verify_pdf._extract_pypdf", return_value=None)
+    @patch("verify_pdf.run_tool")
     def test_dump_text_keeps_the_raw_layer_unfolded(self, mock_run_tool, _pypdf):
         # The fold is comparison-time only: the ATS parser sees the raw layer, and
         # the date-range rule in 05-cv-templates.md needs the en-dash visible here.
@@ -151,15 +153,15 @@ class VerifyPdfTests(unittest.TestCase):
         with self.assertRaisesRegex(VerificationError, "PDF does not exist"):
             verify_pdf(Path(self.temp_dir.name) / "missing.pdf")
 
-    @patch("tools.verify_pdf._extract_pypdf", return_value=("Hello ATS body", 1))
+    @patch("verify_pdf._extract_pypdf", return_value=("Hello ATS body", 1))
     def test_pypdf_is_preferred_over_poppler(self, _pypdf):
         text, pages, extractor = extract_text_layer(self.pdf)
         self.assertEqual(extractor, "pypdf")
         self.assertEqual(text, "Hello ATS body")
         self.assertEqual(pages, 1)
 
-    @patch("tools.verify_pdf._extract_pypdf", return_value=None)
-    @patch("tools.verify_pdf.run_tool")
+    @patch("verify_pdf._extract_pypdf", return_value=None)
+    @patch("verify_pdf.run_tool")
     def test_falls_back_to_pdftotext(self, mock_run_tool, _pypdf):
         mock_run_tool.side_effect = ["poppler text", "Pages:          2\n"]
         text, pages, extractor = extract_text_layer(self.pdf)
@@ -170,12 +172,12 @@ class VerifyPdfTests(unittest.TestCase):
 
 
 class RunToolTests(unittest.TestCase):
-    @patch("tools.verify_pdf.subprocess.run", side_effect=FileNotFoundError)
+    @patch("verify_pdf.subprocess.run", side_effect=FileNotFoundError)
     def test_reports_missing_poppler_command(self, _mock_run):
         with self.assertRaisesRegex(VerificationError, "pip install pypdf"):
             run_tool(["pdftotext", "example.pdf", "-"])
 
-    @patch("tools.verify_pdf.subprocess.run")
+    @patch("verify_pdf.subprocess.run")
     def test_reports_unreadable_pdf(self, mock_run):
         mock_run.side_effect = subprocess.CalledProcessError(
             1, ["pdfinfo", "example.pdf"], stderr="invalid PDF"

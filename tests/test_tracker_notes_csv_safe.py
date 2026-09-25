@@ -19,11 +19,11 @@ import io
 import re
 import unittest
 from pathlib import Path
+from tests import paths
 
 REPO = Path(__file__).resolve().parent.parent
-COMMANDS = REPO / ".claude" / "commands"
-GMAIL_SYNC = COMMANDS / "gmail-sync.md"
-OUTCOME = COMMANDS / "outcome.md"
+GMAIL_SYNC = paths.command_file("gmail-sync")
+OUTCOME = paths.command_file("outcome")
 
 TRACKER_HEADER = (
     "date,company,sector,role,role_type,channel,status,contact_person,"

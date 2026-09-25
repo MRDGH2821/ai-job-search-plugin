@@ -61,7 +61,12 @@ def check_skill(path: Path) -> None:
                 continue
             # Targets may contain globs (e.g. .agents/skills/*/cli/src/cli.ts);
             # require at least one existing file to match.
+            target = target.replace("${CLAUDE_SKILL_DIR}", str(path.parent.relative_to(ROOT)))
             if "*" in target:
+                # .agents/skills/ holds the user's own /add-portal output; the
+                # template ships it empty, so a glob there may match nothing.
+                if target.startswith(".agents/skills/"):
+                    continue
                 if not list(ROOT.glob(target)) and not list((ROOT / ".agents").glob(target)):
                     errors.append(f"{rel(path)}: allowed-tools glob matches no files: {target}")
             else:
@@ -70,11 +75,18 @@ def check_skill(path: Path) -> None:
                     errors.append(f"{rel(path)}: allowed-tools references a missing file: {target}")
 
 
-def check_command(path: Path) -> None:
-    lines = path.read_text(encoding="utf-8").lstrip().splitlines()
-    first = lines[0] if lines else ""
-    if not first.startswith("# /"):
-        errors.append(f"{rel(path)}: command file must start with a '# /<name>' title (found: {first[:50]!r})")
+def check_user_command(path: Path) -> None:
+    """A converted command (disable-model-invocation: true) keeps its '# /<name>' title."""
+    text = path.read_text(encoding="utf-8")
+    m = re.match(r"^---\n(.*?)\n---\n", text, re.DOTALL)
+    if not m:
+        return
+    data = yaml.safe_load(m.group(1)) or {}
+    if str(data.get("disable-model-invocation")).lower() != "true":
+        return
+    body = text[m.end():].lstrip()
+    if not body.startswith(f"# /{data.get('name')} "):
+        errors.append(f"{rel(path)}: user-invoked skill must start its body with '# /{data.get('name')} - ...'")
 
 
 def check_settings() -> None:
@@ -96,17 +108,13 @@ def check_settings() -> None:
 
 
 def main() -> int:
-    skills = sorted(ROOT.glob(".claude/skills/*/SKILL.md")) + sorted(ROOT.glob(".agents/skills/*/SKILL.md"))
-    commands = sorted((ROOT / ".claude" / "commands").glob("*.md"))
+    skills = sorted(ROOT.glob("plugins/*/skills/*/SKILL.md")) + sorted(ROOT.glob(".agents/skills/*/SKILL.md"))
     if not skills:
         errors.append("no SKILL.md files found - glob roots are wrong or the tree moved")
-    if not commands:
-        errors.append("no command files found under .claude/commands/")
 
     for skill in skills:
         check_skill(skill)
-    for command in commands:
-        check_command(command)
+        check_user_command(skill)
     check_settings()
 
     if errors:
@@ -114,7 +122,7 @@ def main() -> int:
         for err in errors:
             print(f"  - {err}")
         return 1
-    print(f"lint_skills: OK ({len(skills)} skills, {len(commands)} commands, settings.json)")
+    print(f"lint_skills: OK ({len(skills)} skills, settings.json)")
     return 0
 
 

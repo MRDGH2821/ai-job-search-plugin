@@ -8,9 +8,10 @@ only and point at profile data with `profile/<file>.md#<anchor>` links.
 import re
 import unittest
 from pathlib import Path
+from tests import paths
 
 REPO = Path(__file__).resolve().parent.parent
-FW = REPO / ".claude" / "skills" / "job-application-assistant"
+FW = paths.FW
 TPL = FW / "profile-templates"
 TEMPLATES = (
     "candidate.md",
@@ -108,7 +109,7 @@ POINTER = re.compile(r"`profile/([\w-]+\.md)(?:#([\w-]+))?`")
 
 def pointer_sources():
     """Every markdown file that may point into profile/."""
-    files = sorted((REPO / ".claude").rglob("*.md"))
+    files = paths.framework_markdown()
     files = [f for f in files if TPL not in f.parents]
     for extra in ("CLAUDE.md", "AGENTS.md"):
         if (REPO / extra).exists():
@@ -163,7 +164,7 @@ class TestFrameworkFilesHoldRulesOnly(unittest.TestCase):
         self.assertIn("/setup", guard)
 
 
-APPLY = REPO / ".claude" / "commands" / "apply.md"
+APPLY = paths.command_file("apply")
 
 
 class TestClaudeMdAndApply(unittest.TestCase):
@@ -210,7 +211,7 @@ def strip_setup_migration(text: str) -> str:
 class TestNoLegacyReferences(unittest.TestCase):
     def test_claude_tree_names_no_legacy_profile_files(self):
         offenders = []
-        files = list((REPO / ".claude").rglob("*.md")) + [REPO / "CLAUDE.md", REPO / "documents" / "README.md"]
+        files = paths.framework_markdown() + [REPO / "CLAUDE.md", REPO / "documents" / "README.md"]
         for path in files:
             text = strip_setup_migration(path.read_text(encoding="utf-8"))
             for name in LEGACY_NAMES:
@@ -219,7 +220,7 @@ class TestNoLegacyReferences(unittest.TestCase):
         self.assertEqual(offenders, [], "legacy profile paths still referenced")
 
     def test_search_queries_read_from_profile(self):
-        scraper = (REPO / ".claude" / "skills" / "job-scraper" / "SKILL.md").read_text(encoding="utf-8")
+        scraper = (paths.skill_file("job-scraper")).read_text(encoding="utf-8")
         self.assertIn("profile/search-queries.md", scraper)
         self.assertNotIn("`search-queries.md` (this directory)", scraper)
 
@@ -257,7 +258,7 @@ class TestDocs(unittest.TestCase):
     def test_setup_md_restores_templates_before_committing_the_merge(self):
         setup_md = (REPO / "SETUP.md").read_text(encoding="utf-8")
         section9 = setup_md.split("## 9. Merging the profile-separation change", 1)[1].split("\n## ", 1)[0]
-        self.assertIn("git checkout MERGE_HEAD -- .claude/skills/job-application-assistant/profile-templates/", section9)
+        self.assertIn("git checkout MERGE_HEAD -- plugins/ai-job-search/skills/job-application-assistant/profile-templates/", section9)
         self.assertLess(section9.index("MERGE_HEAD"), section9.index("Commit the merge"))
 
     def test_setup_md_covers_claude_md_and_deleted_file_conflicts(self):

@@ -12,6 +12,7 @@ import subprocess
 import sys
 import unittest
 from pathlib import Path
+from tests import paths
 
 try:
     import yaml  # noqa: F401 - only probing availability for the lint integration test
@@ -20,7 +21,7 @@ except ImportError:
     _HAVE_YAML = False
 
 REPO = Path(__file__).resolve().parent.parent
-COMMAND = REPO / ".claude" / "commands" / "outcome.md"
+COMMAND = paths.command_file("outcome")
 
 
 class OutcomeFollowupBranchSpec(unittest.TestCase):

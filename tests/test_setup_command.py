@@ -12,12 +12,13 @@ files to close the gap.
 import os
 import unittest
 from pathlib import Path
+from tests import paths
 
 UPSTREAM = "MadsLorentzen/ai-job-search"
 
 REPO = Path(__file__).resolve().parent.parent
-COMMAND = REPO / ".claude" / "commands" / "setup.md"
-SKILL_DIR = REPO / ".claude" / "skills" / "job-application-assistant"
+COMMAND = paths.command_file("setup")
+SKILL_DIR = paths.FW
 CV_TEMPLATES = SKILL_DIR / "05-cv-templates.md"
 COVER_TEMPLATES = SKILL_DIR / "06-cover-letter-templates.md"
 TPL = SKILL_DIR / "profile-templates"

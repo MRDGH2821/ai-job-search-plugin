@@ -32,16 +32,16 @@ that adding a new reader is a one-line addition to READER_CASES.
 import re
 import unittest
 from pathlib import Path
+from tests import paths
 
 REPO = Path(__file__).resolve().parent.parent
-COMMANDS = REPO / ".claude" / "commands"
 
-OUTCOME = COMMANDS / "outcome.md"
-GMAIL_SYNC = COMMANDS / "gmail-sync.md"
-HTML_REPORT = COMMANDS / "html-report.md"
-NOTION_SYNC = COMMANDS / "notion-sync.md"
-APPLY = COMMANDS / "apply.md"
-INTERVIEW = COMMANDS / "interview.md"
+OUTCOME = paths.command_file("outcome")
+GMAIL_SYNC = paths.command_file("gmail-sync")
+HTML_REPORT = paths.command_file("html-report")
+NOTION_SYNC = paths.command_file("notion-sync")
+APPLY = paths.command_file("apply")
+INTERVIEW = paths.command_file("interview")
 
 VOCAB_ANCHOR = "## Tracker status vocabulary"
 

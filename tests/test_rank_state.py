@@ -17,9 +17,10 @@ import sys
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from tests import paths
 
 REPO = Path(__file__).resolve().parent.parent
-TOOL = REPO / "tools" / "rank_state.py"
+TOOL = paths.JOB_TOOLS / "rank_state.py"
 
 TODAY = "2026-09-03"
 

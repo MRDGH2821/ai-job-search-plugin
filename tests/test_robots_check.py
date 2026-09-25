@@ -15,8 +15,9 @@ import unittest
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(REPO_ROOT / "tools"))
 
+from tests import paths  # noqa: E402
+paths.add_job_tools_to_sys_path()
 from robots_check import allowed, is_robots_body  # noqa: E402
 
 
@@ -101,7 +102,7 @@ class TestAgentSelection(unittest.TestCase):
 class TestCli(unittest.TestCase):
     def test_module_is_importable_and_cli_exists(self):
         """The doc calls this by path; make sure that entry point stays valid."""
-        script = REPO_ROOT / "tools" / "robots_check.py"
+        script = paths.JOB_TOOLS / "robots_check.py"
         self.assertTrue(script.is_file())
         out = subprocess.run(
             [sys.executable, str(script)], capture_output=True, text=True, timeout=30
@@ -229,7 +230,7 @@ class TestArgumentHardening(unittest.TestCase):
         self.assertIn("'--', url", src)
 
     def test_a_dash_leading_argument_fails_closed(self):
-        script = REPO_ROOT / "tools" / "robots_check.py"
+        script = paths.JOB_TOOLS / "robots_check.py"
         out = subprocess.run(
             [sys.executable, str(script), "--help"],
             capture_output=True,

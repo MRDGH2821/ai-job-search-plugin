@@ -12,6 +12,7 @@ import subprocess
 import sys
 import unittest
 from pathlib import Path
+from tests import paths
 
 try:
     import yaml  # noqa: F401 - only probing availability for the lint integration test
@@ -20,10 +21,10 @@ except ImportError:
     _HAVE_YAML = False
 
 REPO = Path(__file__).resolve().parent.parent
-COMMAND = REPO / ".claude" / "commands" / "rank.md"
-SCRAPER_SKILL = REPO / ".claude" / "skills" / "job-scraper" / "SKILL.md"
+COMMAND = paths.command_file("rank")
+SCRAPER_SKILL = paths.skill_file("job-scraper")
 EVALUATION = (
-    REPO / ".claude" / "skills" / "job-application-assistant" / "04-job-evaluation.md"
+    paths.FW / "04-job-evaluation.md"
 )
 
 
@@ -45,7 +46,7 @@ def _sections(text: str) -> dict[str, str]:
 class RankCommandSpec(unittest.TestCase):
     def test_command_file_exists_with_lint_compliant_header(self):
         self.assertTrue(COMMAND.is_file(), "command spec missing")
-        first_line = COMMAND.read_text(encoding="utf-8").splitlines()[0]
+        first_line = (lambda t: t.split("\n---\n", 1)[1] if t.startswith("---\n") else t)(COMMAND.read_text(encoding="utf-8")).lstrip().splitlines()[0]
         self.assertTrue(
             first_line.startswith("# /rank"),
             f"header must start with '# /rank' (lint_skills.py enforces it), got: {first_line!r}",
@@ -506,7 +507,7 @@ class RankBatchLimitSpec(unittest.TestCase):
     def test_step1_applies_limit_via_the_state_tool(self):
         step1 = self.sections.get("Step 1: Load State", "")
         self.assertIn(
-            "tools/rank_state.py candidates --limit 10",
+            "job-tools/scripts/rank_state.py candidates --limit 10",
             step1,
             "Step 1 must select candidates with the CLI, passing --limit through to it",
         )
@@ -559,12 +560,12 @@ class RankStateToolSpec(unittest.TestCase):
             step1,
             "Step 1 must forbid the manual read this fix removes",
         )
-        self.assertIn("tools/rank_state.py candidates", step1)
+        self.assertIn("job-tools/scripts/rank_state.py candidates", step1)
 
     def test_step4_writes_back_through_apply_not_by_hand(self):
         step4 = self.sections.get("Step 4: Update State", "")
         self.assertIn(
-            "tools/rank_state.py apply",
+            "job-tools/scripts/rank_state.py apply",
             step4,
             "Step 4 must write results with the CLI; re-emitting seen_jobs.json by hand "
             "reproduces the exact cost this fix removes",
@@ -617,7 +618,7 @@ class RankStateToolSpec(unittest.TestCase):
     def test_step3_sweep_runs_through_the_tool(self):
         step3 = self.sections.get("Step 3: Aggregate and Rank", "")
         self.assertIn(
-            "tools/rank_state.py sweep",
+            "job-tools/scripts/rank_state.py sweep",
             step3,
             "rule 6's expiry sweep must run through the CLI, not a manual re-read",
         )
@@ -630,13 +631,15 @@ class RankStateToolSpec(unittest.TestCase):
             "Step 4 must still state that job_search_tracker.csv is read-only for /rank",
         )
 
-    def test_settings_and_guards_allow_the_new_tool(self):
-        settings = json.loads((REPO / ".claude" / "settings.json").read_text(encoding="utf-8"))
-        allow = settings["permissions"]["allow"]
+    def test_skill_and_guards_allow_the_new_tool(self):
+        # Permissions moved from settings.json into the skill's allowed-tools
+        # in the plugin layout change; the guard reviews them there.
+        text = COMMAND.read_text(encoding="utf-8")
+        frontmatter = text.split("\n---\n", 1)[0]
         guards = (REPO / "tools" / "security_guards.py").read_text(encoding="utf-8")
-        for entry in ("Bash(python tools/rank_state.py:*)", "Bash(python3 tools/rank_state.py:*)"):
-            self.assertIn(entry, allow, f"{entry} missing from .claude/settings.json")
-            self.assertIn(entry, guards, f"{entry} missing from security_guards.py's reviewed allowlist")
+        entry = "Bash(python3 ${CLAUDE_SKILL_DIR}/../job-tools/scripts/rank_state.py:*)"
+        self.assertIn(entry, frontmatter, f"{entry} missing from rank/SKILL.md allowed-tools")
+        self.assertIn(entry, guards, f"{entry} missing from security_guards.py's reviewed allowlist")
 
 
 if __name__ == "__main__":

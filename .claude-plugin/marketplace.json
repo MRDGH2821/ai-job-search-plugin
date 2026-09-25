@@ -1,0 +1,17 @@
+{
+  "name": "ai-job-search",
+  "owner": { "name": "Mads Lorentzen" },
+  "description": "AI job search workflow for Claude Code: fit evaluation, tailored LaTeX CVs and cover letters, job scraping and ranking, interview prep.",
+  "plugins": [
+    {
+      "name": "ai-job-search",
+      "source": "./plugins/ai-job-search",
+      "description": "Core job-application workflow plus the country-agnostic LinkedIn and freehire portals."
+    },
+    {
+      "name": "danish-job-portals",
+      "source": "./plugins/danish-job-portals",
+      "description": "Job portal search skills for Denmark: Jobbank, Jobdanmark, Jobindex, Jobnet."
+    }
+  ]
+}

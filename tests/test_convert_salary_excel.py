@@ -3,8 +3,10 @@ import unittest
 from contextlib import redirect_stderr
 from types import SimpleNamespace
 
+from tests import paths  # noqa: E402
+paths.add_job_tools_to_sys_path()
 from salary_lookup import format_entry
-from tools.convert_salary_excel import (
+from convert_salary_excel import (
     INDEX_PATTERNS,
     detect_column_type,
     header_matches,
@@ -367,6 +369,13 @@ class DetectColumnTypeTests(unittest.TestCase):
 
         self.assertEqual(companies[0]["categories"], {})
         self.assertIn("No salary data columns detected", stderr.getvalue())
+
+
+class TestDefaultOutputLocation(unittest.TestCase):
+    def test_default_output_is_the_workspace_root(self):
+        src = (paths.JOB_TOOLS / "convert_salary_excel.py").read_text(encoding="utf-8")
+        self.assertIn('Path.cwd() / "salary_data.json"', src)
+        self.assertNotIn("Path(__file__).parent.parent", src)
 
 
 if __name__ == "__main__":

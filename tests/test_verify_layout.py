@@ -16,7 +16,9 @@ from contextlib import redirect_stdout
 from pathlib import Path
 from unittest.mock import patch
 
-from tools.verify_layout import Line, Page, find_orphans, main, parse_pdf, report
+from tests import paths  # noqa: E402
+paths.add_job_tools_to_sys_path()
+from verify_layout import Line, Page, find_orphans, main, parse_pdf, report
 
 A4_HEIGHT = 842.0
 
@@ -120,8 +122,8 @@ class TestExtractorFailure(unittest.TestCase):
 
     def test_pdftotext_without_bbox_raises_a_skippable_error(self):
         failure = subprocess.CalledProcessError(99, "pdftotext", stderr="Error: unknown flag")
-        with patch("tools.verify_layout.shutil.which", return_value="/usr/bin/pdftotext"), patch(
-            "tools.verify_layout.subprocess.run", side_effect=failure
+        with patch("verify_layout.shutil.which", return_value="/usr/bin/pdftotext"), patch(
+            "verify_layout.subprocess.run", side_effect=failure
         ):
             with self.assertRaisesRegex(RuntimeError, "bounding boxes"):
                 parse_pdf(Path("cv/main_example.pdf"))
@@ -138,8 +140,8 @@ class TestExtractorFailure(unittest.TestCase):
             stderr="libc++abi: terminating due to uncaught exception of type "
             "std::out_of_range: basic_string",
         )
-        with patch("tools.verify_layout.shutil.which", return_value="/usr/bin/pdftotext"), patch(
-            "tools.verify_layout.subprocess.run", side_effect=failure
+        with patch("verify_layout.shutil.which", return_value="/usr/bin/pdftotext"), patch(
+            "verify_layout.subprocess.run", side_effect=failure
         ):
             with self.assertRaisesRegex(RuntimeError, "bounding boxes") as ctx:
                 parse_pdf(Path("cv/main_example.pdf"))
@@ -149,13 +151,13 @@ class TestExtractorFailure(unittest.TestCase):
         self.assertIn("hyperref", message)
 
     def test_missing_poppler_raises_a_skippable_error(self):
-        with patch("tools.verify_layout.shutil.which", return_value=None):
+        with patch("verify_layout.shutil.which", return_value=None):
             with self.assertRaisesRegex(RuntimeError, "not found"):
                 parse_pdf(Path("cv/main_example.pdf"))
 
     def test_extractor_failure_exits_2_not_1(self):
         """Exit 1 means "your document is broken"; a dead extractor must never claim that."""
-        with patch("tools.verify_layout.parse_pdf", side_effect=RuntimeError("no -bbox")), patch(
+        with patch("verify_layout.parse_pdf", side_effect=RuntimeError("no -bbox")), patch(
             "sys.argv", ["verify_layout.py", __file__]
         ):
             err = io.StringIO()

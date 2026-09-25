@@ -18,6 +18,7 @@ import sys
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from tests import paths
 
 try:
     import openpyxl
@@ -25,7 +26,7 @@ except ImportError:
     openpyxl = None
 
 REPO = Path(__file__).resolve().parent.parent
-TOOLS = REPO / "tools"
+TOOLS = paths.JOB_TOOLS
 
 # One name per script family that cp1252 cannot encode.
 CYRILLIC = "Яндекс"
@@ -92,7 +93,7 @@ class ToolsWriteUtf8(unittest.TestCase):
         self.assertIn(CYRILLIC, proc.stdout.decode("utf-8"))
 
     def test_salary_lookup_prints_a_company_outside_cp1252(self):
-        shutil.copy(REPO / "salary_lookup.py", self.tmp / "salary_lookup.py")
+        shutil.copy(paths.SALARY_LOOKUP, self.tmp / "salary_lookup.py")
         (self.tmp / "salary_data.json").write_text(json.dumps({
             "metadata": {"source": "fixture", "index_baseline": 100, "index_label": "Index",
                          "baseline_description": "Index 100 = baseline"},
@@ -115,8 +116,8 @@ class ToolsWriteUtf8(unittest.TestCase):
         driver.write_text(
             "import sys\n"
             "from unittest.mock import patch\n"
-            f"sys.path.insert(0, {str(REPO)!r})\n"
-            "from tools import verify_layout as v\n"
+            f"sys.path.insert(0, {str(paths.JOB_TOOLS)!r})\n"
+            "import verify_layout as v\n"
             "A4 = 842.0\n"
             "def line(text, top, left=70.0, height=10.0):\n"
             "    return v.Line(top=top, bottom=top + height, left=left, height=height, text=text)\n"

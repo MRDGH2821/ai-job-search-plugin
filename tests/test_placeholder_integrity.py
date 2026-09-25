@@ -18,13 +18,14 @@ guard actually fires on the failure it exists to catch.
 import os
 import unittest
 from pathlib import Path
+from tests import paths
 
 UPSTREAM = "MadsLorentzen/ai-job-search"
 
 REPO = Path(__file__).resolve().parent.parent
 CI = REPO / ".github" / "workflows" / "ci.yml"
 EXAMPLE_CV = REPO / "cv" / "main_example.tex"
-PROFILE = REPO / ".claude" / "skills" / "job-application-assistant" / "profile-templates" / "candidate.md"
+PROFILE = paths.FW / "profile-templates" / "candidate.md"
 
 # The literal sentinel strings (unescaped) that ci.yml's grep patterns match.
 CV_SENTINELS = ["\\name{[First]}{[Last]}", "\\email{[your.email@example.com]}"]
@@ -89,7 +90,7 @@ class TestProfileSentinelIsDataLocated(unittest.TestCase):
     def test_ci_checks_a_data_placeholder_not_the_header_comment(self):
         ci = CI.read_text(encoding="utf-8")
         self.assertIn(
-            "check .claude/skills/job-application-assistant/profile-templates/candidate.md '\\[YOUR_EMAIL\\]'",
+            "check plugins/ai-job-search/skills/job-application-assistant/profile-templates/candidate.md '\\[YOUR_EMAIL\\]'",
             ci,
             "candidate.md's sentinel must sit in the Identity data /setup fills",
         )

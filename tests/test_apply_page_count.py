@@ -2,7 +2,7 @@
 
 The 2-page CV and 1-page cover letter limits are the hard rules of
 05-cv-templates.md and 06-cover-letter-templates.md, and two places defer
-their enforcement to `tools/verify_pdf.py --pages`: `verify_layout.py`'s
+their enforcement to `job-tools/scripts/verify_pdf.py --pages`: `verify_layout.py`'s
 docstring ("page count is verify_pdf.py's job, and CI runs it") and Step 5b's
 own prose, which used to say "Step 5d already runs it". Step 5d's only
 invocation is `--dump-text`, and no other step passed `--pages` at all, so
@@ -14,10 +14,11 @@ check to another step that does not run it.
 import re
 import unittest
 from pathlib import Path
+from tests import paths
 
 REPO = Path(__file__).resolve().parent.parent
-APPLY = REPO / ".claude" / "commands" / "apply.md"
-VERIFY_LAYOUT = REPO / "tools" / "verify_layout.py"
+APPLY = paths.command_file("apply")
+VERIFY_LAYOUT = paths.JOB_TOOLS / "verify_layout.py"
 
 
 def section(path, heading):
@@ -32,7 +33,7 @@ def section(path, heading):
 def page_count_invocations(text):
     """(document path, page count) for every runnable verify_pdf --pages line."""
     return re.findall(
-        r"^python tools/verify_pdf\.py (\S+) --pages (\d+)\s*$", text, re.MULTILINE
+        r"^python3? \$\{CLAUDE_SKILL_DIR\}/\.\./job-tools/scripts/verify_pdf\.py (\S+) --pages (\d+)\s*$", text, re.MULTILINE
     )
 
 

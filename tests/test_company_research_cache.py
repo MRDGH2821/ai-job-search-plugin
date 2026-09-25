@@ -13,11 +13,12 @@ the next consumer to find.
 """
 import unittest
 from pathlib import Path
+from tests import paths
 
 REPO = Path(__file__).resolve().parent.parent
-EVALUATION = REPO / ".claude" / "skills" / "job-application-assistant" / "04-job-evaluation.md"
-APPLY = REPO / ".claude" / "commands" / "apply.md"
-INTERVIEW = REPO / ".claude" / "commands" / "interview.md"
+EVALUATION = paths.FW / "04-job-evaluation.md"
+APPLY = paths.command_file("apply")
+INTERVIEW = paths.command_file("interview")
 
 
 def _sections(text: str, marker: str) -> dict[str, str]:

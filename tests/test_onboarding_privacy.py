@@ -12,11 +12,12 @@ writing anything, not in its closing notes.
 import re
 import unittest
 from pathlib import Path
+from tests import paths
 
 REPO = Path(__file__).resolve().parent.parent
 README = REPO / "README.md"
 SETUP_GUIDE = REPO / "SETUP.md"
-SETUP_COMMAND = REPO / ".claude" / "commands" / "setup.md"
+SETUP_COMMAND = paths.command_file("setup")
 
 
 def section(text: str, heading: str) -> str:
